@@ -1,4 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 
 import AppLayout from "./components/layout/AppLayout";
 import MobileNav from "./components/layout/MobileNav";
@@ -21,6 +22,7 @@ function App() {
 
         </ProfileProvider>
       </ThemeProvider>
+      <Analytics />
     </BrowserRouter>
   );
 }
