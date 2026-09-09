@@ -1,0 +1,164 @@
+:root {
+  /* =========================================================
+     TNU STUDENT LIFE — DESIGN TOKENS
+     ========================================================= */
+
+  /* Brand */
+  --color-primary: #123b68;
+  --color-primary-hover: #0d2f54;
+  --color-primary-soft: #eaf1f7;
+
+  --color-secondary: #b28a3b;
+  --color-secondary-hover: #96722f;
+  --color-secondary-soft: #f6f0e3;
+
+  /* Surfaces */
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-soft: #f0f2f5;
+  --color-surface-muted: #e8ebef;
+
+  /* Typography */
+  --color-text-primary: #17202a;
+  --color-text-secondary: #52606d;
+  --color-text-muted: #7d8995;
+  --color-text-inverse: #ffffff;
+
+  /* Borders */
+  --color-border: #dfe4e9;
+  --color-border-light: #e9edf1;
+  --color-border-strong: #cbd3db;
+
+  /* Semantic */
+  --color-success: #237a57;
+  --color-success-soft: #e8f4ee;
+
+  --color-warning: #a76c16;
+  --color-warning-soft: #fbf1df;
+
+  --color-danger: #b33b3b;
+  --color-danger-soft: #f9eaea;
+
+  --color-info: #28658f;
+  --color-info-soft: #e8f1f7;
+
+  /* Typography */
+  --font-family:
+    "IBM Plex Sans Arabic",
+    "Noto Sans Arabic",
+    "Segoe UI",
+    Tahoma,
+    Arial,
+    sans-serif;
+
+  /* Radius
+     Keep these restrained.
+     Not every element should look like a pill. */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-xs:
+    0 1px 2px rgba(18, 32, 46, 0.04);
+
+  --shadow-sm:
+    0 3px 10px rgba(18, 32, 46, 0.055);
+
+  --shadow-md:
+    0 8px 24px rgba(18, 32, 46, 0.075);
+
+  --shadow-lg:
+    0 18px 45px rgba(18, 32, 46, 0.10);
+
+  /* Layout */
+  --header-height: 72px;
+  --sidebar-width: 250px;
+  --content-max-width: 1440px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+
+  /* Motion */
+  --transition-fast: 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-normal: 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Focus */
+  --focus-ring:
+    0 0 0 3px rgba(18, 59, 104, 0.14);
+}
+/* ============================================================
+   DARK MODE VARIABLES
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-primary: #4f91c9;
+  --color-primary-hover: #6aa7d8;
+  --color-primary-soft: #172a3d;
+
+  --color-secondary: #c5a45b;
+  --color-secondary-hover: #d4b66e;
+  --color-secondary-soft: #302a1d;
+
+  --color-bg: #0e141b;
+  --color-surface: #151d26;
+  --color-surface-raised: #1a242f;
+  --color-surface-soft: #202b36;
+  --color-surface-muted: #27333f;
+
+  --color-text-primary: #edf2f6;
+  --color-text-secondary: #aebbc7;
+  --color-text-muted: #7f8d99;
+  --color-text-inverse: #10161c;
+
+  --color-border: #2b3743;
+  --color-border-light: #222d38;
+  --color-border-strong: #3a4855;
+
+  --color-success: #49a579;
+  --color-success-soft: #173326;
+
+  --color-warning: #d39a45;
+  --color-warning-soft: #352a1a;
+
+  --color-danger: #d46a6a;
+  --color-danger-soft: #351e21;
+
+  --color-info: #5b9ac7;
+  --color-info-soft: #192d3d;
+
+  --shadow-xs:
+    0 1px 2px rgba(0, 0, 0, 0.18);
+
+  --shadow-sm:
+    0 3px 10px rgba(0, 0, 0, 0.22);
+
+  --shadow-md:
+    0 8px 24px rgba(0, 0, 0, 0.28);
+
+  --shadow-lg:
+    0 18px 45px rgba(0, 0, 0, 0.34);
+
+  --focus-ring:
+    0 0 0 3px rgba(79, 145, 201, 0.2);
+}

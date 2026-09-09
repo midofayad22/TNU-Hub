@@ -1,0 +1,1283 @@
+/* =========================================================
+   TNU HUB — PRODUCT DESIGN SYSTEM
+   Modern Student Platform
+   ========================================================= */
+
+/* =========================================================
+   1. ROOT / DESIGN TOKENS
+   ========================================================= */
+
+:root {
+  /* Brand */
+  --tnu-primary: #0f766e;
+  --tnu-primary-hover: #0b625b;
+  --tnu-primary-active: #09554f;
+  --tnu-primary-soft: #e8f6f4;
+  --tnu-primary-subtle: #f2faf9;
+
+  --tnu-accent: #2f8f83;
+  --tnu-accent-soft: #e9f7f5;
+
+  /* Background */
+  --tnu-bg: #f6f8f9;
+  --tnu-surface: #ffffff;
+  --tnu-surface-raised: #ffffff;
+  --tnu-surface-soft: #f1f4f4;
+  --tnu-surface-hover: #f8faf9;
+
+  /* Text */
+  --tnu-text: #12201e;
+  --tnu-text-secondary: #526460;
+  --tnu-text-muted: #7b8986;
+  --tnu-text-disabled: #a7b2af;
+  --tnu-text-inverse: #ffffff;
+
+  /* Border */
+  --tnu-border: #dfe7e5;
+  --tnu-border-light: #e9efed;
+  --tnu-border-strong: #cbd7d4;
+
+  /* Semantic */
+  --tnu-success: #198754;
+  --tnu-success-soft: #eaf7f0;
+
+  --tnu-warning: #b7791f;
+  --tnu-warning-soft: #fff6e5;
+
+  --tnu-danger: #c74444;
+  --tnu-danger-soft: #fceded;
+
+  --tnu-info: #3478a8;
+  --tnu-info-soft: #eaf4fa;
+
+  /* Radius */
+  --tnu-radius-xs: 6px;
+  --tnu-radius-sm: 9px;
+  --tnu-radius-md: 13px;
+  --tnu-radius-lg: 17px;
+  --tnu-radius-xl: 22px;
+  --tnu-radius-2xl: 28px;
+  --tnu-radius-full: 999px;
+
+  /* Shadows */
+  --tnu-shadow-xs:
+    0 1px 2px rgba(15, 35, 32, 0.04);
+
+  --tnu-shadow-sm:
+    0 4px 14px rgba(15, 35, 32, 0.06);
+
+  --tnu-shadow-md:
+    0 10px 28px rgba(15, 35, 32, 0.08);
+
+  --tnu-shadow-lg:
+    0 20px 50px rgba(15, 35, 32, 0.11);
+
+  /* Motion */
+  --tnu-ease:
+    cubic-bezier(0.22, 1, 0.36, 1);
+
+  --tnu-fast: 140ms var(--tnu-ease);
+  --tnu-normal: 220ms var(--tnu-ease);
+  --tnu-slow: 360ms var(--tnu-ease);
+
+  /* Layout */
+  --tnu-header-height: 72px;
+  --tnu-sidebar-width: 250px;
+  --tnu-content-width: 1440px;
+
+  /* Focus */
+  --tnu-focus:
+    0 0 0 3px rgba(15, 118, 110, 0.16);
+}
+
+
+/* =========================================================
+   2. DARK MODE
+   ========================================================= */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --tnu-primary: #45a99e;
+  --tnu-primary-hover: #5bb8ae;
+  --tnu-primary-active: #36958b;
+  --tnu-primary-soft: #15322f;
+  --tnu-primary-subtle: #122725;
+
+  --tnu-accent: #53b5aa;
+  --tnu-accent-soft: #163431;
+
+  --tnu-bg: #0a1110;
+  --tnu-surface: #101a18;
+  --tnu-surface-raised: #15211f;
+  --tnu-surface-soft: #1a2825;
+  --tnu-surface-hover: #1b2b28;
+
+  --tnu-text: #edf5f3;
+  --tnu-text-secondary: #aabbb7;
+  --tnu-text-muted: #7f918c;
+  --tnu-text-disabled: #596964;
+  --tnu-text-inverse: #07100e;
+
+  --tnu-border: #263733;
+  --tnu-border-light: #1d2b28;
+  --tnu-border-strong: #354944;
+
+  --tnu-success: #4fba86;
+  --tnu-success-soft: #143326;
+
+  --tnu-warning: #d5a04e;
+  --tnu-warning-soft: #352a19;
+
+  --tnu-danger: #df7070;
+  --tnu-danger-soft: #351e20;
+
+  --tnu-info: #61a7d2;
+  --tnu-info-soft: #182c38;
+
+  --tnu-shadow-xs:
+    0 1px 2px rgba(0, 0, 0, 0.18);
+
+  --tnu-shadow-sm:
+    0 5px 16px rgba(0, 0, 0, 0.22);
+
+  --tnu-shadow-md:
+    0 12px 30px rgba(0, 0, 0, 0.28);
+
+  --tnu-shadow-lg:
+    0 22px 55px rgba(0, 0, 0, 0.36);
+
+  --tnu-focus:
+    0 0 0 3px rgba(69, 169, 158, 0.22);
+}
+
+
+/* =========================================================
+   3. GLOBAL BASE
+   ========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--tnu-bg);
+  color: var(--tnu-text);
+  font-family:
+    "IBM Plex Sans Arabic",
+    "Noto Sans Arabic",
+    "Segoe UI",
+    Tahoma,
+    Arial,
+    sans-serif;
+
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  transition:
+    background-color var(--tnu-normal),
+    color var(--tnu-normal);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+
+/* =========================================================
+   4. SELECTION
+   ========================================================= */
+
+::selection {
+  background: var(--tnu-primary);
+  color: var(--tnu-text-inverse);
+}
+
+
+/* =========================================================
+   5. SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tnu-border-strong);
+  border: 2px solid var(--tnu-bg);
+  border-radius: var(--tnu-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tnu-text-muted);
+}
+
+
+/* =========================================================
+   6. FOCUS
+   ========================================================= */
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--tnu-focus);
+}
+
+
+/* =========================================================
+   7. BUTTON SYSTEM
+   ========================================================= */
+
+.tnu-btn {
+  --btn-bg: var(--tnu-surface);
+  --btn-color: var(--tnu-text);
+  --btn-border: var(--tnu-border);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 0 16px;
+
+  border: 1px solid var(--btn-border);
+  border-radius: var(--tnu-radius-sm);
+
+  background: var(--btn-bg);
+  color: var(--btn-color);
+
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    transform var(--tnu-fast),
+    background-color var(--tnu-fast),
+    border-color var(--tnu-fast),
+    box-shadow var(--tnu-fast),
+    color var(--tnu-fast);
+}
+
+.tnu-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--tnu-shadow-xs);
+}
+
+.tnu-btn:active {
+  transform: translateY(0);
+}
+
+.tnu-btn-primary {
+  --btn-bg: var(--tnu-primary);
+  --btn-color: #ffffff;
+  --btn-border: var(--tnu-primary);
+}
+
+.tnu-btn-primary:hover {
+  --btn-bg: var(--tnu-primary-hover);
+  --btn-border: var(--tnu-primary-hover);
+}
+
+.tnu-btn-secondary {
+  --btn-bg: var(--tnu-surface);
+  --btn-color: var(--tnu-primary);
+  --btn-border: var(--tnu-border);
+}
+
+.tnu-btn-secondary:hover {
+  background: var(--tnu-primary-soft);
+  border-color: var(--tnu-primary);
+}
+
+.tnu-btn-danger {
+  --btn-bg: var(--tnu-danger);
+  --btn-color: #ffffff;
+  --btn-border: var(--tnu-danger);
+}
+
+.tnu-btn-ghost {
+  --btn-bg: transparent;
+  --btn-color: var(--tnu-text-secondary);
+  --btn-border: transparent;
+}
+
+.tnu-btn-ghost:hover {
+  background: var(--tnu-surface-soft);
+  color: var(--tnu-text);
+}
+
+.tnu-btn-sm {
+  min-height: 36px;
+  padding-inline: 12px;
+  font-size: 13px;
+}
+
+.tnu-btn-lg {
+  min-height: 48px;
+  padding-inline: 20px;
+}
+
+
+/* =========================================================
+   8. ICON BUTTON
+   ========================================================= */
+
+.tnu-icon-btn {
+  width: 40px;
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--tnu-border);
+  border-radius: var(--tnu-radius-sm);
+
+  background: var(--tnu-surface);
+  color: var(--tnu-text-secondary);
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--tnu-fast),
+    border-color var(--tnu-fast),
+    color var(--tnu-fast),
+    transform var(--tnu-fast);
+}
+
+.tnu-icon-btn:hover {
+  color: var(--tnu-primary);
+  border-color: var(--tnu-primary);
+  background: var(--tnu-primary-soft);
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   9. CARDS
+   ========================================================= */
+
+.tnu-card {
+  background: var(--tnu-surface);
+  border: 1px solid var(--tnu-border-light);
+  border-radius: var(--tnu-radius-lg);
+  box-shadow: var(--tnu-shadow-xs);
+
+  transition:
+    transform var(--tnu-normal),
+    box-shadow var(--tnu-normal),
+    border-color var(--tnu-normal),
+    background-color var(--tnu-normal);
+}
+
+.tnu-card:hover {
+  border-color: var(--tnu-border);
+  box-shadow: var(--tnu-shadow-sm);
+}
+
+.tnu-card-interactive {
+  cursor: pointer;
+}
+
+.tnu-card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--tnu-shadow-md);
+}
+
+.tnu-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid var(--tnu-border-light);
+}
+
+.tnu-card-body {
+  padding: 22px;
+}
+
+.tnu-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 16px 22px;
+
+  border-top: 1px solid var(--tnu-border-light);
+}
+
+
+/* =========================================================
+   10. STAT CARDS
+   ========================================================= */
+
+.tnu-stat {
+  position: relative;
+  overflow: hidden;
+
+  padding: 20px;
+
+  background: var(--tnu-surface);
+  border: 1px solid var(--tnu-border-light);
+  border-radius: var(--tnu-radius-lg);
+
+  box-shadow: var(--tnu-shadow-xs);
+
+  transition:
+    transform var(--tnu-normal),
+    box-shadow var(--tnu-normal);
+}
+
+.tnu-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--tnu-shadow-md);
+}
+
+.tnu-stat-icon {
+  width: 42px;
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--tnu-radius-md);
+
+  background: var(--tnu-primary-soft);
+  color: var(--tnu-primary);
+}
+
+.tnu-stat-value {
+  margin-top: 16px;
+
+  color: var(--tnu-text);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.tnu-stat-label {
+  margin-top: 4px;
+
+  color: var(--tnu-text-muted);
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   11. BADGES
+   ========================================================= */
+
+.tnu-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  min-height: 28px;
+  padding: 0 10px;
+
+  border-radius: var(--tnu-radius-full);
+
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.tnu-badge-primary {
+  background: var(--tnu-primary-soft);
+  color: var(--tnu-primary);
+}
+
+.tnu-badge-success {
+  background: var(--tnu-success-soft);
+  color: var(--tnu-success);
+}
+
+.tnu-badge-warning {
+  background: var(--tnu-warning-soft);
+  color: var(--tnu-warning);
+}
+
+.tnu-badge-danger {
+  background: var(--tnu-danger-soft);
+  color: var(--tnu-danger);
+}
+
+.tnu-badge-info {
+  background: var(--tnu-info-soft);
+  color: var(--tnu-info);
+}
+
+
+/* =========================================================
+   12. FORM ELEMENTS
+   ========================================================= */
+
+.tnu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.tnu-label {
+  color: var(--tnu-text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.tnu-input,
+.tnu-select,
+.tnu-textarea {
+  width: 100%;
+
+  min-height: 44px;
+  padding: 10px 13px;
+
+  border: 1px solid var(--tnu-border);
+  border-radius: var(--tnu-radius-sm);
+
+  background: var(--tnu-surface);
+  color: var(--tnu-text);
+
+  outline: none;
+
+  transition:
+    border-color var(--tnu-fast),
+    box-shadow var(--tnu-fast),
+    background-color var(--tnu-fast);
+}
+
+.tnu-input::placeholder,
+.tnu-textarea::placeholder {
+  color: var(--tnu-text-muted);
+}
+
+.tnu-input:hover,
+.tnu-select:hover,
+.tnu-textarea:hover {
+  border-color: var(--tnu-border-strong);
+}
+
+.tnu-input:focus,
+.tnu-select:focus,
+.tnu-textarea:focus {
+  border-color: var(--tnu-primary);
+  box-shadow: var(--tnu-focus);
+}
+
+.tnu-textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+
+/* =========================================================
+   13. SEARCH
+   ========================================================= */
+
+.tnu-search {
+  position: relative;
+}
+
+.tnu-search input {
+  padding-inline-start: 42px;
+}
+
+.tnu-search-icon {
+  position: absolute;
+  inset-inline-start: 13px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: var(--tnu-text-muted);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   14. PAGE HEADER
+   ========================================================= */
+
+.tnu-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  margin-bottom: 28px;
+}
+
+.tnu-page-title {
+  margin: 0;
+
+  color: var(--tnu-text);
+
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 760;
+
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.tnu-page-description {
+  margin: 8px 0 0;
+
+  max-width: 680px;
+
+  color: var(--tnu-text-secondary);
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   15. SECTION
+   ========================================================= */
+
+.tnu-section {
+  margin-block: 40px;
+}
+
+.tnu-section-title {
+  margin: 0;
+
+  color: var(--tnu-text);
+
+  font-size: 20px;
+  font-weight: 720;
+}
+
+.tnu-section-description {
+  margin: 6px 0 0;
+
+  color: var(--tnu-text-muted);
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   16. GRID SYSTEM
+   ========================================================= */
+
+.tnu-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.tnu-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tnu-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tnu-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+
+/* =========================================================
+   17. ADMIN LAYOUT
+   ========================================================= */
+
+.tnu-admin {
+  min-height: 100vh;
+  background: var(--tnu-bg);
+}
+
+.tnu-admin-content {
+  min-width: 0;
+  padding: 32px;
+}
+
+.tnu-admin-sidebar {
+  background: var(--tnu-surface);
+  border-inline-end: 1px solid var(--tnu-border-light);
+}
+
+.tnu-admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  min-height: 44px;
+  padding: 0 12px;
+
+  border-radius: var(--tnu-radius-sm);
+
+  color: var(--tnu-text-secondary);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background-color var(--tnu-fast),
+    color var(--tnu-fast),
+    transform var(--tnu-fast);
+}
+
+.tnu-admin-nav-item:hover {
+  background: var(--tnu-surface-soft);
+  color: var(--tnu-text);
+}
+
+.tnu-admin-nav-item.active {
+  background: var(--tnu-primary-soft);
+  color: var(--tnu-primary);
+}
+
+.tnu-admin-nav-item:active {
+  transform: scale(0.985);
+}
+
+
+/* =========================================================
+   18. MODAL
+   ========================================================= */
+
+.tnu-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(5, 15, 13, 0.48);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  animation: tnu-fade-in 180ms ease-out;
+}
+
+.tnu-modal {
+  width: min(100%, 560px);
+  max-height: min(720px, calc(100vh - 40px));
+
+  overflow: auto;
+
+  background: var(--tnu-surface);
+  border: 1px solid var(--tnu-border-light);
+  border-radius: var(--tnu-radius-xl);
+
+  box-shadow: var(--tnu-shadow-lg);
+
+  animation: tnu-modal-in 260ms var(--tnu-ease);
+}
+
+.tnu-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid var(--tnu-border-light);
+}
+
+.tnu-modal-body {
+  padding: 22px;
+}
+
+.tnu-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  padding: 16px 22px;
+
+  border-top: 1px solid var(--tnu-border-light);
+}
+
+
+/* =========================================================
+   19. ALERTS
+   ========================================================= */
+
+.tnu-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border: 1px solid transparent;
+  border-radius: var(--tnu-radius-md);
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tnu-alert-success {
+  background: var(--tnu-success-soft);
+  border-color: color-mix(
+    in srgb,
+    var(--tnu-success) 18%,
+    transparent
+  );
+  color: var(--tnu-success);
+}
+
+.tnu-alert-warning {
+  background: var(--tnu-warning-soft);
+  color: var(--tnu-warning);
+}
+
+.tnu-alert-danger {
+  background: var(--tnu-danger-soft);
+  color: var(--tnu-danger);
+}
+
+.tnu-alert-info {
+  background: var(--tnu-info-soft);
+  color: var(--tnu-info);
+}
+
+
+/* =========================================================
+   20. EMPTY STATE
+   ========================================================= */
+
+.tnu-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 280px;
+
+  padding: 32px;
+
+  text-align: center;
+
+  border: 1px dashed var(--tnu-border-strong);
+  border-radius: var(--tnu-radius-lg);
+
+  background: var(--tnu-surface);
+}
+
+.tnu-empty-icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 14px;
+
+  border-radius: var(--tnu-radius-md);
+
+  background: var(--tnu-surface-soft);
+  color: var(--tnu-text-muted);
+}
+
+.tnu-empty-title {
+  margin: 0;
+
+  color: var(--tnu-text);
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tnu-empty-description {
+  max-width: 420px;
+
+  margin: 7px 0 0;
+
+  color: var(--tnu-text-muted);
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   21. LOADING / SKELETON
+   ========================================================= */
+
+.tnu-skeleton {
+  position: relative;
+  overflow: hidden;
+
+  background: var(--tnu-surface-soft);
+  border-radius: var(--tnu-radius-sm);
+}
+
+.tnu-skeleton::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  transform: translateX(-100%);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.28),
+      transparent
+    );
+
+  animation: tnu-skeleton 1.5s infinite;
+}
+
+:root[data-theme="dark"] .tnu-skeleton::after {
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.055),
+      transparent
+    );
+}
+
+
+/* =========================================================
+   22. TABLE
+   ========================================================= */
+
+.tnu-table-wrapper {
+  overflow-x: auto;
+
+  border: 1px solid var(--tnu-border-light);
+  border-radius: var(--tnu-radius-lg);
+
+  background: var(--tnu-surface);
+}
+
+.tnu-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  font-size: 13px;
+}
+
+.tnu-table th {
+  padding: 13px 16px;
+
+  background: var(--tnu-surface-soft);
+
+  color: var(--tnu-text-secondary);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: start;
+
+  white-space: nowrap;
+}
+
+.tnu-table td {
+  padding: 15px 16px;
+
+  border-top: 1px solid var(--tnu-border-light);
+
+  color: var(--tnu-text-secondary);
+
+  vertical-align: middle;
+}
+
+.tnu-table tbody tr {
+  transition: background-color var(--tnu-fast);
+}
+
+.tnu-table tbody tr:hover {
+  background: var(--tnu-surface-hover);
+}
+
+
+/* =========================================================
+   23. DIVIDER
+   ========================================================= */
+
+.tnu-divider {
+  height: 1px;
+  width: 100%;
+
+  background: var(--tnu-border-light);
+}
+
+
+/* =========================================================
+   24. ANIMATIONS
+   ========================================================= */
+
+@keyframes tnu-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tnu-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tnu-skeleton {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+
+/* =========================================================
+   25. RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .tnu-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tnu-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .tnu-admin-content {
+    padding: 20px 14px;
+  }
+
+  .tnu-page-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 22px;
+  }
+
+  .tnu-grid-2,
+  .tnu-grid-3,
+  .tnu-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .tnu-card-header,
+  .tnu-card-body,
+  .tnu-card-footer {
+    padding: 17px;
+  }
+
+  .tnu-stat {
+    padding: 17px;
+  }
+
+  .tnu-modal-backdrop {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .tnu-modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    border-radius: var(--tnu-radius-xl) var(--tnu-radius-xl) 14px 14px;
+  }
+
+  .tnu-modal-header,
+  .tnu-modal-body,
+  .tnu-modal-footer {
+    padding: 17px;
+  }
+
+  .tnu-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .tnu-modal-footer .tnu-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .tnu-page-title {
+    font-size: 24px;
+  }
+
+  .tnu-page-description {
+    font-size: 13px;
+  }
+
+  .tnu-btn {
+    min-height: 44px;
+  }
+
+  .tnu-table {
+    min-width: 620px;
+  }
+}
+
+
+/* =========================================================
+   26. REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* =========================================================
+   27. UTILITY HELPERS
+   ========================================================= */
+
+.tnu-flex {
+  display: flex;
+}
+
+.tnu-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tnu-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tnu-items-center {
+  align-items: center;
+}
+
+.tnu-gap-1 {
+  gap: 4px;
+}
+
+.tnu-gap-2 {
+  gap: 8px;
+}
+
+.tnu-gap-3 {
+  gap: 12px;
+}
+
+.tnu-gap-4 {
+  gap: 16px;
+}
+
+.tnu-gap-5 {
+  gap: 20px;
+}
+
+.tnu-gap-6 {
+  gap: 24px;
+}
+
+.tnu-text-muted {
+  color: var(--tnu-text-muted);
+}
+
+.tnu-text-secondary {
+  color: var(--tnu-text-secondary);
+}
+
+.tnu-text-primary {
+  color: var(--tnu-primary);
+}
+
+.tnu-text-danger {
+  color: var(--tnu-danger);
+}
+
+.tnu-text-success {
+  color: var(--tnu-success);
+}
+
+.tnu-w-full {
+  width: 100%;
+}
+
+.tnu-mt-1 {
+  margin-top: 4px;
+}
+
+.tnu-mt-2 {
+  margin-top: 8px;
+}
+
+.tnu-mt-3 {
+  margin-top: 12px;
+}
+
+.tnu-mt-4 {
+  margin-top: 16px;
+}
+
+.tnu-mt-5 {
+  margin-top: 20px;
+}
+
+.tnu-mt-6 {
+  margin-top: 24px;
+}

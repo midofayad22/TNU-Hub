@@ -1,0 +1,408 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  width="512"
+  height="512"
+  role="img"
+  aria-label="TNU Hub Student Union"
+>
+
+  <!-- =========================
+       COLORS
+       White      : #FFFFFF
+       Navy Blue  : #173B5C
+       Light Navy : #315A7D
+       Soft Gold  : #D8B65A
+       ========================= -->
+
+  <!-- Main white circular background -->
+  <circle
+    cx="256"
+    cy="256"
+    r="248"
+    fill="#FFFFFF"
+  />
+
+  <!-- Main navy outer border -->
+  <circle
+    cx="256"
+    cy="256"
+    r="238"
+    fill="none"
+    stroke="#173B5C"
+    stroke-width="8"
+  />
+
+  <!-- Thin soft gold border -->
+  <circle
+    cx="256"
+    cy="256"
+    r="224"
+    fill="none"
+    stroke="#D8B65A"
+    stroke-width="4"
+  />
+
+  <!-- =========================
+       TOP DECORATION
+       ========================= -->
+
+  <circle
+    cx="256"
+    cy="54"
+    r="6"
+    fill="#D8B65A"
+  />
+
+  <circle
+    cx="228"
+    cy="59"
+    r="3"
+    fill="#173B5C"
+  />
+
+  <circle
+    cx="284"
+    cy="59"
+    r="3"
+    fill="#173B5C"
+  />
+
+
+  <!-- =========================
+       STUDENT COMMUNITY SYMBOL
+       ========================= -->
+
+  <!-- Center student -->
+  <circle
+    cx="256"
+    cy="112"
+    r="27"
+    fill="#173B5C"
+  />
+
+  <path
+    d="
+      M213 174
+      C213 143 230 126 256 126
+      C282 126 299 143 299 174
+      Z
+    "
+    fill="#173B5C"
+  />
+
+  <!-- Left student -->
+  <circle
+    cx="192"
+    cy="136"
+    r="20"
+    fill="#315A7D"
+  />
+
+  <path
+    d="
+      M158 187
+      C158 162 172 147 192 147
+      C212 147 226 162 226 187
+      Z
+    "
+    fill="#315A7D"
+  />
+
+  <!-- Right student -->
+  <circle
+    cx="320"
+    cy="136"
+    r="20"
+    fill="#315A7D"
+  />
+
+  <path
+    d="
+      M286 187
+      C286 162 300 147 320 147
+      C340 147 354 162 354 187
+      Z
+    "
+    fill="#315A7D"
+  />
+
+
+  <!-- Community connection -->
+  <path
+    d="
+      M176 197
+      C198 216 225 226 256 226
+      C287 226 314 216 336 197
+    "
+    fill="none"
+    stroke="#173B5C"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =========================
+       OPEN BOOK
+       ========================= -->
+
+  <!-- Left page -->
+  <path
+    d="
+      M256 218
+      C221 198 183 198 148 211
+      L148 294
+      C183 282 221 282 256 303
+      Z
+    "
+    fill="#FFFFFF"
+  />
+
+  <!-- Right page -->
+  <path
+    d="
+      M256 218
+      C291 198 329 198 364 211
+      L364 294
+      C329 282 291 282 256 303
+      Z
+    "
+    fill="#FFFFFF"
+  />
+
+  <!-- Book outline -->
+  <path
+    d="
+      M256 218
+      C221 198 183 198 148 211
+      L148 294
+      C183 282 221 282 256 303
+
+      C291 282 329 282 364 294
+      L364 211
+      C329 198 291 198 256 218
+      Z
+    "
+    fill="none"
+    stroke="#173B5C"
+    stroke-width="7"
+    stroke-linejoin="round"
+  />
+
+  <!-- Book center -->
+  <path
+    d="M256 218 V303"
+    fill="none"
+    stroke="#173B5C"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+
+
+  <!-- Book page details -->
+
+  <path
+    d="M170 234 C193 230 216 234 237 245"
+    fill="none"
+    stroke="#315A7D"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M170 256 C193 252 216 256 237 267"
+    fill="none"
+    stroke="#315A7D"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M342 234 C319 230 296 234 275 245"
+    fill="none"
+    stroke="#315A7D"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M342 256 C319 252 296 256 275 267"
+    fill="none"
+    stroke="#315A7D"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =========================
+       GOLD ACCENT
+       ========================= -->
+
+  <path
+    d="M214 319 H298"
+    fill="none"
+    stroke="#D8B65A"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =========================
+       TNU
+       VECTOR LETTERS
+       ========================= -->
+
+  <!-- T -->
+  <path
+    d="
+      M164 346
+      H228
+      V357
+      H204
+      V387
+      H188
+      V357
+      H164
+      Z
+    "
+    fill="#173B5C"
+  />
+
+  <!-- N -->
+  <path
+    d="
+      M236 346
+      H251
+      L272 374
+      V346
+      H287
+      V387
+      H272
+      L251 359
+      V387
+      H236
+      Z
+    "
+    fill="#173B5C"
+  />
+
+  <!-- U -->
+  <path
+    d="
+      M295 346
+      H310
+      V374
+      C310 379 313 381 318 381
+      C323 381 326 379 326 374
+      V346
+      H341
+      V375
+      C341 384 333 389 318 389
+      C303 389 295 384 295 375
+      Z
+    "
+    fill="#173B5C"
+  />
+
+
+  <!-- =========================
+       HUB
+       ========================= -->
+
+  <!-- H -->
+  <path
+    d="
+      M176 401
+      H190
+      V416
+      H209
+      V401
+      H223
+      V442
+      H209
+      V427
+      H190
+      V442
+      H176
+      Z
+    "
+    fill="#315A7D"
+  />
+
+  <!-- U -->
+  <path
+    d="
+      M231 401
+      H245
+      V430
+      C245 434 248 436 253 436
+      C258 436 261 434 261 430
+      V401
+      H275
+      V431
+      C275 439 267 444 253 444
+      C239 444 231 439 231 431
+      Z
+    "
+    fill="#315A7D"
+  />
+
+  <!-- B -->
+  <path
+    d="
+      M284 401
+      H306
+
+      C317 401 323 406 323 414
+      C323 419 320 422 315 424
+
+      C321 425 325 429 325 435
+      C325 441 319 444 307 444
+
+      H284
+      Z
+
+      M298 409
+      V419
+      H304
+      C308 419 310 417 310 414
+      C310 411 308 409 304 409
+      Z
+
+      M298 427
+      V436
+      H306
+      C310 436 312 434 312 431
+      C312 428 310 427 306 427
+      Z
+    "
+    fill="#315A7D"
+  />
+
+
+  <!-- =========================
+       BOTTOM GOLD DETAIL
+       ========================= -->
+
+  <circle
+    cx="256"
+    cy="461"
+    r="5"
+    fill="#D8B65A"
+  />
+
+  <circle
+    cx="238"
+    cy="461"
+    r="3"
+    fill="#173B5C"
+  />
+
+  <circle
+    cx="274"
+    cy="461"
+    r="3"
+    fill="#173B5C"
+  />
+
+</svg>
