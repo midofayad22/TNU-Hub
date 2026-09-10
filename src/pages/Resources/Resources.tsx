@@ -1,13 +1,24 @@
 import {
+  AlertCircle,
   ArrowLeft,
   BookOpen,
   FileText,
   GraduationCap,
   Laptop,
+  Loader2,
   Search,
   X,
 } from "lucide-react";
-import { useMemo, useState, type CSSProperties } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
+
+import { supabase } from "../../lib/supabase";
 
 type ResourceCategory =
   | "الكل"
@@ -17,47 +28,12 @@ type ResourceCategory =
   | "أنظمة";
 
 interface Resource {
-  id: string;
+  id: number;
   title: string;
   description: string;
   category: Exclude<ResourceCategory, "الكل">;
-  icon: typeof GraduationCap;
+  icon: string;
 }
-
-const resources: Resource[] = [
-  {
-    id: "student-guide",
-    title: "دليل الطالب",
-    description:
-      "دليل يساعدك على فهم أهم الخدمات والإجراءات التي تحتاجها خلال حياتك الجامعية.",
-    category: "أدلة الطلاب",
-    icon: GraduationCap,
-  },
-  {
-    id: "academic-resources",
-    title: "المصادر الأكاديمية",
-    description:
-      "مجموعة من المصادر والأدوات التي تساعدك في دراستك وتطوير مستواك الأكاديمي.",
-    category: "أكاديمي",
-    icon: BookOpen,
-  },
-  {
-    id: "guides",
-    title: "الأدلة والإرشادات",
-    description:
-      "إرشادات مختصرة تساعدك على فهم الخدمات والأنظمة والإجراءات المختلفة.",
-    category: "إرشادات",
-    icon: FileText,
-  },
-  {
-    id: "online-systems",
-    title: "الأنظمة الإلكترونية",
-    description:
-      "الوصول السريع إلى الأنظمة والمنصات الإلكترونية التي يستخدمها الطلاب.",
-    category: "أنظمة",
-    icon: Laptop,
-  },
-];
 
 const categories: ResourceCategory[] = [
   "الكل",
@@ -67,10 +43,66 @@ const categories: ResourceCategory[] = [
   "أنظمة",
 ];
 
+const iconMap = {
+  GraduationCap,
+  BookOpen,
+  FileText,
+  Laptop,
+} as const;
+
+const getResourceIcon = (iconName: string) => {
+  return (
+    iconMap[iconName as keyof typeof iconMap] ??
+    BookOpen
+  );
+};
+
 export default function Resources() {
+  const [resources, setResources] = useState<Resource[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] =
     useState<ResourceCategory>("الكل");
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadResources = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    const { data, error: supabaseError } = await supabase
+      .from("resources")
+      .select(
+        "id, title, description, category, icon"
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (supabaseError) {
+      console.error(
+        "Failed to load resources:",
+        supabaseError
+      );
+
+      setResources([]);
+      setError(
+        "تعذر تحميل المصادر حاليًا. حاول مرة أخرى."
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    setResources(
+      (data ?? []) as Resource[]
+    );
+
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadResources();
+  }, [loadResources]);
 
   const filteredResources = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -78,9 +110,15 @@ export default function Resources() {
     return resources.filter((resource) => {
       const matchesSearch =
         !query ||
-        resource.title.toLowerCase().includes(query) ||
-        resource.description.toLowerCase().includes(query) ||
-        resource.category.toLowerCase().includes(query);
+        resource.title
+          .toLowerCase()
+          .includes(query) ||
+        resource.description
+          .toLowerCase()
+          .includes(query) ||
+        resource.category
+          .toLowerCase()
+          .includes(query);
 
       const matchesCategory =
         activeCategory === "الكل" ||
@@ -88,7 +126,7 @@ export default function Resources() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [resources, search, activeCategory]);
 
   const clearFilters = () => {
     setSearch("");
@@ -100,26 +138,38 @@ export default function Resources() {
   };
 
   const hasFilters =
-    Boolean(search.trim()) || activeCategory !== "الكل";
+    Boolean(search.trim()) ||
+    activeCategory !== "الكل";
 
   return (
-    <main className="page-shell resources-page" dir="rtl">
-      {/* Header */}
+    <main
+      className="page-shell resources-page"
+      dir="rtl"
+    >
+      {/* =========================================
+          HEADER
+          ========================================= */}
+
       <section className="resources-header">
         <div className="resources-header__content">
-          <span className="page-kicker">تعلم واستخدم</span>
+          <span className="page-kicker">
+            تعلم واستخدم
+          </span>
 
           <div className="resources-header__title-row">
             <div className="resources-header__icon">
-              <BookOpen size={24} aria-hidden="true" />
+              <BookOpen
+                size={24}
+                aria-hidden="true"
+              />
             </div>
 
             <h1>المصادر</h1>
           </div>
 
           <p>
-            مجموعة منظمة من الأدلة والمصادر والأدوات المفيدة
-            خلال رحلتك الجامعية.
+            مجموعة منظمة من الأدلة والمصادر والأدوات
+            المفيدة خلال رحلتك الجامعية.
           </p>
         </div>
 
@@ -127,11 +177,17 @@ export default function Resources() {
           className="resources-header__visual"
           aria-hidden="true"
         >
-          <BookOpen size={54} strokeWidth={1.35} />
+          <BookOpen
+            size={54}
+            strokeWidth={1.35}
+          />
         </div>
       </section>
 
-      {/* Search & count */}
+      {/* =========================================
+          SEARCH & COUNT
+          ========================================= */}
+
       <section className="resources-toolbar">
         <div className="resources-search">
           <Search
@@ -159,7 +215,10 @@ export default function Resources() {
               onClick={clearSearch}
               aria-label="مسح البحث"
             >
-              <X size={16} aria-hidden="true" />
+              <X
+                size={16}
+                aria-hidden="true"
+              />
             </button>
           )}
         </div>
@@ -175,7 +234,10 @@ export default function Resources() {
         </span>
       </section>
 
-      {/* Categories */}
+      {/* =========================================
+          CATEGORIES
+          ========================================= */}
+
       <section
         className="resources-filters"
         aria-label="تصفية المصادر حسب التصنيف"
@@ -226,7 +288,10 @@ export default function Resources() {
         </div>
       </section>
 
-      {/* Content */}
+      {/* =========================================
+          CONTENT
+          ========================================= */}
+
       <section className="resources-content">
         <div className="resources-section-heading">
           <div>
@@ -245,63 +310,142 @@ export default function Resources() {
           </span>
         </div>
 
-        {filteredResources.length > 0 ? (
-          <div className="resource-grid">
-            {filteredResources.map((resource, index) => {
-              const Icon = resource.icon;
+        {/* =========================================
+            LOADING
+            ========================================= */}
 
-              return (
-                <article
-                  className="resource-card"
-                  key={resource.id}
-                  style={
-                    {
-                      "--resource-index": index,
-                    } as CSSProperties
-                  }
-                >
-                  <div className="resource-card__top">
-                    <div
-                      className="resource-card__icon"
-                      aria-hidden="true"
-                    >
-                      <Icon size={23} />
+        {isLoading ? (
+          <div className="resources-empty">
+            <div
+              className="resources-empty__icon"
+              aria-hidden="true"
+            >
+              <Loader2
+                size={25}
+                className="resources-loading-icon"
+              />
+            </div>
+
+            <span className="resources-empty__eyebrow">
+              جاري التحميل
+            </span>
+
+            <h3>جاري تحميل المصادر</h3>
+
+            <p>
+              لحظات ونجهز لك أحدث المصادر والأدلة
+              المتاحة على المنصة.
+            </p>
+          </div>
+        ) : error ? (
+          /* =========================================
+             ERROR
+             ========================================= */
+
+          <div className="resources-empty">
+            <div
+              className="resources-empty__icon"
+              aria-hidden="true"
+            >
+              <AlertCircle
+                size={25}
+              />
+            </div>
+
+            <span className="resources-empty__eyebrow">
+              حدث خطأ
+            </span>
+
+            <h3>تعذر تحميل المصادر</h3>
+
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={() => {
+                void loadResources();
+              }}
+            >
+              المحاولة مرة أخرى
+            </button>
+          </div>
+        ) : filteredResources.length > 0 ? (
+          /* =========================================
+             RESOURCE GRID
+             ========================================= */
+
+          <div className="resource-grid">
+            {filteredResources.map(
+              (resource, index) => {
+                const Icon = getResourceIcon(
+                  resource.icon
+                );
+
+                return (
+                  <article
+                    className="resource-card"
+                    key={resource.id}
+                    style={
+                      {
+                        "--resource-index": index,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="resource-card__top">
+                      <div
+                        className="resource-card__icon"
+                        aria-hidden="true"
+                      >
+                        <Icon size={23} />
+                      </div>
+
+                      <span className="resource-card__category">
+                        {resource.category}
+                      </span>
                     </div>
 
-                    <span className="resource-card__category">
-                      {resource.category}
-                    </span>
-                  </div>
+                    <div className="resource-card__body">
+                      <h2>
+                        {resource.title}
+                      </h2>
 
-                  <div className="resource-card__body">
-                    <h2>{resource.title}</h2>
+                      <p>
+                        {resource.description}
+                      </p>
+                    </div>
 
-                    <p>{resource.description}</p>
-                  </div>
+                    <div className="resource-card__footer">
+                      <button
+                        type="button"
+                        className="resource-card__action"
+                        disabled
+                        aria-label={`${resource.title} — قريبًا`}
+                      >
+                        <span>
+                          استكشاف
+                        </span>
 
-                  <div className="resource-card__footer">
-                    <button
-                      type="button"
-                      className="resource-card__action"
-                      disabled
-                      aria-label={`${resource.title} — قريبًا`}
-                    >
-                      <span>استكشاف</span>
-                      <ArrowLeft
-                        size={16}
-                        aria-hidden="true"
-                      />
-                    </button>
+                        <ArrowLeft
+                          size={16}
+                          aria-hidden="true"
+                        />
+                      </button>
 
-                    <span className="resource-card__status">
-                      قريبًا
-                    </span>
-                  </div>
-                </article>
-              );
-            })}
+                      <span className="resource-card__status">
+                        قريبًا
+                      </span>
+                    </div>
+                  </article>
+                );
+              }
+            )}
           </div>
         ) : (
+          /* =========================================
+             EMPTY SEARCH RESULT
+             ========================================= */
+
           <div className="resources-empty">
             <div
               className="resources-empty__icon"
@@ -314,11 +458,13 @@ export default function Resources() {
               لا توجد نتائج
             </span>
 
-            <h3>لم نجد مصادر مطابقة</h3>
+            <h3>
+              لم نجد مصادر مطابقة
+            </h3>
 
             <p>
-              جرّب استخدام كلمة مختلفة أو غيّر التصنيف
-              لعرض المزيد من المصادر.
+              جرّب استخدام كلمة مختلفة أو غيّر
+              التصنيف لعرض المزيد من المصادر.
             </p>
 
             <button
@@ -332,7 +478,10 @@ export default function Resources() {
         )}
       </section>
 
-      {/* Bottom note */}
+      {/* =========================================
+          BOTTOM NOTE
+          ========================================= */}
+
       <section className="resources-note">
         <div
           className="resources-note__icon"
@@ -342,11 +491,13 @@ export default function Resources() {
         </div>
 
         <div>
-          <strong>المصادر ستتوسع باستمرار</strong>
+          <strong>
+            المصادر ستتوسع باستمرار
+          </strong>
 
           <p>
-            سيتم إضافة المزيد من الأدلة والمراجع والروابط
-            المفيدة للطلاب مع تطور المنصة.
+            سيتم إضافة المزيد من الأدلة والمراجع
+            والروابط المفيدة للطلاب مع تطور المنصة.
           </p>
         </div>
       </section>

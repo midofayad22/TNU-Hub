@@ -4,11 +4,19 @@ import {
   Megaphone,
   Save,
   LoaderCircle,
+  ShieldCheck,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
 import { useEffect, useState } from "react";
 
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 
 type AnnouncementStatus = "منشور" | "مسودة";
 
@@ -31,19 +39,80 @@ export default function AdminAnnouncementForm() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const { profile } = useAuth();
+
   const isEditMode = Boolean(id);
+  const isRootAdmin = profile?.role === "root_admin";
 
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("أكاديمي");
-  const [target, setTarget] = useState("جميع الطلاب");
+  const [category, setCategory] =
+    useState("أكاديمي");
+  const [target, setTarget] =
+    useState("جميع الطلاب");
   const [date, setDate] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] =
     useState<AnnouncementStatus>("منشور");
 
-  const [loading, setLoading] = useState(isEditMode);
+  const [loading, setLoading] =
+    useState(isEditMode);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const [canAdd, setCanAdd] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+
+  /*
+   * =========================================================
+   * LOAD PERMISSIONS
+   * =========================================================
+   */
+
+  useEffect(() => {
+    if (!profile?.id) {
+      return;
+    }
+
+    if (isRootAdmin) {
+      setCanAdd(true);
+      setCanEdit(true);
+      return;
+    }
+
+    const loadPermissions = async () => {
+      const { data, error: permissionError } =
+        await supabase
+          .from("admin_permissions")
+          .select(
+            "can_add, can_edit, can_view"
+          )
+          .eq("admin_id", profile.id)
+          .eq("section", "announcements")
+          .maybeSingle();
+
+      if (permissionError) {
+        console.error(
+          "Failed to load announcement permissions:",
+          permissionError
+        );
+
+        setCanAdd(false);
+        setCanEdit(false);
+        return;
+      }
+
+      if (!data?.can_view) {
+        setError(
+          "لا تملك صلاحية الوصول إلى قسم الإعلانات."
+        );
+      }
+
+      setCanAdd(Boolean(data?.can_add));
+      setCanEdit(Boolean(data?.can_edit));
+    };
+
+    loadPermissions();
+  }, [profile?.id, isRootAdmin]);
 
   /*
    * =========================================================
@@ -66,21 +135,22 @@ export default function AdminAnnouncementForm() {
       setLoading(true);
       setError("");
 
-      const { data, error: fetchError } = await supabase
-        .from("announcements")
-        .select(
-          `
-            id,
-            title,
-            category,
-            content,
-            date,
-            target,
-            status
-          `
-        )
-        .eq("id", id)
-        .single();
+      const { data, error: fetchError } =
+        await supabase
+          .from("announcements")
+          .select(
+            `
+              id,
+              title,
+              category,
+              content,
+              date,
+              target,
+              status
+            `
+          )
+          .eq("id", id)
+          .single();
 
       if (fetchError) {
         console.error(
@@ -100,19 +170,20 @@ export default function AdminAnnouncementForm() {
         data as AnnouncementRecord;
 
       setTitle(announcement.title ?? "");
+
       setCategory(
         announcement.category ?? "أكاديمي"
       );
-      setContent(announcement.content ?? "");
+
+      setContent(
+        announcement.content ?? ""
+      );
+
       setDate(announcement.date ?? "");
+
       setStatus(
         announcement.status ?? "منشور"
       );
-
-      /*
-       * Convert JSON target into the simple
-       * options used by this form.
-       */
 
       if (!announcement.target) {
         setTarget("جميع الطلاب");
@@ -174,6 +245,58 @@ export default function AdminAnnouncementForm() {
 
   /*
    * =========================================================
+   * CREATE REQUEST
+   * =========================================================
+   */
+
+  const createActionRequest = async (
+    userId: string,
+    action: "add" | "edit"
+  ) => {
+    const payload = {
+      title: title.trim(),
+      category,
+      content: content.trim(),
+      date,
+      target: buildTarget(),
+      status,
+      created_by: userId,
+    };
+
+    const { error: requestError } =
+      await supabase
+        .from("admin_action_requests")
+        .insert({
+          admin_id: userId,
+          section: "announcements",
+          action,
+          target_id: id ?? null,
+          payload,
+          reason:
+            action === "add"
+              ? `طلب إضافة إعلان: ${title.trim()}`
+              : `طلب تعديل إعلان: ${title.trim()}`,
+          status: "pending",
+        });
+
+    if (requestError) {
+      console.error(
+        "Failed to create announcement action request:",
+        requestError
+      );
+
+      setError(
+        "تعذر إرسال الطلب إلى Root Admin. حاول مرة أخرى."
+      );
+
+      return false;
+    }
+
+    return true;
+  };
+
+  /*
+   * =========================================================
    * SAVE
    * =========================================================
    */
@@ -183,18 +306,45 @@ export default function AdminAnnouncementForm() {
   ) => {
     event.preventDefault();
 
+    if (!profile?.id) {
+      setError(
+        "تعذر تحديد حساب المشرف الحالي."
+      );
+      return;
+    }
+
     if (!title.trim()) {
-      setError("من فضلك اكتب عنوان الإعلان.");
+      setError(
+        "من فضلك اكتب عنوان الإعلان."
+      );
       return;
     }
 
     if (!content.trim()) {
-      setError("من فضلك اكتب محتوى الإعلان.");
+      setError(
+        "من فضلك اكتب محتوى الإعلان."
+      );
       return;
     }
 
     if (!date) {
-      setError("من فضلك اختر تاريخ الإعلان.");
+      setError(
+        "من فضلك اختر تاريخ الإعلان."
+      );
+      return;
+    }
+
+    if (isEditMode && !canEdit) {
+      setError(
+        "لا تملك صلاحية تعديل الإعلانات."
+      );
+      return;
+    }
+
+    if (!isEditMode && !canAdd) {
+      setError(
+        "لا تملك صلاحية إضافة الإعلانات."
+      );
       return;
     }
 
@@ -202,95 +352,112 @@ export default function AdminAnnouncementForm() {
     setError("");
 
     /*
-     * Get currently logged-in admin.
+     * =======================================================
+     * ROOT ADMIN
+     * تنفيذ مباشر
+     * =======================================================
      */
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    if (isRootAdmin) {
+      const payload = {
+        title: title.trim(),
+        category,
+        content: content.trim(),
+        date,
+        target: buildTarget(),
+        status,
+        created_by: profile.id,
+      };
 
-    if (!user) {
-      setError(
-        "انتهت جلسة تسجيل الدخول. سجل الدخول مرة أخرى."
+      /*
+       * EDIT
+       */
+
+      if (isEditMode && id) {
+        const { error: updateError } =
+          await supabase
+            .from("announcements")
+            .update({
+              title: payload.title,
+              category: payload.category,
+              content: payload.content,
+              date: payload.date,
+              target: payload.target,
+              status: payload.status,
+            })
+            .eq("id", id);
+
+        if (updateError) {
+          console.error(
+            "Failed to update announcement:",
+            updateError
+          );
+
+          setError(
+            "تعذر حفظ تعديلات الإعلان. حاول مرة أخرى."
+          );
+
+          setSaving(false);
+          return;
+        }
+      }
+
+      /*
+       * CREATE
+       */
+
+      else {
+        const { error: insertError } =
+          await supabase
+            .from("announcements")
+            .insert(payload);
+
+        if (insertError) {
+          console.error(
+            "Failed to create announcement:",
+            insertError
+          );
+
+          setError(
+            "تعذر إضافة الإعلان. حاول مرة أخرى."
+          );
+
+          setSaving(false);
+          return;
+        }
+      }
+
+      navigate("/admin/announcements");
+      return;
+    }
+
+    /*
+     * =======================================================
+     * SUB ADMIN
+     * Request فقط
+     * =======================================================
+     */
+
+    const action = isEditMode
+      ? "edit"
+      : "add";
+
+    const requestCreated =
+      await createActionRequest(
+        profile.id,
+        action
       );
 
+    if (!requestCreated) {
       setSaving(false);
       return;
     }
 
-    const payload = {
-      title: title.trim(),
-      category,
-      content: content.trim(),
-      date,
-      target: buildTarget(),
-      status,
-      created_by: user.id,
-    };
-
-    /*
-     * =======================================================
-     * EDIT
-     * =======================================================
-     */
-
-    if (isEditMode && id) {
-      const { error: updateError } = await supabase
-        .from("announcements")
-        .update({
-          title: payload.title,
-          category: payload.category,
-          content: payload.content,
-          date: payload.date,
-          target: payload.target,
-          status: payload.status,
-        })
-        .eq("id", id);
-
-      if (updateError) {
-        console.error(
-          "Failed to update announcement:",
-          updateError
-        );
-
-        setError(
-          "تعذر حفظ تعديلات الإعلان. حاول مرة أخرى."
-        );
-
-        setSaving(false);
-        return;
-      }
-    }
-
-    /*
-     * =======================================================
-     * CREATE
-     * =======================================================
-     */
-
-    else {
-      const { error: insertError } = await supabase
-        .from("announcements")
-        .insert(payload);
-
-      if (insertError) {
-        console.error(
-          "Failed to create announcement:",
-          insertError
-        );
-
-        setError(
-          "تعذر إضافة الإعلان. تأكد من صلاحيات المشرف وحاول مرة أخرى."
-        );
-
-        setSaving(false);
-        return;
-      }
-    }
-
-    /*
-     * Success
-     */
+    window.alert(
+      isEditMode
+        ? "تم إرسال طلب تعديل الإعلان إلى Root Admin للمراجعة."
+        : "تم إرسال طلب إضافة الإعلان إلى Root Admin للمراجعة."
+    );
 
     navigate("/admin/announcements");
   };
@@ -344,7 +511,9 @@ export default function AdminAnnouncementForm() {
           >
             <ArrowRight size={17} />
 
-            <span>العودة للإعلانات</span>
+            <span>
+              العودة للإعلانات
+            </span>
           </Link>
 
           <span className="admin-page__kicker">
@@ -359,8 +528,12 @@ export default function AdminAnnouncementForm() {
 
           <p>
             {isEditMode
-              ? "قم بتعديل بيانات الإعلان ثم احفظ التغييرات."
-              : "أضف إعلانًا جديدًا ليظهر للطلاب على المنصة."}
+              ? isRootAdmin
+                ? "قم بتعديل بيانات الإعلان ثم احفظ التغييرات."
+                : "قم بتعديل بيانات الإعلان ثم أرسل طلب التعديل إلى Root Admin."
+              : isRootAdmin
+              ? "أضف إعلانًا جديدًا ليظهر للطلاب على المنصة."
+              : "أضف بيانات الإعلان لإرسال طلب الإضافة إلى Root Admin."}
           </p>
         </div>
       </header>
@@ -374,6 +547,8 @@ export default function AdminAnnouncementForm() {
           className="admin-alert admin-alert--error"
           role="alert"
         >
+          <ShieldCheck size={18} />
+
           <span>{error}</span>
         </div>
       )}
@@ -386,8 +561,6 @@ export default function AdminAnnouncementForm() {
         className="admin-form-panel"
         onSubmit={handleSubmit}
       >
-        {/* Intro */}
-
         <div className="admin-form-panel__intro">
           <div className="admin-form-panel__icon">
             <Megaphone size={22} />
@@ -404,9 +577,7 @@ export default function AdminAnnouncementForm() {
         </div>
 
         <div className="admin-form-grid">
-          {/* =================================================
-              TITLE
-          ================================================== */}
+          {/* TITLE */}
 
           <label className="admin-form-field admin-form-field--full">
             <span>عنوان الإعلان</span>
@@ -423,9 +594,7 @@ export default function AdminAnnouncementForm() {
             />
           </label>
 
-          {/* =================================================
-              CATEGORY
-          ================================================== */}
+          {/* CATEGORY */}
 
           <label className="admin-form-field">
             <span>التصنيف</span>
@@ -433,7 +602,9 @@ export default function AdminAnnouncementForm() {
             <select
               value={category}
               onChange={(event) =>
-                setCategory(event.target.value)
+                setCategory(
+                  event.target.value
+                )
               }
             >
               <option value="أكاديمي">
@@ -454,9 +625,7 @@ export default function AdminAnnouncementForm() {
             </select>
           </label>
 
-          {/* =================================================
-              TARGET
-          ================================================== */}
+          {/* TARGET */}
 
           <label className="admin-form-field">
             <span>الفئة المستهدفة</span>
@@ -464,7 +633,9 @@ export default function AdminAnnouncementForm() {
             <select
               value={target}
               onChange={(event) =>
-                setTarget(event.target.value)
+                setTarget(
+                  event.target.value
+                )
               }
             >
               <option value="جميع الطلاب">
@@ -481,9 +652,7 @@ export default function AdminAnnouncementForm() {
             </select>
           </label>
 
-          {/* =================================================
-              DATE
-          ================================================== */}
+          {/* DATE */}
 
           <label className="admin-form-field">
             <span>تاريخ الإعلان</span>
@@ -495,16 +664,16 @@ export default function AdminAnnouncementForm() {
                 type="date"
                 value={date}
                 onChange={(event) =>
-                  setDate(event.target.value)
+                  setDate(
+                    event.target.value
+                  )
                 }
                 required
               />
             </div>
           </label>
 
-          {/* =================================================
-              STATUS
-          ================================================== */}
+          {/* STATUS */}
 
           <label className="admin-form-field">
             <span>الحالة</span>
@@ -528,9 +697,7 @@ export default function AdminAnnouncementForm() {
             </select>
           </label>
 
-          {/* =================================================
-              CONTENT
-          ================================================== */}
+          {/* CONTENT */}
 
           <label className="admin-form-field admin-form-field--full">
             <span>محتوى الإعلان</span>
@@ -538,7 +705,9 @@ export default function AdminAnnouncementForm() {
             <textarea
               value={content}
               onChange={(event) =>
-                setContent(event.target.value)
+                setContent(
+                  event.target.value
+                )
               }
               placeholder="اكتب تفاصيل الإعلان هنا..."
               rows={9}
@@ -547,14 +716,15 @@ export default function AdminAnnouncementForm() {
             />
 
             <small>
-              {content.length.toLocaleString("ar-EG")} / 10,000
+              {content.length.toLocaleString(
+                "ar-EG"
+              )}{" "}
+              / 10,000
             </small>
           </label>
         </div>
 
-        {/* ===================================================
-            ACTIONS
-        ==================================================== */}
+        {/* ACTIONS */}
 
         <div className="admin-form-panel__actions">
           <Link
@@ -580,10 +750,14 @@ export default function AdminAnnouncementForm() {
 
             <span>
               {saving
-                ? "جارٍ الحفظ..."
+                ? "جارٍ الإرسال..."
+                : isRootAdmin
+                ? isEditMode
+                  ? "حفظ التعديلات"
+                  : "إضافة الإعلان"
                 : isEditMode
-                ? "حفظ التعديلات"
-                : "إضافة الإعلان"}
+                ? "إرسال طلب التعديل"
+                : "إرسال طلب الإضافة"}
             </span>
           </button>
         </div>

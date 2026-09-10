@@ -1,6 +1,7 @@
 import { Route, Routes, Link } from "react-router-dom";
 
 import Login from "../pages/Login/Login";
+import Register from "../pages/Register/Register";
 
 import Home from "../pages/home/Home";
 import Explore from "../pages/Explore/Explore";
@@ -31,12 +32,17 @@ import AdminLayout from "../components/admin/AdminLayout";
 
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import Admins from "../pages/Admin/Admins";
+import AdminApprovals from "../pages/Admin/AdminApprovals";
 
 import AdminAnnouncements from "../pages/Admin/AdminAnnouncements";
 import AdminAnnouncementForm from "../pages/Admin/AdminAnnouncementForm";
 
 import AdminEvents from "../pages/Admin/AdminEvents";
 import AdminEventForm from "../pages/Admin/AdminEventForm";
+
+import AdminFaculties from "../pages/Admin/AdminFaculties";
+import AdminStudents from "../pages/Admin/AdminStudents";
+import AdminResources from "../pages/Admin/AdminResources";
 
 /* =========================================================
    404
@@ -102,6 +108,7 @@ function AdminPage({
 export default function AppRoutes() {
   return (
     <Routes>
+
       {/* =====================================================
           AUTH
       ====================================================== */}
@@ -109,6 +116,11 @@ export default function AppRoutes() {
       <Route
         path="/login"
         element={<Login />}
+      />
+
+      <Route
+        path="/register"
+        element={<Register />}
       />
 
       {/* =====================================================
@@ -241,6 +253,17 @@ export default function AppRoutes() {
         }
       />
 
+      {/* Approval Center */}
+
+      <Route
+        path="/admin/approvals"
+        element={
+          <AdminPage>
+            <AdminApprovals />
+          </AdminPage>
+        }
+      />
+
       {/* =====================================================
           ADMIN — ANNOUNCEMENTS
       ====================================================== */}
@@ -316,6 +339,45 @@ export default function AppRoutes() {
       />
 
       {/* =====================================================
+          ADMIN — FACULTIES & PROGRAMS
+      ====================================================== */}
+
+      <Route
+        path="/admin/faculties"
+        element={
+          <AdminPage>
+            <AdminFaculties />
+          </AdminPage>
+        }
+      />
+
+      {/* =====================================================
+          ADMIN — STUDENTS
+      ====================================================== */}
+
+      <Route
+        path="/admin/students"
+        element={
+          <AdminPage>
+            <AdminStudents />
+          </AdminPage>
+        }
+      />
+
+      {/* =====================================================
+          ADMIN — RESOURCES
+      ====================================================== */}
+
+      <Route
+        path="/admin/resources"
+        element={
+          <AdminPage>
+            <AdminResources />
+          </AdminPage>
+        }
+      />
+
+      {/* =====================================================
           404
       ====================================================== */}
 
@@ -323,6 +385,7 @@ export default function AppRoutes() {
         path="*"
         element={<NotFound />}
       />
+
     </Routes>
   );
 }

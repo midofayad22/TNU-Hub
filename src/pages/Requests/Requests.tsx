@@ -3,18 +3,34 @@ import {
   Clock3,
   FileText,
   Filter,
+  Loader2,
   Plus,
   Search,
   X,
 } from "lucide-react";
 import {
+  useEffect,
   useMemo,
   useState,
   type CSSProperties,
 } from "react";
 import { Link } from "react-router-dom";
 
-import { requests } from "../../data/requests";
+import { supabase } from "../../lib/supabase";
+
+type RequestStatus =
+  | "قيد الانتظار"
+  | "قيد المراجعة"
+  | "تم الحل";
+
+interface RequestItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  status: RequestStatus;
+  created_at: string;
+}
 
 const statuses = [
   "الكل",
@@ -23,16 +39,89 @@ const statuses = [
   "تم الحل",
 ];
 
-const categories = [
-  "الكل",
-  ...new Set(requests.map((request) => request.category)),
-];
-
 export default function Requests() {
+  const [requests, setRequests] = useState<RequestItem[]>(
+    [],
+  );
+
   const [search, setSearch] = useState("");
-  const [activeStatus, setActiveStatus] = useState("الكل");
+  const [activeStatus, setActiveStatus] =
+    useState("الكل");
   const [activeCategory, setActiveCategory] =
     useState("الكل");
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadRequests = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError) {
+          throw userError;
+        }
+
+        if (!user) {
+          setRequests([]);
+          setError(
+            "يجب تسجيل الدخول حتى تتمكن من عرض طلباتك.",
+          );
+          return;
+        }
+
+        const { data, error: requestsError } =
+          await supabase
+            .from("requests")
+            .select(
+              "id, title, category, description, status, created_at",
+            )
+            .eq("user_id", user.id)
+            .order("created_at", {
+              ascending: false,
+            });
+
+        if (requestsError) {
+          throw requestsError;
+        }
+
+        setRequests(
+          (data ?? []) as RequestItem[],
+        );
+      } catch (err) {
+        console.error(
+          "Failed to load requests:",
+          err,
+        );
+
+        setError(
+          "حدث خطأ أثناء تحميل طلباتك. حاول مرة أخرى.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadRequests();
+  }, []);
+
+  const categories = useMemo(() => {
+    const uniqueCategories = Array.from(
+      new Set(
+        requests.map(
+          (request) => request.category,
+        ),
+      ),
+    );
+
+    return ["الكل", ...uniqueCategories];
+  }, [requests]);
 
   const filteredRequests = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -42,8 +131,12 @@ export default function Requests() {
         !query ||
         request.id.toLowerCase().includes(query) ||
         request.title.toLowerCase().includes(query) ||
-        request.description.toLowerCase().includes(query) ||
-        request.category.toLowerCase().includes(query);
+        request.description
+          .toLowerCase()
+          .includes(query) ||
+        request.category
+          .toLowerCase()
+          .includes(query);
 
       const matchesStatus =
         activeStatus === "الكل" ||
@@ -59,22 +152,29 @@ export default function Requests() {
         matchesCategory
       );
     });
-  }, [search, activeStatus, activeCategory]);
+  }, [
+    requests,
+    search,
+    activeStatus,
+    activeCategory,
+  ]);
 
   const pendingCount = useMemo(
     () =>
       requests.filter(
-        (item) => item.status === "قيد الانتظار",
+        (item) =>
+          item.status === "قيد الانتظار",
       ).length,
-    [],
+    [requests],
   );
 
   const reviewingCount = useMemo(
     () =>
       requests.filter(
-        (item) => item.status === "قيد المراجعة",
+        (item) =>
+          item.status === "قيد المراجعة",
       ).length,
-    [],
+    [requests],
   );
 
   const solvedCount = useMemo(
@@ -82,7 +182,7 @@ export default function Requests() {
       requests.filter(
         (item) => item.status === "تم الحل",
       ).length,
-    [],
+    [requests],
   );
 
   const clearFilters = () => {
@@ -96,8 +196,24 @@ export default function Requests() {
     activeStatus !== "الكل" ||
     activeCategory !== "الكل";
 
+  const formatDate = (date: string) => {
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return date;
+    }
+
+    return new Intl.DateTimeFormat("ar-EG", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(parsedDate);
+  };
+
   return (
-    <main className="page-shell requests-page" dir="rtl">
+    <main
+      className="page-shell requests-page"
+      dir="rtl"
+    >
       {/* Header */}
       <section className="requests-header">
         <div className="requests-header__content">
@@ -130,7 +246,10 @@ export default function Requests() {
           to="/requests/new"
           className="requests-new-button"
         >
-          <Plus size={18} aria-hidden="true" />
+          <Plus
+            size={18}
+            aria-hidden="true"
+          />
           <span>طلب جديد</span>
         </Link>
       </section>
@@ -332,7 +451,68 @@ export default function Requests() {
           )}
         </div>
 
-        {filteredRequests.length > 0 ? (
+        {isLoading ? (
+          <div className="requests-empty">
+            <div className="requests-empty__icon">
+              <Loader2
+                size={25}
+                className="animate-spin"
+                aria-hidden="true"
+              />
+            </div>
+
+            <span className="requests-empty__eyebrow">
+              جاري التحميل
+            </span>
+
+            <h3>
+              جاري تحميل طلباتك
+            </h3>
+
+            <p>
+              لحظات ونظهر لك جميع الطلبات الخاصة
+              بحسابك.
+            </p>
+          </div>
+        ) : error ? (
+          <div className="requests-empty">
+            <div className="requests-empty__icon">
+              <X
+                size={25}
+                aria-hidden="true"
+              />
+            </div>
+
+            <span className="requests-empty__eyebrow">
+              حدث خطأ
+            </span>
+
+            <h3>
+              تعذر تحميل الطلبات
+            </h3>
+
+            <p>{error}</p>
+
+            <div className="requests-empty__actions">
+              <button
+                type="button"
+                className="button button--secondary"
+                onClick={() =>
+                  window.location.reload()
+                }
+              >
+                إعادة المحاولة
+              </button>
+
+              <Link
+                to="/requests/new"
+                className="button button--primary"
+              >
+                إنشاء طلب جديد
+              </Link>
+            </div>
+          </div>
+        ) : filteredRequests.length > 0 ? (
           <div className="request-list">
             {filteredRequests.map(
               (request, index) => (
@@ -365,12 +545,16 @@ export default function Requests() {
                       {request.category}
                     </span>
 
-                    <p>{request.description}</p>
+                    <p>
+                      {request.description}
+                    </p>
                   </div>
 
                   <div className="request-card__bottom">
                     <span>
-                      {request.createdAt}
+                      {formatDate(
+                        request.created_at,
+                      )}
                     </span>
 
                     <span className="request-card__details">
@@ -398,22 +582,27 @@ export default function Requests() {
             </span>
 
             <h3>
-              لم نجد أي طلبات مطابقة
+              {hasFilters
+                ? "لم نجد أي طلبات مطابقة"
+                : "لم ترسل أي طلبات بعد"}
             </h3>
 
             <p>
-              جرّب استخدام كلمة مختلفة أو غيّر الفلاتر
-              لعرض المزيد من الطلبات.
+              {hasFilters
+                ? "جرّب استخدام كلمة مختلفة أو غيّر الفلاتر لعرض المزيد من الطلبات."
+                : "يمكنك إنشاء طلب جديد وسيظهر هنا تلقائيًا بعد إرساله."}
             </p>
 
             <div className="requests-empty__actions">
-              <button
-                type="button"
-                className="button button--secondary"
-                onClick={clearFilters}
-              >
-                مسح الفلاتر
-              </button>
+              {hasFilters && (
+                <button
+                  type="button"
+                  className="button button--secondary"
+                  onClick={clearFilters}
+                >
+                  مسح الفلاتر
+                </button>
+              )}
 
               <Link
                 to="/requests/new"

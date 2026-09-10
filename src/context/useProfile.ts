@@ -7,7 +7,7 @@ export function useProfile() {
 
   if (!context) {
     throw new Error(
-      "useProfile must be used inside ProfileProvider"
+      "useProfile must be used inside ProfileProvider",
     );
   }
 

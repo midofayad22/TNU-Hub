@@ -6,16 +6,20 @@ import {
   Search,
   Trash2,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 
 interface AnnouncementTarget {
   faculty?: string;
   program?: string;
   academicYear?: string;
+  type?: "all" | "faculty" | "year";
+  value?: string;
 }
 
 interface AdminAnnouncement {
@@ -47,6 +51,14 @@ const getTargetLabel = (target: AnnouncementTarget) => {
     return "جميع الطلاب";
   }
 
+  if (target.type === "faculty" && target.value) {
+    return target.value;
+  }
+
+  if (target.type === "year" && target.value) {
+    return target.value;
+  }
+
   const parts: string[] = [];
 
   if (target.faculty) {
@@ -65,14 +77,67 @@ const getTargetLabel = (target: AnnouncementTarget) => {
 };
 
 export default function AdminAnnouncements() {
+  const { profile } = useAuth();
+
   const [search, setSearch] = useState("");
   const [announcements, setAnnouncements] = useState<
     AdminAnnouncement[]
   >([]);
 
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(
+    null
+  );
   const [error, setError] = useState("");
+
+  const isRootAdmin = profile?.role === "root_admin";
+
+  const [canView, setCanView] = useState(false);
+  const [canAdd, setCanAdd] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
+
+  const loadPermissions = useCallback(async () => {
+    if (!profile?.id) {
+      return;
+    }
+
+    if (isRootAdmin) {
+      setCanView(true);
+      setCanAdd(true);
+      setCanEdit(true);
+      setCanDelete(true);
+      return;
+    }
+
+    const { data, error: permissionError } = await supabase
+      .from("admin_permissions")
+      .select(
+        "can_view, can_add, can_edit, can_delete"
+      )
+      .eq("admin_id", profile.id)
+      .eq("section", "announcements")
+      .maybeSingle();
+
+    if (permissionError) {
+      console.error(
+        "Failed to load announcement permissions:",
+        permissionError
+      );
+
+      setCanView(false);
+      setCanAdd(false);
+      setCanEdit(false);
+      setCanDelete(false);
+
+      return;
+    }
+
+    setCanView(Boolean(data?.can_view));
+    setCanAdd(Boolean(data?.can_add));
+    setCanEdit(Boolean(data?.can_edit));
+    setCanDelete(Boolean(data?.can_delete));
+  }, [profile?.id, isRootAdmin]);
 
   const loadAnnouncements = useCallback(async () => {
     setLoading(true);
@@ -86,6 +151,7 @@ export default function AdminAnnouncements() {
           title,
           category,
           content,
+          date,
           target,
           status,
           created_at,
@@ -119,6 +185,10 @@ export default function AdminAnnouncements() {
   }, []);
 
   useEffect(() => {
+    loadPermissions();
+  }, [loadPermissions]);
+
+  useEffect(() => {
     loadAnnouncements();
   }, [loadAnnouncements]);
 
@@ -147,9 +217,65 @@ export default function AdminAnnouncements() {
     });
   }, [announcements, search]);
 
+  const createDeleteRequest = async (
+    announcement: AdminAnnouncement
+  ) => {
+    if (!profile?.id) {
+      setError(
+        "تعذر تحديد حساب المشرف الحالي."
+      );
+      return;
+    }
+
+    const { error: requestError } = await supabase
+      .from("admin_action_requests")
+      .insert({
+        admin_id: profile.id,
+        section: "announcements",
+        action: "delete",
+        target_id: announcement.id,
+        payload: {
+          id: announcement.id,
+          title: announcement.title,
+          category: announcement.category,
+          content: announcement.content,
+          date: announcement.date,
+          target: announcement.target,
+          status: announcement.status,
+        },
+        reason: `طلب حذف الإعلان: ${announcement.title}`,
+        status: "pending",
+      });
+
+    if (requestError) {
+      console.error(
+        "Failed to create announcement delete request:",
+        requestError
+      );
+
+      setError(
+        "تعذر إرسال طلب حذف الإعلان. حاول مرة أخرى."
+      );
+
+      return;
+    }
+
+    window.alert(
+      "تم إرسال طلب حذف الإعلان إلى Root Admin للمراجعة."
+    );
+  };
+
   const handleDelete = async (id: string) => {
+    const announcement = announcements.find(
+      (item) => item.id === id
+    );
+
+    if (!announcement) {
+      return;
+    }
+
     const confirmed = window.confirm(
-      "هل أنت متأكد من حذف هذا الإعلان؟\n\nلا يمكن التراجع عن هذه العملية."
+      "هل أنت متأكد من طلب حذف هذا الإعلان؟\n\nسيتم إرسال الطلب إلى Root Admin للموافقة."
     );
 
     if (!confirmed) {
@@ -158,6 +284,12 @@ export default function AdminAnnouncements() {
 
     setDeletingId(id);
     setError("");
+
+    if (!isRootAdmin) {
+      await createDeleteRequest(announcement);
+      setDeletingId(null);
+      return;
+    }
 
     const { error: deleteError } = await supabase
       .from("announcements")
@@ -171,7 +303,7 @@ export default function AdminAnnouncements() {
       );
 
       setError(
-        "تعذر حذف الإعلان. تأكد من صلاحيات المشرف ثم حاول مرة أخرى."
+        "تعذر حذف الإعلان. حاول مرة أخرى."
       );
 
       setDeletingId(null);
@@ -180,12 +312,43 @@ export default function AdminAnnouncements() {
 
     setAnnouncements((current) =>
       current.filter(
-        (announcement) => announcement.id !== id
+        (item) => item.id !== id
       )
     );
 
     setDeletingId(null);
   };
+
+  if (!profile) {
+    return null;
+  }
+
+  if (!canView && !isRootAdmin) {
+    return (
+      <div className="admin-page" dir="rtl">
+        <section className="admin-panel admin-panel--empty">
+          <div className="admin-empty-state">
+            <div className="admin-empty-state__icon">
+              <ShieldCheck size={25} />
+            </div>
+
+            <h3>الوصول غير متاح</h3>
+
+            <p>
+              لا تملك صلاحية الوصول إلى قسم الإعلانات.
+            </p>
+
+            <Link
+              to="/admin"
+              className="admin-secondary-button"
+            >
+              العودة للوحة الإدارة
+            </Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page" dir="rtl">
@@ -223,14 +386,20 @@ export default function AdminAnnouncements() {
             <span>تحديث</span>
           </button>
 
-          <Link
-            to="/admin/announcements/new"
-            className="admin-primary-button"
-          >
-            <Plus size={18} />
+          {canAdd && (
+            <Link
+              to="/admin/announcements/new"
+              className="admin-primary-button"
+            >
+              <Plus size={18} />
 
-            <span>إضافة إعلان</span>
-          </Link>
+              <span>
+                {isRootAdmin
+                  ? "إضافة إعلان"
+                  : "طلب إضافة إعلان"}
+              </span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -337,15 +506,20 @@ export default function AdminAnnouncements() {
               >
                 إظهار جميع الإعلانات
               </button>
-            ) : (
+            ) : canAdd ? (
               <Link
                 to="/admin/announcements/new"
                 className="admin-primary-button"
               >
                 <Plus size={17} />
-                <span>إضافة أول إعلان</span>
+
+                <span>
+                  {isRootAdmin
+                    ? "إضافة أول إعلان"
+                    : "طلب إضافة أول إعلان"}
+                </span>
               </Link>
-            )}
+            ) : null}
           </div>
         ) : (
           /* =================================================
@@ -415,42 +589,52 @@ export default function AdminAnnouncements() {
                       </div>
 
                       <div className="admin-announcement-card__actions">
-                        <Link
-                          to={`/admin/announcements/${announcement.id}/edit`}
-                          className="admin-card-action admin-card-action--edit"
-                          aria-label={`تعديل ${announcement.title}`}
-                        >
-                          <Edit3 size={16} />
+                        {canEdit && (
+                          <Link
+                            to={`/admin/announcements/${announcement.id}/edit`}
+                            className="admin-card-action admin-card-action--edit"
+                            aria-label={`تعديل ${announcement.title}`}
+                          >
+                            <Edit3 size={16} />
 
-                          <span>تعديل</span>
-                        </Link>
+                            <span>
+                              {isRootAdmin
+                                ? "تعديل"
+                                : "طلب تعديل"}
+                            </span>
+                          </Link>
+                        )}
 
-                        <button
-                          type="button"
-                          className="admin-card-action admin-card-action--delete"
-                          onClick={() =>
-                            handleDelete(
-                              announcement.id
-                            )
-                          }
-                          disabled={isDeleting}
-                          aria-label={`حذف ${announcement.title}`}
-                        >
-                          {isDeleting ? (
-                            <RefreshCw
-                              size={16}
-                              className="is-spinning"
-                            />
-                          ) : (
-                            <Trash2 size={16} />
-                          )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            className="admin-card-action admin-card-action--delete"
+                            onClick={() =>
+                              handleDelete(
+                                announcement.id
+                              )
+                            }
+                            disabled={isDeleting}
+                            aria-label={`حذف ${announcement.title}`}
+                          >
+                            {isDeleting ? (
+                              <RefreshCw
+                                size={16}
+                                className="is-spinning"
+                              />
+                            ) : (
+                              <Trash2 size={16} />
+                            )}
 
-                          <span>
-                            {isDeleting
-                              ? "جارٍ الحذف..."
-                              : "حذف"}
-                          </span>
-                        </button>
+                            <span>
+                              {isDeleting
+                                ? "جارٍ الإرسال..."
+                                : isRootAdmin
+                                ? "حذف"
+                                : "طلب حذف"}
+                            </span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </article>

@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Edit3,
   GraduationCap,
+  Loader2,
   Save,
   Settings,
   User,
@@ -41,12 +42,26 @@ const academicYears = [
 ];
 
 export default function Profile() {
-  const { profile, updateProfile } = useProfile();
+  const {
+    profile,
+    updateProfile,
+    isLoading,
+    error,
+  } = useProfile();
 
   const [formData, setFormData] =
     useState<ProfileData>(emptyProfile);
 
   const [isEditing, setIsEditing] =
+    useState(false);
+
+  const [isSaving, setIsSaving] =
+    useState(false);
+
+  const [saveError, setSaveError] =
+    useState<string | null>(null);
+
+  const [saveSuccess, setSaveSuccess] =
     useState(false);
 
   const selectedFaculty = useMemo(
@@ -66,7 +81,9 @@ export default function Profile() {
     profile.faculty,
     profile.program,
     profile.academicYear,
-  ].filter((value) => value.trim() !== "").length;
+  ].filter(
+    (value) => value.trim() !== "",
+  ).length;
 
   const completionPercentage =
     completedFields * 25;
@@ -85,10 +102,14 @@ export default function Profile() {
       academicYear: profile.academicYear,
     });
 
+    setSaveError(null);
+    setSaveSuccess(false);
     setIsEditing(true);
   };
 
   const closeEditProfile = () => {
+    if (isSaving) return;
+
     setFormData({
       name: profile.name,
       faculty: profile.faculty,
@@ -96,10 +117,12 @@ export default function Profile() {
       academicYear: profile.academicYear,
     });
 
+    setSaveError(null);
+    setSaveSuccess(false);
     setIsEditing(false);
   };
 
-  const saveProfile = (
+  const saveProfile = async (
     event?: FormEvent<HTMLFormElement>,
   ) => {
     event?.preventDefault();
@@ -108,7 +131,8 @@ export default function Profile() {
       name: formData.name.trim(),
       faculty: formData.faculty.trim(),
       program: formData.program.trim(),
-      academicYear: formData.academicYear.trim(),
+      academicYear:
+        formData.academicYear.trim(),
     };
 
     if (
@@ -117,11 +141,43 @@ export default function Profile() {
       !cleanedProfile.program ||
       !cleanedProfile.academicYear
     ) {
+      setSaveError(
+        "من فضلك أكمل جميع بيانات الملف الشخصي.",
+      );
+
       return;
     }
 
-    updateProfile(cleanedProfile);
-    setIsEditing(false);
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      await updateProfile(cleanedProfile);
+
+      setFormData(cleanedProfile);
+      setSaveSuccess(true);
+
+      /*
+       * ننتظر لحظة بسيطة حتى يرى المستخدم
+       * رسالة نجاح الحفظ قبل إغلاق النافذة.
+       */
+      window.setTimeout(() => {
+        setIsEditing(false);
+        setSaveSuccess(false);
+      }, 500);
+    } catch (error) {
+      console.error(
+        "Failed to save profile:",
+        error,
+      );
+
+      setSaveError(
+        "تعذر حفظ البيانات. حاول مرة أخرى.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateField = (
@@ -132,6 +188,9 @@ export default function Profile() {
       ...current,
       [field]: value,
     }));
+
+    setSaveError(null);
+    setSaveSuccess(false);
   };
 
   const updateFaculty = (
@@ -142,13 +201,21 @@ export default function Profile() {
       faculty: facultyName,
       program: "",
     }));
+
+    setSaveError(null);
+    setSaveSuccess(false);
   };
 
   useEffect(() => {
     if (!isEditing) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+    const handleKeyDown = (
+      event: KeyboardEvent,
+    ) => {
+      if (
+        event.key === "Escape" &&
+        !isSaving
+      ) {
         closeEditProfile();
       }
     };
@@ -164,7 +231,7 @@ export default function Profile() {
         handleKeyDown,
       );
     };
-  }, [isEditing, profile]);
+  }, [isEditing, isSaving, profile]);
 
   useEffect(() => {
     if (!isEditing) return;
@@ -184,7 +251,8 @@ export default function Profile() {
     formData.name.trim() !== "" &&
     formData.faculty.trim() !== "" &&
     formData.program.trim() !== "" &&
-    formData.academicYear.trim() !== "";
+    formData.academicYear.trim() !== "" &&
+    !isSaving;
 
   return (
     <main
@@ -241,6 +309,7 @@ export default function Profile() {
             type="button"
             className="profile-edit-button"
             onClick={openEditProfile}
+            disabled={isLoading}
           >
             <Edit3
               size={16}
@@ -266,6 +335,19 @@ export default function Profile() {
           </Link>
         </div>
       </section>
+
+      {/* =========================================
+          PROFILE ERROR
+          ========================================= */}
+
+      {error && (
+        <div
+          className="profile-form-error"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
 
       {/* =========================================
           PROFILE COMPLETION
@@ -510,6 +592,7 @@ export default function Profile() {
                 }`}
               >
                 <span />
+
                 {isProfileComplete
                   ? "الملف مكتمل"
                   : "الملف غير مكتمل"}
@@ -598,7 +681,8 @@ export default function Profile() {
           onMouseDown={(event) => {
             if (
               event.target ===
-              event.currentTarget
+                event.currentTarget &&
+              !isSaving
             ) {
               closeEditProfile();
             }
@@ -628,6 +712,7 @@ export default function Profile() {
                 type="button"
                 className="profile-modal__close"
                 onClick={closeEditProfile}
+                disabled={isSaving}
                 aria-label="إغلاق"
               >
                 <X
@@ -656,6 +741,7 @@ export default function Profile() {
                   placeholder="اكتب اسمك"
                   autoComplete="name"
                   autoFocus
+                  disabled={isSaving}
                 />
               </label>
 
@@ -669,6 +755,7 @@ export default function Profile() {
                       event.target.value,
                     )
                   }
+                  disabled={isSaving}
                 >
                   <option value="">
                     اختر الكلية
@@ -697,7 +784,8 @@ export default function Profile() {
                     )
                   }
                   disabled={
-                    !formData.faculty
+                    !formData.faculty ||
+                    isSaving
                   }
                 >
                   <option value="">
@@ -732,6 +820,7 @@ export default function Profile() {
                       event.target.value,
                     )
                   }
+                  disabled={isSaving}
                 >
                   <option value="">
                     اختر العام الدراسي
@@ -748,11 +837,30 @@ export default function Profile() {
                 </select>
               </label>
 
+              {saveError && (
+                <div
+                  className="profile-form-error"
+                  role="alert"
+                >
+                  {saveError}
+                </div>
+              )}
+
+              {saveSuccess && (
+                <div
+                  className="profile-form-success"
+                  role="status"
+                >
+                  تم حفظ بيانات الملف الشخصي بنجاح.
+                </div>
+              )}
+
               <div className="profile-modal__footer">
                 <button
                   type="button"
                   className="profile-modal__cancel"
                   onClick={closeEditProfile}
+                  disabled={isSaving}
                 >
                   إلغاء
                 </button>
@@ -762,12 +870,26 @@ export default function Profile() {
                   className="profile-modal__save"
                   disabled={!canSave}
                 >
-                  <Save
-                    size={16}
-                    aria-hidden="true"
-                  />
+                  {isSaving ? (
+                    <>
+                      <Loader2
+                        size={16}
+                        className="profile-save-spinner"
+                        aria-hidden="true"
+                      />
 
-                  حفظ البيانات
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    <>
+                      <Save
+                        size={16}
+                        aria-hidden="true"
+                      />
+
+                      حفظ البيانات
+                    </>
+                  )}
                 </button>
               </div>
             </form>

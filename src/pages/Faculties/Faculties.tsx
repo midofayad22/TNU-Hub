@@ -1,18 +1,96 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
   Building2,
   ChevronLeft,
+  Loader2,
   Search,
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { faculties } from "../../data/faculties";
+import { supabase } from "../../lib/supabase";
+
+interface Faculty {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+interface Program {
+  id: string;
+  faculty_id: string;
+  name: string;
+  description: string;
+}
+
+interface FacultyWithPrograms extends Faculty {
+  programs: Program[];
+}
 
 export default function Faculties() {
+  const [faculties, setFaculties] = useState<
+    FacultyWithPrograms[]
+  >([]);
+
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadFaculties = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const { data: facultiesData, error: facultiesError } =
+          await supabase
+            .from("faculties")
+            .select("id, name, description, icon")
+            .order("name", { ascending: true });
+
+        if (facultiesError) {
+          throw facultiesError;
+        }
+
+        const { data: programsData, error: programsError } =
+          await supabase
+            .from("programs")
+            .select("id, faculty_id, name, description")
+            .order("name", { ascending: true });
+
+        if (programsError) {
+          throw programsError;
+        }
+
+        const formattedFaculties: FacultyWithPrograms[] =
+          (facultiesData ?? []).map((faculty) => ({
+            ...faculty,
+            programs: (programsData ?? []).filter(
+              (program) =>
+                program.faculty_id === faculty.id
+            ),
+          }));
+
+        setFaculties(formattedFaculties);
+      } catch (err) {
+        console.error(
+          "Failed to load faculties:",
+          err
+        );
+
+        setError(
+          "حدث خطأ أثناء تحميل الكليات والبرامج. حاول مرة أخرى."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadFaculties();
+  }, []);
 
   const filteredFaculties = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -44,14 +122,85 @@ export default function Faculties() {
         programText.includes(value)
       );
     });
-  }, [search]);
+  }, [search, faculties]);
+
+  const totalPrograms = useMemo(() => {
+    return faculties.reduce(
+      (total, faculty) =>
+        total + faculty.programs.length,
+      0
+    );
+  }, [faculties]);
 
   const clearSearch = () => {
     setSearch("");
   };
 
+  if (loading) {
+    return (
+      <main
+        className="page-shell academic-page"
+        dir="rtl"
+      >
+        <section className="academic-loading">
+          <div className="academic-loading__icon">
+            <Loader2
+              size={30}
+              aria-hidden="true"
+            />
+          </div>
+
+          <h1>جاري تحميل الهيكل الأكاديمي</h1>
+
+          <p>
+            يتم الآن تحميل الكليات والبرامج المتاحة...
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main
+        className="page-shell academic-page"
+        dir="rtl"
+      >
+        <section className="academic-details-empty">
+          <div className="academic-details-empty__icon">
+            <Building2
+              size={32}
+              aria-hidden="true"
+            />
+          </div>
+
+          <span className="academic-kicker">
+            الهيكل الأكاديمي
+          </span>
+
+          <h1>تعذر تحميل الكليات</h1>
+
+          <p>{error}</p>
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={() =>
+              window.location.reload()
+            }
+          >
+            إعادة المحاولة
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <main className="page-shell academic-page" dir="rtl">
+    <main
+      className="page-shell academic-page"
+      dir="rtl"
+    >
       {/* Hero */}
       <section className="academic-hero">
         <div className="academic-hero__content">
@@ -70,26 +219,25 @@ export default function Faculties() {
           <div className="academic-hero__stats">
             <div className="academic-hero__stat">
               <strong>{faculties.length}</strong>
+
               <span>كلية</span>
             </div>
 
             <div className="academic-hero__stat-divider" />
 
             <div className="academic-hero__stat">
-              <strong>
-                {faculties.reduce(
-                  (total, faculty) =>
-                    total + faculty.programs.length,
-                  0
-                )}
-              </strong>
+              <strong>{totalPrograms}</strong>
+
               <span>برنامج أكاديمي</span>
             </div>
           </div>
         </div>
 
         <div className="academic-hero__icon">
-          <Building2 size={32} aria-hidden="true" />
+          <Building2
+            size={32}
+            aria-hidden="true"
+          />
         </div>
       </section>
 
@@ -120,13 +268,21 @@ export default function Faculties() {
               onClick={clearSearch}
               aria-label="مسح البحث"
             >
-              <X size={16} aria-hidden="true" />
+              <X
+                size={16}
+                aria-hidden="true"
+              />
             </button>
           )}
         </div>
 
-        <div className="academic-count" aria-live="polite">
-          <strong>{filteredFaculties.length}</strong>
+        <div
+          className="academic-count"
+          aria-live="polite"
+        >
+          <strong>
+            {filteredFaculties.length}
+          </strong>
 
           <span>
             {filteredFaculties.length === 1

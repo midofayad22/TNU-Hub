@@ -3,6 +3,7 @@ import {
   BookOpen,
   Building2,
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   LayoutDashboard,
   LoaderCircle,
@@ -53,6 +54,10 @@ interface SidebarItem {
   section?: AdminSection;
 }
 
+/* =========================================================
+   MAIN ITEMS
+========================================================= */
+
 const mainItems: SidebarItem[] = [
   {
     label: "لوحة التحكم",
@@ -85,6 +90,10 @@ const mainItems: SidebarItem[] = [
   },
 ];
 
+/* =========================================================
+   MANAGEMENT ITEMS
+========================================================= */
+
 const managementItems: SidebarItem[] = [
   {
     label: "الكليات والبرامج",
@@ -99,6 +108,10 @@ const managementItems: SidebarItem[] = [
     section: "students",
   },
 ];
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
@@ -115,8 +128,16 @@ export default function AdminSidebar() {
   const [logoutLoading, setLogoutLoading] =
     useState(false);
 
+  /* =======================================================
+     ROLE
+  ======================================================= */
+
   const isRootAdmin =
     profile?.role === "root_admin";
+
+  /* =======================================================
+     LOAD PERMISSIONS
+  ======================================================= */
 
   const loadPermissions = useCallback(async () => {
     if (!profile?.id) {
@@ -124,6 +145,11 @@ export default function AdminSidebar() {
       setLoadingPermissions(false);
       return;
     }
+
+    /*
+     * Root Admin does not need permissions.
+     * Root Admin automatically has full access.
+     */
 
     if (isRootAdmin) {
       setPermissions([]);
@@ -164,24 +190,52 @@ export default function AdminSidebar() {
     loadPermissions();
   }, [loadPermissions]);
 
+  /* =======================================================
+     VIEW PERMISSION
+  ======================================================= */
+
   const canView = useCallback(
     (section?: AdminSection) => {
+      /*
+       * Items without a section are available
+       * to every admin.
+       */
+
       if (!section) {
         return true;
       }
+
+      /*
+       * Root Admin has full access.
+       */
 
       if (isRootAdmin) {
         return true;
       }
 
+      /*
+       * Students are Root Admin only.
+       *
+       * We intentionally do not use admin_permissions
+       * for the students section.
+       */
+
+      if (section === "students") {
+        return false;
+      }
+
       return permissions.some(
         (permission) =>
           permission.section === section &&
-          permission.can_view
+          permission.can_view === true
       );
     },
     [isRootAdmin, permissions]
   );
+
+  /* =======================================================
+     VISIBLE MAIN ITEMS
+  ======================================================= */
 
   const visibleMainItems = useMemo(() => {
     return mainItems.filter((item) =>
@@ -189,11 +243,19 @@ export default function AdminSidebar() {
     );
   }, [canView]);
 
+  /* =======================================================
+     VISIBLE MANAGEMENT ITEMS
+  ======================================================= */
+
   const visibleManagementItems = useMemo(() => {
     return managementItems.filter((item) =>
       canView(item.section)
     );
   }, [canView]);
+
+  /* =======================================================
+     SIGN OUT
+  ======================================================= */
 
   const handleSignOut = async () => {
     if (logoutLoading) {
@@ -222,6 +284,10 @@ export default function AdminSidebar() {
     }
   };
 
+  /* =======================================================
+     ADMIN IDENTITY
+  ======================================================= */
+
   const adminName =
     profile?.full_name?.trim() ||
     "المشرف";
@@ -234,12 +300,19 @@ export default function AdminSidebar() {
   const adminInitial =
     adminName.charAt(0).toUpperCase();
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
     <aside
       className="admin-sidebar"
       dir="rtl"
     >
-      {/* Brand */}
+      {/* =================================================
+          BRAND
+      ================================================= */}
+
       <div className="admin-sidebar__brand">
         <div className="admin-sidebar__brand-mark">
           T
@@ -254,9 +327,16 @@ export default function AdminSidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
       <nav className="admin-sidebar__nav">
-        {/* Main */}
+
+        {/* =================================================
+            MAIN
+        ================================================= */}
+
         <div className="admin-sidebar__section">
           <span className="admin-sidebar__section-title">
             الإدارة
@@ -304,7 +384,10 @@ export default function AdminSidebar() {
           )}
         </div>
 
-        {/* Management */}
+        {/* =================================================
+            MANAGEMENT
+        ================================================= */}
+
         {visibleManagementItems.length > 0 && (
           <div className="admin-sidebar__section">
             <span className="admin-sidebar__section-title">
@@ -342,12 +425,17 @@ export default function AdminSidebar() {
           </div>
         )}
 
-        {/* Root Admin */}
+        {/* =================================================
+            ROOT ADMIN
+        ================================================= */}
+
         {isRootAdmin && (
           <div className="admin-sidebar__section">
             <span className="admin-sidebar__section-title">
               النظام
             </span>
+
+            {/* إدارة المشرفين */}
 
             <NavLink
               to="/admin/admins"
@@ -368,11 +456,39 @@ export default function AdminSidebar() {
                 إدارة المشرفين
               </span>
             </NavLink>
+
+            {/* مركز الموافقات */}
+
+            <NavLink
+              to="/admin/approvals"
+              className={({ isActive }) =>
+                [
+                  "admin-sidebar__link",
+                  isActive
+                    ? "admin-sidebar__link--active"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")
+              }
+            >
+              <ClipboardCheck size={19} />
+
+              <span>
+                مركز الموافقات
+              </span>
+            </NavLink>
           </div>
         )}
 
-        {/* Bottom */}
+        {/* =================================================
+            BOTTOM
+        ================================================= */}
+
         <div className="admin-sidebar__section admin-sidebar__section--bottom">
+
+          {/* Settings */}
+
           <NavLink
             to="/settings"
             className={({ isActive }) =>
@@ -392,6 +508,8 @@ export default function AdminSidebar() {
               الإعدادات
             </span>
           </NavLink>
+
+          {/* Logout */}
 
           <button
             type="button"
@@ -415,6 +533,8 @@ export default function AdminSidebar() {
             </span>
           </button>
 
+          {/* Back to Platform */}
+
           <button
             type="button"
             className="admin-sidebar__link admin-sidebar__back"
@@ -429,7 +549,10 @@ export default function AdminSidebar() {
         </div>
       </nav>
 
-      {/* Identity */}
+      {/* =================================================
+          IDENTITY
+      ================================================= */}
+
       <div className="admin-sidebar__identity">
         <div className="admin-sidebar__avatar">
           {adminInitial}

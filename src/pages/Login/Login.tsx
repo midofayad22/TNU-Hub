@@ -178,9 +178,11 @@ export default function Login() {
       dir="rtl"
     >
       <div className="login-shell">
+
         {/* =================================================
             BRAND / VISUAL SIDE
-            ================================================= */}
+        ================================================= */}
+
         <section className="login-showcase">
           <div className="login-showcase__glow" />
 
@@ -203,6 +205,7 @@ export default function Login() {
                 size={15}
                 aria-hidden="true"
               />
+
               بوابتك إلى المنصة
             </span>
 
@@ -222,6 +225,7 @@ export default function Login() {
           </div>
 
           <div className="login-showcase__features">
+
             <div className="login-showcase__feature">
               <div className="login-showcase__feature-icon">
                 <CheckCircle2
@@ -259,6 +263,7 @@ export default function Login() {
                 </span>
               </div>
             </div>
+
           </div>
 
           <div className="login-showcase__footer">
@@ -270,9 +275,11 @@ export default function Login() {
 
         {/* =================================================
             LOGIN FORM
-            ================================================= */}
+        ================================================= */}
+
         <section className="login-panel">
           <div className="login-card">
+
             <div className="login-card__icon">
               <ShieldCheck
                 size={28}
@@ -316,7 +323,9 @@ export default function Login() {
               className="login-form"
               noValidate
             >
+
               {/* Email */}
+
               <div className="login-field">
                 <label htmlFor="email">
                   البريد الإلكتروني
@@ -345,14 +354,13 @@ export default function Login() {
                     autoComplete="email"
                     inputMode="email"
                     disabled={loading}
-                    aria-invalid={
-                      Boolean(error)
-                    }
+                    aria-invalid={Boolean(error)}
                   />
                 </div>
               </div>
 
               {/* Password */}
+
               <div className="login-field">
                 <div className="login-field__label-row">
                   <label htmlFor="password">
@@ -423,6 +431,7 @@ export default function Login() {
               </div>
 
               {/* Error */}
+
               {error && (
                 <div
                   className="login-error"
@@ -435,6 +444,7 @@ export default function Login() {
               )}
 
               {/* Submit */}
+
               <button
                 type="submit"
                 className="login-submit"
@@ -443,6 +453,7 @@ export default function Login() {
                 {loading ? (
                   <>
                     <span className="login-submit__spinner" />
+
                     <span>
                       جاري تسجيل الدخول...
                     </span>
@@ -460,7 +471,30 @@ export default function Login() {
                   </>
                 )}
               </button>
+
             </form>
+
+            {/* =================================================
+                REGISTER LINK
+            ================================================= */}
+
+            <div className="login-register">
+              <span>
+                ليس لديك حساب؟
+              </span>
+
+              <Link to="/register">
+                إنشاء حساب جديد
+                <ArrowLeft
+                  size={15}
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
+
+            {/* =================================================
+                FOOTER
+            ================================================= */}
 
             <div className="login-card__footer">
               <Link to="/">
@@ -474,6 +508,7 @@ export default function Login() {
                 </span>
               </Link>
             </div>
+
           </div>
 
           <p className="login-panel__note">
@@ -481,6 +516,7 @@ export default function Login() {
             الجامعية
           </p>
         </section>
+
       </div>
     </main>
   );

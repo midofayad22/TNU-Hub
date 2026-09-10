@@ -1,8 +1,6 @@
 import {
   Bell,
   ChevronLeft,
-  Globe2,
-  LockKeyhole,
   Moon,
   ShieldCheck,
   Sun,
@@ -21,7 +19,6 @@ export default function Settings() {
   const [notificationsEnabled, setNotificationsEnabled] =
     useState(true);
 
-  const [language, setLanguage] = useState("العربية");
   const [savedMessage, setSavedMessage] = useState("");
 
   const messageTimeoutRef = useRef<number | null>(null);
@@ -73,18 +70,6 @@ export default function Settings() {
     });
   };
 
-  const handleLanguageChange = (
-    value: string,
-  ) => {
-    setLanguage(value);
-
-    showSavedMessage(
-      value === "العربية"
-        ? "تم اختيار اللغة العربية"
-        : "تم اختيار اللغة الإنجليزية",
-    );
-  };
-
   return (
     <main
       className="page-shell settings-page"
@@ -113,7 +98,7 @@ export default function Settings() {
 
           <p>
             خصص طريقة استخدامك للمنصة وتحكم في
-            المظهر والإشعارات وبعض تفضيلات حسابك.
+            المظهر والإشعارات.
           </p>
         </div>
 
@@ -180,6 +165,8 @@ export default function Settings() {
           role="group"
           aria-label="اختيار مظهر المنصة"
         >
+          {/* Light Theme */}
+
           <button
             type="button"
             className={`settings-theme-option ${
@@ -214,6 +201,8 @@ export default function Settings() {
               {theme === "light" && <span />}
             </span>
           </button>
+
+          {/* Dark Theme */}
 
           <button
             type="button"
@@ -327,83 +316,6 @@ export default function Settings() {
       </section>
 
       {/* =====================================================
-          LANGUAGE
-      ====================================================== */}
-
-      <section className="settings-section">
-        <div className="settings-section__heading">
-          <div className="settings-section__heading-icon">
-            <Globe2
-              size={20}
-              aria-hidden="true"
-            />
-          </div>
-
-          <div>
-            <span>اللغة</span>
-            <h2>لغة المنصة</h2>
-          </div>
-        </div>
-
-        <div className="settings-row settings-row--language">
-          <div className="settings-row__icon">
-            <Globe2
-              size={19}
-              aria-hidden="true"
-            />
-          </div>
-
-          <div className="settings-row__content">
-            <strong>اللغة الحالية</strong>
-
-            <p>
-              اختر اللغة التي تريد استخدامها داخل
-              المنصة.
-            </p>
-          </div>
-
-          <label className="settings-select-wrapper">
-            <span className="sr-only">
-              لغة المنصة
-            </span>
-
-            <select
-              value={language}
-              onChange={(event) =>
-                handleLanguageChange(
-                  event.target.value,
-                )
-              }
-              className="settings-select"
-              aria-label="لغة المنصة"
-            >
-              <option value="العربية">
-                العربية
-              </option>
-
-              <option value="English">
-                English
-              </option>
-            </select>
-          </label>
-        </div>
-
-        {language === "English" && (
-          <div className="settings-coming-soon">
-            <Globe2
-              size={16}
-              aria-hidden="true"
-            />
-
-            <span>
-              النسخة الإنجليزية الكاملة للمنصة
-              ستكون متاحة قريبًا.
-            </span>
-          </div>
-        )}
-      </section>
-
-      {/* =====================================================
           ACCOUNT
       ====================================================== */}
 
@@ -448,38 +360,6 @@ export default function Settings() {
               aria-hidden="true"
             />
           </Link>
-
-          <button
-            type="button"
-            className="settings-link settings-link--disabled"
-            disabled
-            aria-label="الأمان والخصوصية — قريبًا"
-          >
-            <div className="settings-link__icon">
-              <LockKeyhole
-                size={18}
-                aria-hidden="true"
-              />
-            </div>
-
-            <div className="settings-link__content">
-              <strong>الأمان والخصوصية</strong>
-
-              <span>
-                إدارة إعدادات الأمان والخصوصية
-              </span>
-            </div>
-
-            <span className="settings-link__soon">
-              قريبًا
-            </span>
-
-            <ChevronLeft
-              className="settings-link__arrow"
-              size={18}
-              aria-hidden="true"
-            />
-          </button>
         </div>
       </section>
 

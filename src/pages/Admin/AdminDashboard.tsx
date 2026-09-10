@@ -1,7 +1,6 @@
 import {
   ArrowLeft,
   CalendarDays,
-  CheckCircle2,
   ClipboardList,
   Megaphone,
   Plus,
@@ -41,66 +40,6 @@ interface DashboardStats {
   students: number;
   admins: number;
 }
-
-interface QuickAction {
-  id: string;
-  label: string;
-  description: string;
-  href: string;
-  section?: AdminSection;
-  icon: React.ComponentType<{ size?: number }>;
-}
-
-const quickActions: QuickAction[] = [
-  {
-    id: "announcement",
-    label: "إضافة إعلان",
-    description: "إنشاء إعلان جديد للطلاب",
-    href: "/admin/announcements/new",
-    section: "announcements",
-    icon: Megaphone,
-  },
-  {
-    id: "event",
-    label: "إضافة فعالية",
-    description: "إنشاء فعالية طلابية جديدة",
-    href: "/admin/events/new",
-    section: "events",
-    icon: CalendarDays,
-  },
-  {
-    id: "requests",
-    label: "مراجعة الطلبات",
-    description: "متابعة طلبات الطلاب",
-    href: "/admin/requests",
-    section: "requests",
-    icon: ClipboardList,
-  },
-  {
-    id: "resources",
-    label: "إدارة المصادر",
-    description: "إدارة المصادر والمحتوى التعليمي",
-    href: "/admin/resources",
-    section: "resources",
-    icon: BookOpen,
-  },
-  {
-    id: "faculties",
-    label: "الكليات والبرامج",
-    description: "إدارة الكليات والبرامج الأكاديمية",
-    href: "/admin/faculties",
-    section: "faculties",
-    icon: Building2,
-  },
-  {
-    id: "students",
-    label: "إدارة الطلاب",
-    description: "عرض وإدارة بيانات الطلاب",
-    href: "/admin/students",
-    section: "students",
-    icon: Users,
-  },
-];
 
 interface DashboardCard {
   id: string;
@@ -241,19 +180,6 @@ export default function AdminDashboard() {
     },
     [isRootAdmin, permissions]
   );
-
-  const visibleQuickActions = useMemo(() => {
-    return quickActions.filter((action) => {
-      if (!action.section) {
-        return true;
-      }
-
-      return (
-        canView(action.section) ||
-        canAdd(action.section)
-      );
-    });
-  }, [canView, canAdd]);
 
   const dashboardCards = useMemo<DashboardCard[]>(() => {
     const cards: DashboardCard[] = [];
@@ -542,57 +468,6 @@ export default function AdminDashboard() {
               );
             })}
           </div>
-        </div>
-
-        {/* Quick actions */}
-        <div className="admin-panel">
-          <div className="admin-panel__header">
-            <div>
-              <span className="admin-panel__kicker">
-                إجراءات سريعة
-              </span>
-
-              <h2>ماذا تريد أن تفعل؟</h2>
-            </div>
-          </div>
-
-          {visibleQuickActions.length > 0 ? (
-            <div className="admin-quick-actions">
-              {visibleQuickActions.map((action) => {
-                const Icon = action.icon;
-
-                return (
-                  <Link
-                    key={action.id}
-                    to={action.href}
-                    className="admin-quick-action"
-                  >
-                    <div className="admin-quick-action__icon">
-                      <Icon size={19} />
-                    </div>
-
-                    <div>
-                      <strong>{action.label}</strong>
-
-                      <span>
-                        {action.description}
-                      </span>
-                    </div>
-
-                    <ArrowLeft size={17} />
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="admin-empty-state admin-empty-state--small">
-              <CheckCircle2 size={25} />
-
-              <p>
-                لا توجد إجراءات متاحة حسب صلاحيات حسابك.
-              </p>
-            </div>
-          )}
         </div>
       </section>
     </div>

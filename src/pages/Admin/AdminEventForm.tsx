@@ -5,6 +5,7 @@ import {
   LoaderCircle,
   MapPin,
   Save,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -18,6 +19,18 @@ interface EventTarget {
 }
 
 type EventStatus = "قادمة" | "منتهية" | "مسودة";
+
+type AdminRole = "root_admin" | "admin";
+
+interface AdminPermission {
+  id: number;
+  admin_id: string;
+  section: string;
+  can_view: boolean;
+  can_add: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+}
 
 export default function AdminEventForm() {
   const { id } = useParams();
@@ -36,7 +49,13 @@ export default function AdminEventForm() {
   const [status, setStatus] =
     useState<EventStatus>("قادمة");
 
-  const [loading, setLoading] = useState(isEditMode);
+  const [role, setRole] = useState<AdminRole | null>(null);
+
+  const [canView, setCanView] = useState(false);
+  const [canAdd, setCanAdd] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -88,17 +107,173 @@ export default function AdminEventForm() {
     return "جميع الطلاب";
   };
 
+  /*
+   * =====================================================
+   * تحميل بيانات المستخدم + الصلاحيات + الفعالية
+   * =====================================================
+   */
   useEffect(() => {
-    if (!isEditMode || !id) {
-      return;
-    }
-
-    const loadEvent = async () => {
+    const loadPage = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const { data, error: fetchError } = await supabase
+        setCanView(false);
+        setCanAdd(false);
+        setCanEdit(false);
+
+        /*
+         * الحصول على المستخدم الحالي
+         */
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError) {
+          throw userError;
+        }
+
+        if (!user) {
+          setError(
+            "يجب تسجيل الدخول بحساب إداري لإتمام العملية."
+          );
+          return;
+        }
+
+        /*
+         * الحصول على Role من profiles
+         */
+        const {
+          data: profile,
+          error: profileError,
+        } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        if (
+          profile?.role !== "admin" &&
+          profile?.role !== "root_admin"
+        ) {
+          setError(
+            "ليس لديك صلاحية للوصول إلى هذه الصفحة."
+          );
+          return;
+        }
+
+        const currentRole =
+          profile.role as AdminRole;
+
+        setRole(currentRole);
+
+        /*
+         * =====================================================
+         * ROOT ADMIN
+         * =====================================================
+         *
+         * Root Admin لا يحتاج إلى وجود permission row.
+         * كل الصلاحيات متاحة له مباشرة.
+         */
+        if (currentRole === "root_admin") {
+          setCanView(true);
+          setCanAdd(true);
+          setCanEdit(true);
+        } else {
+          /*
+           * =====================================================
+           * SUB ADMIN
+           * =====================================================
+           *
+           * تحميل صلاحيات Events الخاصة بهذا الـAdmin.
+           */
+          const {
+            data: permission,
+            error: permissionError,
+          } = await supabase
+            .from("admin_permissions")
+            .select(
+              "id, admin_id, section, can_view, can_add, can_edit, can_delete"
+            )
+            .eq("admin_id", user.id)
+            .eq("section", "events")
+            .maybeSingle();
+
+          if (permissionError) {
+            throw permissionError;
+          }
+
+          const adminPermission =
+            permission as AdminPermission | null;
+
+          const hasView =
+            adminPermission?.can_view === true;
+
+          const hasAdd =
+            adminPermission?.can_add === true;
+
+          const hasEdit =
+            adminPermission?.can_edit === true;
+
+          setCanView(hasView);
+          setCanAdd(hasAdd);
+          setCanEdit(hasEdit);
+
+          /*
+           * لا نسمح للـSub Admin بفتح الفورم
+           * إذا لم يكن لديه View.
+           */
+          if (!hasView) {
+            setError(
+              "ليس لديك صلاحية عرض قسم الفعاليات."
+            );
+            return;
+          }
+
+          /*
+           * إذا كانت الصفحة إضافة جديدة،
+           * فلا بد من can_add.
+           */
+          if (!isEditMode && !hasAdd) {
+            setError(
+              "ليس لديك صلاحية إضافة فعاليات."
+            );
+            return;
+          }
+
+          /*
+           * إذا كانت الصفحة تعديل،
+           * فلا بد من can_edit.
+           */
+          if (isEditMode && !hasEdit) {
+            setError(
+              "ليس لديك صلاحية تعديل الفعاليات."
+            );
+            return;
+          }
+        }
+
+        /*
+         * لو إضافة جديدة، لا نحتاج تحميل فعالية.
+         */
+        if (!isEditMode || !id) {
+          return;
+        }
+
+        /*
+         * =====================================================
+         * تحميل الفعالية في حالة التعديل
+         * =====================================================
+         */
+        const {
+          data,
+          error: fetchError,
+        } = await supabase
           .from("events")
           .select(
             `
@@ -130,13 +305,16 @@ export default function AdminEventForm() {
         setDate(data.date ?? "");
         setTime(data.time?.slice(0, 5) ?? "");
         setLocation(data.location ?? "");
+
         setCapacity(
           data.capacity !== null &&
           data.capacity !== undefined
             ? String(data.capacity)
             : ""
         );
+
         setDescription(data.description ?? "");
+
         setStatus(
           (data.status as EventStatus) ?? "قادمة"
         );
@@ -147,17 +325,20 @@ export default function AdminEventForm() {
           )
         );
       } catch (err) {
-        console.error("Error loading event:", err);
+        console.error(
+          "Error loading admin event form:",
+          err
+        );
 
         setError(
-          "تعذر تحميل بيانات الفعالية. قد تكون الفعالية غير موجودة أو حدث خطأ في الاتصال."
+          "تعذر تحميل بيانات الصفحة. حاول مرة أخرى."
         );
       } finally {
         setLoading(false);
       }
     };
 
-    void loadEvent();
+    void loadPage();
   }, [id, isEditMode]);
 
   const handleSubmit = async (
@@ -171,10 +352,56 @@ export default function AdminEventForm() {
 
     setError("");
 
+    /*
+     * =====================================================
+     * Permission Guard
+     * =====================================================
+     *
+     * Root Admin يستطيع التنفيذ دائمًا.
+     *
+     * Sub Admin:
+     * - Add يحتاج can_add
+     * - Edit يحتاج can_edit
+     */
+    if (role === "admin") {
+      if (!canView) {
+        setError(
+          "ليس لديك صلاحية الوصول إلى قسم الفعاليات."
+        );
+        return;
+      }
+
+      if (!isEditMode && !canAdd) {
+        setError(
+          "ليس لديك صلاحية إضافة فعاليات."
+        );
+        return;
+      }
+
+      if (isEditMode && !canEdit) {
+        setError(
+          "ليس لديك صلاحية تعديل الفعاليات."
+        );
+        return;
+      }
+    }
+
+    if (!role) {
+      setError(
+        "تعذر تحديد صلاحيات الحساب الإداري."
+      );
+      return;
+    }
+
     const trimmedTitle = title.trim();
     const trimmedLocation = location.trim();
     const trimmedDescription = description.trim();
 
+    /*
+     * =====================================================
+     * Validation
+     * =====================================================
+     */
     if (!trimmedTitle) {
       setError("من فضلك اكتب اسم الفعالية.");
       return;
@@ -219,6 +446,11 @@ export default function AdminEventForm() {
     try {
       setSaving(true);
 
+      /*
+       * =====================================================
+       * الحصول على المستخدم الحالي
+       * =====================================================
+       */
       const {
         data: { user },
         error: userError,
@@ -235,6 +467,19 @@ export default function AdminEventForm() {
         return;
       }
 
+      /*
+       * =====================================================
+       * بيانات الفعالية
+       * =====================================================
+       *
+       * هذه البيانات سيتم استخدامها:
+       *
+       * Root Admin:
+       *   مباشرة مع events
+       *
+       * Sub Admin:
+       *   داخل payload في admin_action_requests
+       */
       const eventData = {
         title: trimmedTitle,
         category,
@@ -247,38 +492,137 @@ export default function AdminEventForm() {
         status,
       };
 
-      if (isEditMode && id) {
-        const { error: updateError } = await supabase
-          .from("events")
-          .update({
-            ...eventData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id);
+      /*
+       * =====================================================
+       * ROOT ADMIN
+       * =====================================================
+       *
+       * Root Admin يستطيع التنفيذ مباشرة.
+       */
+      if (role === "root_admin") {
+        if (isEditMode && id) {
+          const {
+            error: updateError,
+          } = await supabase
+            .from("events")
+            .update({
+              ...eventData,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", id);
 
-        if (updateError) {
-          throw updateError;
-        }
-      } else {
-        const { error: insertError } = await supabase
-          .from("events")
-          .insert({
-            ...eventData,
-            created_by: user.id,
-          });
+          if (updateError) {
+            throw updateError;
+          }
+        } else {
+          const {
+            error: insertError,
+          } = await supabase
+            .from("events")
+            .insert({
+              ...eventData,
+              created_by: user.id,
+            });
 
-        if (insertError) {
-          throw insertError;
+          if (insertError) {
+            throw insertError;
+          }
         }
+
+        navigate("/admin/events");
+        return;
       }
+
+      /*
+       * =====================================================
+       * SUB ADMIN
+       * =====================================================
+       *
+       * Sub Admin لا يقوم بتعديل events مباشرة.
+       *
+       * بدلًا من ذلك ننشئ Action Request
+       * ينتظر موافقة Root Admin.
+       */
+      const action = isEditMode
+        ? "edit"
+        : "add";
+
+      const {
+        error: requestError,
+      } = await supabase
+        .from("admin_action_requests")
+        .insert({
+          admin_id: user.id,
+          section: "events",
+          action,
+          target_id:
+            isEditMode && id ? id : null,
+          payload: eventData,
+          reason: isEditMode
+            ? "طلب تعديل فعالية من Sub Admin"
+            : "طلب إضافة فعالية من Sub Admin",
+          status: "pending",
+        });
+
+      if (requestError) {
+        throw requestError;
+      }
+
+      /*
+       * الطلب تم إرساله بنجاح.
+       */
+      alert(
+        isEditMode
+          ? "تم إرسال طلب تعديل الفعالية إلى Root Admin للمراجعة."
+          : "تم إرسال طلب إضافة الفعالية إلى Root Admin للمراجعة."
+      );
 
       navigate("/admin/events");
     } catch (err) {
-      console.error("Error saving event:", err);
+      console.error(
+        "Error saving event:",
+        err
+      );
+
+      /*
+       * رسائل أخطاء أوضح للـSub Admin
+       */
+      if (
+        role === "admin" &&
+        err &&
+        typeof err === "object" &&
+        "message" in err
+      ) {
+        const message = String(
+          (err as { message?: unknown })
+            .message ?? ""
+        );
+
+        if (
+          message
+            .toLowerCase()
+            .includes("permission") ||
+          message
+            .toLowerCase()
+            .includes("policy") ||
+          message
+            .toLowerCase()
+            .includes("row-level")
+        ) {
+          setError(
+            "لا تملك صلاحية إرسال هذا الطلب."
+          );
+          return;
+        }
+      }
 
       setError(
         isEditMode
-          ? "تعذر حفظ تعديلات الفعالية. حاول مرة أخرى."
+          ? role === "admin"
+            ? "تعذر إرسال طلب تعديل الفعالية. حاول مرة أخرى."
+            : "تعذر حفظ تعديلات الفعالية. حاول مرة أخرى."
+          : role === "admin"
+          ? "تعذر إرسال طلب إضافة الفعالية. حاول مرة أخرى."
           : "تعذر إضافة الفعالية. حاول مرة أخرى."
       );
     } finally {
@@ -286,9 +630,17 @@ export default function AdminEventForm() {
     }
   };
 
+  /*
+   * =====================================================
+   * Loading State
+   * =====================================================
+   */
   if (loading) {
     return (
-      <div className="admin-page" dir="rtl">
+      <div
+        className="admin-page"
+        dir="rtl"
+      >
         <div className="admin-empty-state">
           <div className="admin-empty-state__icon">
             <LoaderCircle
@@ -297,18 +649,95 @@ export default function AdminEventForm() {
             />
           </div>
 
-          <h3>جاري تحميل الفعالية</h3>
+          <h3>جاري تحميل الصفحة</h3>
 
           <p>
-            يتم الآن جلب بيانات الفعالية من قاعدة البيانات.
+            يتم الآن تجهيز بيانات الفعالية
+            والصلاحيات.
           </p>
         </div>
       </div>
     );
   }
 
+  /*
+   * =====================================================
+   * Unauthorized / No Role
+   * =====================================================
+   */
+  if (!role || !canView) {
+    return (
+      <div
+        className="admin-page"
+        dir="rtl"
+      >
+        <div className="admin-empty-state">
+          <div className="admin-empty-state__icon">
+            <ShieldCheck size={25} />
+          </div>
+
+          <h3>غير مصرح لك</h3>
+
+          <p>
+            {error ||
+              "ليس لديك صلاحية للوصول إلى هذه الصفحة."}
+          </p>
+
+          <Link
+            to="/admin/events"
+            className="admin-primary-button"
+          >
+            العودة للفعاليات
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /*
+   * =====================================================
+   * Permission Guard Before Rendering Form
+   * =====================================================
+   */
+  if (
+    role === "admin" &&
+    ((!isEditMode && !canAdd) ||
+      (isEditMode && !canEdit))
+  ) {
+    return (
+      <div
+        className="admin-page"
+        dir="rtl"
+      >
+        <div className="admin-empty-state">
+          <div className="admin-empty-state__icon">
+            <ShieldCheck size={25} />
+          </div>
+
+          <h3>غير مصرح لك بتنفيذ العملية</h3>
+
+          <p>
+            {isEditMode
+              ? "ليس لديك صلاحية تعديل الفعاليات."
+              : "ليس لديك صلاحية إضافة فعاليات."}
+          </p>
+
+          <Link
+            to="/admin/events"
+            className="admin-primary-button"
+          >
+            العودة للفعاليات
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="admin-page" dir="rtl">
+    <div
+      className="admin-page"
+      dir="rtl"
+    >
       {/* Header */}
       <header className="admin-page__header">
         <div>
@@ -328,11 +757,31 @@ export default function AdminEventForm() {
 
           <p>
             {isEditMode
-              ? "قم بتعديل بيانات الفعالية ثم احفظ التغييرات."
+              ? role === "admin"
+                ? "قم بتعديل بيانات الفعالية ثم أرسل طلب التعديل للمراجعة."
+                : "قم بتعديل بيانات الفعالية ثم احفظ التغييرات."
+              : role === "admin"
+              ? "أدخل بيانات الفعالية ثم أرسل طلب الإضافة إلى Root Admin."
               : "أضف فعالية جديدة ليتم عرضها للطلاب."}
           </p>
         </div>
       </header>
+
+      {/* Sub Admin Notice */}
+      {role === "admin" && (
+        <div
+          className="admin-alert"
+          role="status"
+        >
+          <ShieldCheck size={18} />
+
+          <span>
+            سيتم إرسال هذه العملية إلى Root
+            Admin للمراجعة والموافقة قبل تطبيقها
+            على قاعدة البيانات.
+          </span>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -358,7 +807,8 @@ export default function AdminEventForm() {
             <h2>بيانات الفعالية</h2>
 
             <p>
-              أدخل المعلومات الأساسية الخاصة بالفعالية.
+              أدخل المعلومات الأساسية الخاصة
+              بالفعالية.
             </p>
           </div>
         </div>
@@ -465,7 +915,8 @@ export default function AdminEventForm() {
             </div>
 
             <small>
-              اتركه فارغًا إذا كانت السعة غير محددة.
+              اتركه فارغًا إذا كانت السعة غير
+              محددة.
             </small>
           </label>
 
@@ -567,7 +1018,12 @@ export default function AdminEventForm() {
           <button
             type="submit"
             className="admin-primary-button"
-            disabled={saving}
+            disabled={
+              saving ||
+              (role === "admin" &&
+                ((!isEditMode && !canAdd) ||
+                  (isEditMode && !canEdit)))
+            }
           >
             {saving ? (
               <LoaderCircle
@@ -580,7 +1036,13 @@ export default function AdminEventForm() {
 
             <span>
               {saving
-                ? "جاري الحفظ..."
+                ? role === "admin"
+                  ? "جاري إرسال الطلب..."
+                  : "جاري الحفظ..."
+                : role === "admin"
+                ? isEditMode
+                  ? "إرسال طلب التعديل"
+                  : "إرسال طلب الإضافة"
                 : isEditMode
                 ? "حفظ التعديلات"
                 : "إضافة الفعالية"}

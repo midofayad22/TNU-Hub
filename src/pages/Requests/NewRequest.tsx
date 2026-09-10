@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   CheckCircle2,
+  Loader2,
   Send,
 } from "lucide-react";
 import { useState } from "react";
@@ -10,6 +11,8 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
+
+import { supabase } from "../../lib/supabase";
 
 const categories = [
   {
@@ -66,6 +69,12 @@ export default function NewRequest() {
   const [isSubmitted, setIsSubmitted] =
     useState(false);
 
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const [submitError, setSubmitError] =
+    useState("");
+
   const validate = () => {
     const nextErrors: FormErrors = {};
 
@@ -93,7 +102,8 @@ export default function NewRequest() {
       trimmedDescription.length <
       MIN_DESCRIPTION_LENGTH
     ) {
-      nextErrors.description = `اكتب تفاصيل أكثر، الحد الأدنى ${MIN_DESCRIPTION_LENGTH} حرفًا.`;
+      nextErrors.description =
+        `اكتب تفاصيل أكثر، الحد الأدنى ${MIN_DESCRIPTION_LENGTH} حرفًا.`;
     }
 
     setErrors(nextErrors);
@@ -103,18 +113,85 @@ export default function NewRequest() {
     );
   };
 
-  const handleSubmit = (
+  const generateRequestId = () => {
+    const timestamp = Date.now()
+      .toString()
+      .slice(-8);
+
+    const random = Math.floor(
+      100 + Math.random() * 900,
+    );
+
+    return `REQ-${timestamp}-${random}`;
+  };
+
+  const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 
+    setSubmitError("");
+
     if (!validate()) return;
 
-    setIsSubmitted(true);
+    setIsSubmitting(true);
 
-    window.setTimeout(() => {
-      navigate("/requests");
-    }, 1400);
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      if (!user) {
+        setSubmitError(
+          "يجب تسجيل الدخول أولًا حتى تتمكن من إرسال طلب.",
+        );
+        return;
+      }
+
+      const selectedCategory = categories.find(
+        (item) => item.value === category,
+      );
+
+      const requestId = generateRequestId();
+
+      const { error } = await supabase
+        .from("requests")
+        .insert({
+          id: requestId,
+          user_id: user.id,
+          title: title.trim(),
+          category:
+            selectedCategory?.label ?? category,
+          description: description.trim(),
+          status: "قيد الانتظار",
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      setIsSubmitted(true);
+
+      window.setTimeout(() => {
+        navigate("/requests");
+      }, 1400);
+    } catch (error) {
+      console.error(
+        "Failed to create request:",
+        error,
+      );
+
+      setSubmitError(
+        "حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const updateTitle = (value: string) => {
@@ -126,6 +203,10 @@ export default function NewRequest() {
         title: undefined,
       }));
     }
+
+    if (submitError) {
+      setSubmitError("");
+    }
   };
 
   const updateCategory = (value: string) => {
@@ -136,6 +217,10 @@ export default function NewRequest() {
         ...current,
         category: undefined,
       }));
+    }
+
+    if (submitError) {
+      setSubmitError("");
     }
   };
 
@@ -149,6 +234,10 @@ export default function NewRequest() {
         ...current,
         description: undefined,
       }));
+    }
+
+    if (submitError) {
+      setSubmitError("");
     }
   };
 
@@ -228,11 +317,22 @@ export default function NewRequest() {
       >
         <div className="request-form__intro">
           <strong>أخبرنا بما تحتاج إليه</strong>
+
           <span>
             املأ البيانات التالية وسنوجّه طلبك
             إلى الجهة المختصة.
           </span>
         </div>
+
+        {/* Submit Error */}
+        {submitError && (
+          <div
+            className="form-error"
+            role="alert"
+          >
+            {submitError}
+          </div>
+        )}
 
         {/* Title */}
         <div className="form-field">
@@ -260,6 +360,7 @@ export default function NewRequest() {
                 : undefined
             }
             autoComplete="off"
+            disabled={isSubmitting}
           />
 
           {errors.title && (
@@ -300,6 +401,7 @@ export default function NewRequest() {
                 ? "request-category-error"
                 : undefined
             }
+            disabled={isSubmitting}
           >
             <option value="">
               اختر نوع الطلب
@@ -366,6 +468,7 @@ export default function NewRequest() {
               errors.description,
             )}
             aria-describedby="request-description-help"
+            disabled={isSubmitting}
           />
 
           <div
@@ -405,12 +508,26 @@ export default function NewRequest() {
           <button
             className="button button--primary request-submit"
             type="submit"
+            disabled={isSubmitting}
           >
-            <Send
-              size={17}
-              aria-hidden="true"
-            />
-            إرسال الطلب
+            {isSubmitting ? (
+              <>
+                <Loader2
+                  size={17}
+                  className="animate-spin"
+                  aria-hidden="true"
+                />
+                جارٍ إرسال الطلب...
+              </>
+            ) : (
+              <>
+                <Send
+                  size={17}
+                  aria-hidden="true"
+                />
+                إرسال الطلب
+              </>
+            )}
           </button>
         </div>
       </form>

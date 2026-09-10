@@ -9,7 +9,16 @@ export interface ProfileData {
 
 export interface ProfileContextValue {
   profile: ProfileData;
-  updateProfile: (data: ProfileData) => void;
+
+  updateProfile: (
+    data: ProfileData,
+  ) => Promise<void>;
+
+  isLoading: boolean;
+
+  error: string | null;
+
+  reloadProfile: () => Promise<void>;
 }
 
 export const ProfileContext = createContext<
