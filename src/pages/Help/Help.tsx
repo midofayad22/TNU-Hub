@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -25,28 +26,43 @@ const icons = {
   Lightbulb,
 };
 
+function getResultLabel(count: number) {
+  if (count === 0) return "لا توجد نتائج";
+  if (count === 1) return "نتيجة واحدة";
+  if (count === 2) return "نتيجتان";
+  if (count >= 3 && count <= 10) return `${count} نتائج`;
+  return `${count} نتيجة`;
+}
+
+function getQuestionLabel(count: number) {
+  if (count === 0) return "لا توجد أسئلة";
+  if (count === 1) return "سؤال واحد";
+  if (count === 2) return "سؤالان";
+  if (count >= 3 && count <= 10) return `${count} أسئلة`;
+  return `${count} سؤالًا`;
+}
+
 export default function Help() {
   const [search, setSearch] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState("الكل");
 
-  const filteredFaqs = useMemo(() => {
-    const value = search.trim().toLowerCase();
+  const normalizedSearch = search.trim().toLowerCase();
 
+  const filteredFaqs = useMemo(() => {
     return faqs.filter((faq) => {
       const matchesSearch =
-        !value ||
-        faq.question.toLowerCase().includes(value) ||
-        faq.answer.toLowerCase().includes(value) ||
-        faq.category.toLowerCase().includes(value);
+        !normalizedSearch ||
+        faq.question.toLowerCase().includes(normalizedSearch) ||
+        faq.answer.toLowerCase().includes(normalizedSearch) ||
+        faq.category.toLowerCase().includes(normalizedSearch);
 
       const matchesCategory =
-        activeCategory === "الكل" ||
-        faq.category === activeCategory;
+        activeCategory === "الكل" || faq.category === activeCategory;
 
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [normalizedSearch, activeCategory]);
 
   const faqCategories = useMemo(() => {
     return ["الكل", ...new Set(faqs.map((faq) => faq.category))];
@@ -57,22 +73,39 @@ export default function Help() {
     setOpenFaq(null);
   };
 
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    setOpenFaq(null);
+  };
+
   return (
     <main className="page-shell help-page" dir="rtl">
       {/* Hero */}
       <section className="page-hero help-hero">
-        <div>
+        <div className="help-hero__content">
           <span className="page-kicker">الدعم والمساعدة</span>
 
           <h1>مركز المساعدة</h1>
 
           <p>
-            ماذا تحتاج اليوم؟ ابحث عن إجابتك أو اختر نوع
-            المساعدة التي تحتاجها.
+            ماذا تحتاج اليوم؟ ابحث عن إجابتك أو اختر نوع المساعدة
+            التي تحتاجها وسنساعدك في الوصول للحل المناسب.
           </p>
+
+          <div className="help-hero__meta">
+            <span>
+              <MessageSquareWarning size={15} />
+              {faqs.length} سؤالًا شائعًا
+            </span>
+
+            <span>
+              <Lightbulb size={15} />
+              {helpCategories.length} أقسام للمساعدة
+            </span>
+          </div>
         </div>
 
-        <div className="page-hero__icon">
+        <div className="page-hero__icon help-hero__icon">
           <MessageSquareWarning size={30} />
         </div>
       </section>
@@ -80,7 +113,7 @@ export default function Help() {
       {/* Search */}
       <section className="help-search-wrapper">
         <div className="page-search help-search">
-          <Search size={19} />
+          <Search size={19} className="help-search__icon" />
 
           <input
             type="search"
@@ -99,6 +132,7 @@ export default function Help() {
               className="help-search__clear"
               onClick={clearSearch}
               aria-label="مسح البحث"
+              title="مسح البحث"
             >
               <X size={16} />
             </button>
@@ -106,8 +140,8 @@ export default function Help() {
         </div>
 
         {search && (
-          <span className="help-search-result">
-            {filteredFaqs.length} نتيجة
+          <span className="help-search-result" aria-live="polite">
+            {getResultLabel(filteredFaqs.length)}
           </span>
         )}
       </section>
@@ -118,20 +152,25 @@ export default function Help() {
           <div>
             <span className="page-kicker">اختر ما يناسبك</span>
             <h2>كيف يمكننا مساعدتك؟</h2>
+            <p className="help-section__description">
+              اختر القسم الأقرب لمشكلتك وسنوجّهك إلى نموذج الطلب المناسب.
+            </p>
           </div>
         </div>
 
         <div className="help-grid">
-          {helpCategories.map((category) => {
+          {helpCategories.map((category, index) => {
             const Icon =
-              icons[category.icon as keyof typeof icons] ??
-              Building2;
+              icons[category.icon as keyof typeof icons] ?? Building2;
 
             return (
               <Link
                 to={`/requests/new?category=${category.id}`}
                 className="help-card"
                 key={category.id}
+                style={{
+                  "--help-index": index,
+                } as CSSProperties}
               >
                 <div
                   className={`help-card__icon help-card__icon--${category.color}`}
@@ -140,7 +179,12 @@ export default function Help() {
                 </div>
 
                 <div className="help-card__content">
-                  <h3>{category.title}</h3>
+                  <div className="help-card__heading">
+                    <h3>{category.title}</h3>
+                    <span className="help-card__number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
 
                   <p>{category.description}</p>
 
@@ -161,20 +205,21 @@ export default function Help() {
           <div>
             <span className="page-kicker">أسئلة شائعة</span>
 
-            <h2>
-              {search
-                ? "نتائج البحث"
-                : "ربما تجد إجابتك هنا"}
-            </h2>
+            <h2>{search ? "نتائج البحث" : "ربما تجد إجابتك هنا"}</h2>
+
+            <p className="help-section__description">
+              تصفح الأسئلة الأكثر شيوعًا أو استخدم البحث للوصول إلى
+              إجابة محددة.
+            </p>
           </div>
 
           <span className="help-faq-count">
-            {filteredFaqs.length} سؤال
+            {getQuestionLabel(filteredFaqs.length)}
           </span>
         </div>
 
         {/* FAQ Categories */}
-        <div className="faq-filters">
+        <div className="faq-filters" role="tablist" aria-label="تصنيفات الأسئلة">
           {faqCategories.map((category) => {
             const isActive = activeCategory === category;
 
@@ -185,10 +230,9 @@ export default function Help() {
                 className={`faq-filter ${
                   isActive ? "faq-filter--active" : ""
                 }`}
-                onClick={() => {
-                  setActiveCategory(category);
-                  setOpenFaq(null);
-                }}
+                onClick={() => handleCategoryChange(category)}
+                aria-selected={isActive}
+                role="tab"
               >
                 {category}
               </button>
@@ -198,8 +242,9 @@ export default function Help() {
 
         {filteredFaqs.length > 0 ? (
           <div className="faq-list">
-            {filteredFaqs.map((faq) => {
+            {filteredFaqs.map((faq, index) => {
               const isOpen = openFaq === faq.id;
+              const answerId = `faq-answer-${faq.id}`;
 
               return (
                 <button
@@ -212,19 +257,32 @@ export default function Help() {
                     setOpenFaq(isOpen ? null : faq.id)
                   }
                   aria-expanded={isOpen}
+                  aria-controls={answerId}
+                  style={{
+                    "--faq-index": index,
+                  } as React.CSSProperties}
                 >
                   <div className="faq-item__question">
-                    <span>{faq.question}</span>
+                    <span className="faq-item__question-number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
 
-                    <ChevronDown
-                      size={19}
-                      className={
-                        isOpen ? "faq-arrow--open" : ""
-                      }
-                    />
+                    <span className="faq-item__question-text">
+                      {faq.question}
+                    </span>
+
+                    <span className="faq-item__toggle">
+                      <ChevronDown
+                        size={18}
+                        className={
+                          isOpen ? "faq-arrow--open" : ""
+                        }
+                      />
+                    </span>
                   </div>
 
                   <div
+                    id={answerId}
                     className={`faq-item__answer-wrapper ${
                       isOpen
                         ? "faq-item__answer-wrapper--open"
@@ -245,11 +303,15 @@ export default function Help() {
               <Search size={24} />
             </div>
 
+            <span className="help-empty__eyebrow">
+              لا توجد مطابقة
+            </span>
+
             <h3>لم نجد إجابة مطابقة</h3>
 
             <p>
-              جرّب استخدام كلمات مختلفة، أو أرسل لنا طلب
-              مساعدة وسنساعدك في حل المشكلة.
+              جرّب استخدام كلمات مختلفة، أو أرسل لنا طلب مساعدة
+              وسنساعدك في حل المشكلة.
             </p>
 
             <div className="help-empty__actions">
@@ -266,6 +328,7 @@ export default function Help() {
                 className="button button--primary"
               >
                 إرسال طلب مساعدة
+                <ArrowLeft size={16} />
               </Link>
             </div>
           </div>
@@ -274,7 +337,7 @@ export default function Help() {
 
       {/* Direct Support */}
       <section className="help-support">
-        <div>
+        <div className="help-support__content">
           <span className="help-support__eyebrow">
             لم تجد ما تبحث عنه؟
           </span>
@@ -283,7 +346,7 @@ export default function Help() {
 
           <p>
             يمكنك إرسال طلب مساعدة وسيتولى الفريق المختص
-            متابعته معك.
+            متابعته معك حتى الوصول إلى الحل المناسب.
           </p>
         </div>
 

@@ -9,8 +9,15 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
+import {
+  Link,
+  useSearchParams,
+} from "react-router-dom";
 
 type ExploreSection = {
   title: string;
@@ -24,7 +31,8 @@ type ExploreSection = {
 const sections: ExploreSection[] = [
   {
     title: "الكليات والبرامج",
-    description: "استكشف الكليات والبرامج الأكاديمية وتعرّف على تخصصاتها.",
+    description:
+      "استكشف الكليات والبرامج الأكاديمية وتعرّف على تخصصاتها.",
     icon: GraduationCap,
     to: "/faculties",
     category: "أكاديمي",
@@ -35,11 +43,14 @@ const sections: ExploreSection[] = [
       "تخصصات",
       "دراسة",
       "أكاديمي",
+      "تخصص",
+      "تعليم",
     ],
   },
   {
     title: "الفعاليات",
-    description: "اكتشف الأنشطة والورش والمسابقات والفعاليات القادمة.",
+    description:
+      "اكتشف الأنشطة والورش والمسابقات والفعاليات القادمة.",
     icon: CalendarDays,
     to: "/events",
     category: "الحياة الطلابية",
@@ -50,25 +61,31 @@ const sections: ExploreSection[] = [
       "مسابقات",
       "أحداث",
       "طلاب",
+      "نشاط",
+      "حدث",
     ],
   },
   {
     title: "الإعلانات",
-    description: "تابع آخر الأخبار والتنبيهات والمستجدات المهمة.",
+    description:
+      "تابع آخر الأخبار والتنبيهات والمستجدات المهمة.",
     icon: Bell,
     to: "/announcements",
     category: "المستجدات",
     keywords: [
       "إعلانات",
+      "إعلان",
       "أخبار",
       "تنبيهات",
       "مستجدات",
       "أخبار الجامعة",
+      "خبر",
     ],
   },
   {
     title: "مركز المساعدة",
-    description: "ابحث عن إجابة أو احصل على الدعم عندما تحتاج إليه.",
+    description:
+      "ابحث عن إجابة أو احصل على الدعم عندما تحتاج إليه.",
     icon: CircleHelp,
     to: "/help",
     category: "الدعم",
@@ -76,14 +93,17 @@ const sections: ExploreSection[] = [
       "مساعدة",
       "دعم",
       "أسئلة",
+      "سؤال",
       "مشكلة",
       "استفسار",
       "faq",
+      "حل",
     ],
   },
   {
     title: "المصادر",
-    description: "الوصول إلى الأدلة والمصادر المفيدة خلال رحلتك الجامعية.",
+    description:
+      "الوصول إلى الأدلة والمصادر المفيدة خلال رحلتك الجامعية.",
     icon: BookOpen,
     to: "/resources",
     category: "المصادر",
@@ -94,11 +114,14 @@ const sections: ExploreSection[] = [
       "مراجع",
       "تعلم",
       "معلومات",
+      "كتب",
+      "دليل",
     ],
   },
   {
     title: "الحياة الطلابية",
-    description: "شارك في الأنشطة وتعرّف على الفرص والمجتمع الطلابي.",
+    description:
+      "شارك في الأنشطة وتعرّف على الفرص والمجتمع الطلابي.",
     icon: Users,
     to: "/events",
     category: "المجتمع",
@@ -109,6 +132,8 @@ const sections: ExploreSection[] = [
       "أنشطة",
       "مشاركة",
       "اتحاد",
+      "تطوع",
+      "فرص",
     ],
   },
 ];
@@ -124,12 +149,21 @@ const categories = [
 ];
 
 export default function Explore() {
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("الكل");
+  const [searchParams, setSearchParams] =
+    useSearchParams();
+
+  const urlSearch = searchParams.get("search") ?? "";
+
+  const [search, setSearch] =
+    useState(urlSearch);
+
+  const [activeCategory, setActiveCategory] =
+    useState("الكل");
+
+  const normalizedSearch =
+    search.trim().toLowerCase();
 
   const filteredSections = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
     return sections.filter((section) => {
       const matchesCategory =
         activeCategory === "الكل" ||
@@ -149,47 +183,111 @@ export default function Explore() {
         .toLowerCase();
 
       return (
-        matchesCategory && searchableText.includes(normalizedSearch)
+        matchesCategory &&
+        searchableText.includes(normalizedSearch)
       );
     });
-  }, [search, activeCategory]);
+  }, [
+    normalizedSearch,
+    activeCategory,
+  ]);
 
-  const clearSearch = () => {
-    setSearch("");
+  const updateSearch = (value: string) => {
+    setSearch(value);
+
+    const nextParams =
+      new URLSearchParams(searchParams);
+
+    if (value.trim()) {
+      nextParams.set(
+        "search",
+        value.trim(),
+      );
+    } else {
+      nextParams.delete("search");
+    }
+
+    setSearchParams(nextParams, {
+      replace: true,
+    });
   };
 
+  const clearSearch = () => {
+    updateSearch("");
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setActiveCategory("الكل");
+
+    setSearchParams(
+      {},
+      { replace: true },
+    );
+  };
+
+  const hasFilters =
+    Boolean(search.trim()) ||
+    activeCategory !== "الكل";
+
   return (
-    <main className="page-shell explore-page" dir="rtl">
+    <main
+      className="page-shell explore-page"
+      dir="rtl"
+    >
       {/* Hero */}
       <section className="page-hero explore-hero">
         <div className="explore-hero__content">
-          <span className="page-kicker">اكتشف المنصة</span>
+          <span className="page-kicker">
+            اكتشف المنصة
+          </span>
 
-          <h1>استكشف</h1>
+          <h1>
+            كل ما تحتاجه
+            <span> في مكان واحد.</span>
+          </h1>
 
           <p>
-            كل ما تحتاجه في حياتك الجامعية، من الأكاديميات والفعاليات
-            إلى الدعم والمصادر، في مكان واحد.
+            استكشف الخدمات والأقسام والمحتوى الذي
+            تحتاجه خلال رحلتك الجامعية، من مكان واحد
+            وبطريقة أبسط.
           </p>
         </div>
 
-        <div className="explore-hero__meta">
-          <strong>{sections.length}</strong>
-          <span>أقسام رئيسية</span>
+        <div
+          className="explore-hero__meta"
+          aria-label="عدد الأقسام الرئيسية"
+        >
+          <strong>
+            {sections.length}
+          </strong>
+
+          <span>
+            أقسام رئيسية
+          </span>
         </div>
       </section>
 
       {/* Search */}
       <section className="explore-toolbar">
         <div className="explore-search">
-          <Search size={20} />
+          <Search
+            className="explore-search__icon"
+            size={20}
+            aria-hidden="true"
+          />
 
           <input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="ابحث عن كلية، فعالية، مساعدة، مصدر..."
+            onChange={(event) =>
+              updateSearch(
+                event.target.value,
+              )
+            }
+            placeholder="ابحث عن كلية، فعالية، إعلان، مساعدة..."
             aria-label="البحث في أقسام المنصة"
+            autoComplete="off"
           />
 
           {search && (
@@ -199,49 +297,75 @@ export default function Explore() {
               onClick={clearSearch}
               aria-label="مسح البحث"
             >
-              <X size={17} />
+              <X
+                size={17}
+                aria-hidden="true"
+              />
             </button>
           )}
         </div>
 
-        <div className="explore-results">
-          <strong>{filteredSections.length}</strong>
+        <div
+          className="explore-results"
+          aria-live="polite"
+        >
+          <strong>
+            {filteredSections.length}
+          </strong>
+
           <span>
             {filteredSections.length === 1
               ? "نتيجة"
-              : "نتائج متاحة"}
+              : "نتائج"}
           </span>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="explore-filters" aria-label="تصنيف المحتوى">
+      <section
+        className="explore-filters"
+        aria-label="تصنيف المحتوى"
+      >
         <div className="explore-filters__label">
-          <span>تصفية حسب</span>
+          <span>
+            تصفح حسب
+          </span>
         </div>
 
         <div className="explore-filters__list">
-          {categories.map((category) => {
-            const isActive = activeCategory === category;
+          {categories.map(
+            (category) => {
+              const isActive =
+                activeCategory ===
+                category;
 
-            return (
-              <button
-                key={category}
-                type="button"
-                className={`explore-filter ${
-                  isActive ? "explore-filter--active" : ""
-                }`}
-                onClick={() => setActiveCategory(category)}
-                aria-pressed={isActive}
-              >
-                {category}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  className={`explore-filter ${
+                    isActive
+                      ? "explore-filter--active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setActiveCategory(
+                      category,
+                    )
+                  }
+                  aria-pressed={
+                    isActive
+                  }
+                >
+                  {category}
+                </button>
+              );
+            },
+          )}
         </div>
       </section>
 
-      {/* Section heading */}
+      {/* Content */}
       <section className="explore-content">
         <div className="section-heading">
           <div>
@@ -250,89 +374,133 @@ export default function Explore() {
             </span>
 
             <h2>
-              {search
-                ? `نتائج البحث عن "${search}"`
-                : activeCategory === "الكل"
+              {search.trim()
+                ? `نتائج البحث عن "${search.trim()}"`
+                : activeCategory ===
+                    "الكل"
                   ? "ماذا تريد أن تستكشف؟"
                   : activeCategory}
             </h2>
           </div>
+
+          {hasFilters && (
+            <button
+              type="button"
+              className="explore-reset"
+              onClick={
+                resetFilters
+              }
+            >
+              إعادة ضبط
+              <X
+                size={15}
+                aria-hidden="true"
+              />
+            </button>
+          )}
         </div>
 
-        {filteredSections.length > 0 ? (
+        {filteredSections.length >
+        0 ? (
           <div className="explore-grid">
-            {filteredSections.map((section, index) => {
-              const Icon = section.icon;
+            {filteredSections.map(
+              (
+                section,
+                index,
+              ) => {
+                const Icon =
+                  section.icon;
 
-              return (
-                <Link
-                  to={section.to}
-                  className="explore-card"
-                  key={section.title}
-                  style={
-                    {
-                      "--explore-index": index,
-                    } as React.CSSProperties
-                  }
-                >
-                  <div className="explore-card__top">
-                    <div className="explore-card__icon">
-                      <Icon size={23} />
+                return (
+                  <Link
+                    to={section.to}
+                    className="explore-card"
+                    key={
+                      section.title
+                    }
+                    style={
+                      {
+                        "--explore-index":
+                          index,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="explore-card__top">
+                      <div className="explore-card__icon">
+                        <Icon
+                          size={23}
+                          aria-hidden="true"
+                        />
+                      </div>
+
+                      <span className="explore-card__category">
+                        {
+                          section.category
+                        }
+                      </span>
                     </div>
 
-                    <span className="explore-card__category">
-                      {section.category}
+                    <div className="explore-card__body">
+                      <h2>
+                        {
+                          section.title
+                        }
+                      </h2>
+
+                      <p>
+                        {
+                          section.description
+                        }
+                      </p>
+                    </div>
+
+                    <span className="explore-card__action">
+                      <span>
+                        استكشف القسم
+                      </span>
+
+                      <ArrowLeft
+                        size={17}
+                        aria-hidden="true"
+                      />
                     </span>
-                  </div>
-
-                  <div className="explore-card__body">
-                    <h2>{section.title}</h2>
-
-                    <p>{section.description}</p>
-                  </div>
-
-                  <span className="explore-card__action">
-                    <span>استكشف القسم</span>
-                    <ArrowLeft size={17} />
-                  </span>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              },
+            )}
           </div>
         ) : (
           <div className="explore-empty">
             <div className="explore-empty__icon">
-              <Search size={25} />
+              <Search
+                size={25}
+                aria-hidden="true"
+              />
             </div>
 
-            <h3>لم نجد ما تبحث عنه</h3>
+            <h3>
+              لم نجد ما تبحث عنه
+            </h3>
 
             <p>
-              جرّب استخدام كلمة مختلفة أو ألغِ الفلاتر للبحث في
+              جرّب استخدام كلمة مختلفة
+              أو ألغِ الفلاتر للبحث في
               جميع أقسام المنصة.
             </p>
 
-            <div className="explore-empty__actions">
-              {search && (
+            {hasFilters && (
+              <div className="explore-empty__actions">
                 <button
                   type="button"
-                  onClick={clearSearch}
+                  onClick={
+                    resetFilters
+                  }
                   className="button button--primary"
-                >
-                  مسح البحث
-                </button>
-              )}
-
-              {activeCategory !== "الكل" && (
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory("الكل")}
-                  className="button button--secondary"
                 >
                   عرض كل الأقسام
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -340,23 +508,39 @@ export default function Explore() {
       {/* Help CTA */}
       <section className="explore-help">
         <div className="explore-help__icon">
-          <CircleHelp size={23} />
+          <CircleHelp
+            size={23}
+            aria-hidden="true"
+          />
         </div>
 
         <div className="explore-help__content">
-          <span>تحتاج مساعدة في الوصول لشيء معين؟</span>
+          <span>
+            لم تجد ما تبحث عنه؟
+          </span>
 
-          <h2>مركز المساعدة موجود لمساعدتك.</h2>
+          <h2>
+            مركز المساعدة موجود لمساعدتك.
+          </h2>
 
           <p>
-            ابحث عن إجابة لسؤالك أو أرسل طلب دعم إذا لم تجد ما
-            تحتاجه.
+            ابحث عن إجابة لسؤالك أو أرسل
+            طلب دعم إذا لم تجد ما تحتاجه.
           </p>
         </div>
 
-        <Link to="/help" className="explore-help__action">
-          افتح مركز المساعدة
-          <ArrowLeft size={17} />
+        <Link
+          to="/help"
+          className="explore-help__action"
+        >
+          <span>
+            افتح مركز المساعدة
+          </span>
+
+          <ArrowLeft
+            size={17}
+            aria-hidden="true"
+          />
         </Link>
       </section>
     </main>

@@ -7,7 +7,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 
 type ResourceCategory =
   | "الكل"
@@ -90,47 +90,66 @@ export default function Resources() {
     });
   }, [search, activeCategory]);
 
+  const clearFilters = () => {
+    setSearch("");
+    setActiveCategory("الكل");
+  };
+
   const clearSearch = () => {
     setSearch("");
   };
 
   const hasFilters =
-    search.trim() !== "" ||
-    activeCategory !== "الكل";
+    Boolean(search.trim()) || activeCategory !== "الكل";
 
   return (
     <main className="page-shell resources-page" dir="rtl">
       {/* Header */}
       <section className="resources-header">
-        <div>
+        <div className="resources-header__content">
           <span className="page-kicker">تعلم واستخدم</span>
 
-          <h1>المصادر</h1>
+          <div className="resources-header__title-row">
+            <div className="resources-header__icon">
+              <BookOpen size={24} aria-hidden="true" />
+            </div>
+
+            <h1>المصادر</h1>
+          </div>
 
           <p>
-            مجموعة منظمة من الأدلة والمصادر والأدوات
-            المفيدة خلال رحلتك الجامعية.
+            مجموعة منظمة من الأدلة والمصادر والأدوات المفيدة
+            خلال رحلتك الجامعية.
           </p>
         </div>
 
-        <div className="resources-header__icon">
-          <BookOpen size={29} />
+        <div
+          className="resources-header__visual"
+          aria-hidden="true"
+        >
+          <BookOpen size={54} strokeWidth={1.35} />
         </div>
       </section>
 
-      {/* Search */}
+      {/* Search & count */}
       <section className="resources-toolbar">
         <div className="resources-search">
-          <Search size={19} />
+          <Search
+            className="resources-search__icon"
+            size={19}
+            aria-hidden="true"
+          />
 
           <input
+            id="resources-search"
             type="search"
             value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-            }}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
             placeholder="ابحث عن مصدر أو دليل..."
             aria-label="البحث في المصادر"
+            autoComplete="off"
           />
 
           {search && (
@@ -140,23 +159,48 @@ export default function Resources() {
               onClick={clearSearch}
               aria-label="مسح البحث"
             >
-              <X size={16} />
+              <X size={16} aria-hidden="true" />
             </button>
           )}
         </div>
 
-        <span className="resources-count">
-          {filteredResources.length} مصدر
+        <span
+          className="resources-count"
+          aria-live="polite"
+        >
+          {filteredResources.length}{" "}
+          {filteredResources.length === 1
+            ? "مصدر"
+            : "مصادر"}
         </span>
       </section>
 
-      {/* Filters */}
-      <section className="resources-filters">
-        <span className="resources-filter-label">
-          التصنيف
-        </span>
+      {/* Categories */}
+      <section
+        className="resources-filters"
+        aria-label="تصفية المصادر حسب التصنيف"
+      >
+        <div className="resources-filter-heading">
+          <span className="resources-filter-label">
+            التصنيف
+          </span>
 
-        <div className="resources-filter-list">
+          {hasFilters && (
+            <button
+              type="button"
+              className="resources-filter-reset"
+              onClick={clearFilters}
+            >
+              إعادة ضبط
+            </button>
+          )}
+        </div>
+
+        <div
+          className="resources-filter-list"
+          role="group"
+          aria-label="تصنيفات المصادر"
+        >
           {categories.map((category) => {
             const isActive =
               activeCategory === category;
@@ -196,70 +240,79 @@ export default function Resources() {
           </div>
 
           <span>
-            {filteredResources.length} من {resources.length}
+            {filteredResources.length} من{" "}
+            {resources.length}
           </span>
         </div>
 
         {filteredResources.length > 0 ? (
           <div className="resource-grid">
-            {filteredResources.map(
-              (resource, index) => {
-                const Icon = resource.icon;
+            {filteredResources.map((resource, index) => {
+              const Icon = resource.icon;
 
-                return (
-                  <article
-                    className="resource-card"
-                    key={resource.id}
-                    style={
-                      {
-                        "--resource-index": index,
-                      } as React.CSSProperties
-                    }
-                  >
-                    <div className="resource-card__top">
-                      <div className="resource-card__icon">
-                        <Icon size={23} />
-                      </div>
-
-                      <span className="resource-card__category">
-                        {resource.category}
-                      </span>
+              return (
+                <article
+                  className="resource-card"
+                  key={resource.id}
+                  style={
+                    {
+                      "--resource-index": index,
+                    } as CSSProperties
+                  }
+                >
+                  <div className="resource-card__top">
+                    <div
+                      className="resource-card__icon"
+                      aria-hidden="true"
+                    >
+                      <Icon size={23} />
                     </div>
 
-                    <div className="resource-card__body">
-                      <h2>{resource.title}</h2>
+                    <span className="resource-card__category">
+                      {resource.category}
+                    </span>
+                  </div>
 
-                      <p>
-                        {resource.description}
-                      </p>
-                    </div>
+                  <div className="resource-card__body">
+                    <h2>{resource.title}</h2>
 
-                    <div className="resource-card__footer">
-                      <button
-                        type="button"
-                        className="resource-card__action"
-                        onClick={() => {
-                          // سيتم ربط المصدر الحقيقي هنا لاحقًا.
-                        }}
-                      >
-                        استكشاف
-                        <ArrowLeft size={16} />
-                      </button>
+                    <p>{resource.description}</p>
+                  </div>
 
-                      <span className="resource-card__status">
-                        قريبًا
-                      </span>
-                    </div>
-                  </article>
-                );
-              }
-            )}
+                  <div className="resource-card__footer">
+                    <button
+                      type="button"
+                      className="resource-card__action"
+                      disabled
+                      aria-label={`${resource.title} — قريبًا`}
+                    >
+                      <span>استكشاف</span>
+                      <ArrowLeft
+                        size={16}
+                        aria-hidden="true"
+                      />
+                    </button>
+
+                    <span className="resource-card__status">
+                      قريبًا
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="resources-empty">
-            <div className="resources-empty__icon">
+            <div
+              className="resources-empty__icon"
+              aria-hidden="true"
+            >
               <Search size={25} />
             </div>
+
+            <span className="resources-empty__eyebrow">
+              لا توجد نتائج
+            </span>
 
             <h3>لم نجد مصادر مطابقة</h3>
 
@@ -271,10 +324,7 @@ export default function Resources() {
             <button
               type="button"
               className="button button--secondary"
-              onClick={() => {
-                setSearch("");
-                setActiveCategory("الكل");
-              }}
+              onClick={clearFilters}
             >
               مسح الفلاتر
             </button>
@@ -284,7 +334,10 @@ export default function Resources() {
 
       {/* Bottom note */}
       <section className="resources-note">
-        <div className="resources-note__icon">
+        <div
+          className="resources-note__icon"
+          aria-hidden="true"
+        >
           <BookOpen size={20} />
         </div>
 

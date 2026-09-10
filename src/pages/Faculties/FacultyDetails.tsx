@@ -11,8 +11,9 @@ import {
   useParams,
 } from "react-router-dom";
 
-import { faculties } from "../../data/faculties";
+import { type CSSProperties } from "react";
 
+import { faculties } from "../../data/faculties";
 export default function FacultyDetails() {
   const { id } = useParams();
 
@@ -22,106 +23,118 @@ export default function FacultyDetails() {
 
   if (!faculty) {
     return (
-      <div
-        className="page-shell"
+      <main
+        className="page-shell academic-page"
         dir="rtl"
       >
-        <div className="empty-state">
+        <div className="academic-details-empty">
+          <div className="academic-details-empty__icon">
+            <Building2
+              size={32}
+              aria-hidden="true"
+            />
+          </div>
 
-          <Building2 size={34} />
+          <span className="academic-kicker">
+            الكليات والبرامج
+          </span>
 
-          <h1>
-            الكلية غير موجودة
-          </h1>
+          <h1>الكلية غير موجودة</h1>
 
           <p>
-            لم نتمكن من العثور على الكلية
-            التي تبحث عنها.
+            لم نتمكن من العثور على الكلية التي تبحث
+            عنها. ربما تم تغيير الرابط أو أن الكلية
+            غير متاحة حاليًا.
           </p>
 
           <Link
             to="/faculties"
-            className="primary-button"
+            className="button button--primary"
           >
+            <ArrowRight
+              size={17}
+              aria-hidden="true"
+            />
+
             العودة إلى الكليات
           </Link>
-
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div
-      className="page-shell academic-page"
+    <main
+      className="page-shell academic-page faculty-details-page"
       dir="rtl"
     >
-
-      {/* =========================
-          BACK
-          ========================= */}
-
+      {/* Back */}
       <Link
         to="/faculties"
-        className="back-link"
+        className="back-link faculty-details__back"
       >
-        <ArrowRight size={17} />
+        <ArrowRight
+          size={17}
+          aria-hidden="true"
+        />
 
         العودة إلى الكليات
       </Link>
 
-
-      {/* =========================
-          HERO
-          ========================= */}
-
+      {/* Faculty Hero */}
       <section className="faculty-details-hero">
-
         <div className="faculty-details-hero__icon">
-          {faculty.icon}
+          <span aria-hidden="true">
+            {faculty.icon}
+          </span>
         </div>
 
-        <div>
-
+        <div className="faculty-details-hero__content">
           <span className="page-kicker">
             الكليات والبرامج
           </span>
 
-          <h1>
-            {faculty.name}
-          </h1>
+          <h1>{faculty.name}</h1>
 
-          <p>
-            {faculty.description}
-          </p>
+          <p>{faculty.description}</p>
 
+          <div className="faculty-details-hero__stats">
+            <div>
+              <strong>
+                {faculty.programs.length}
+              </strong>
+
+              <span>
+                {faculty.programs.length === 1
+                  ? "برنامج أكاديمي"
+                  : "برامج أكاديمية"}
+              </span>
+            </div>
+          </div>
         </div>
-
       </section>
 
-
-      {/* =========================
-          PROGRAMS
-          ========================= */}
-
-      <section className="content-section">
-
+      {/* Programs */}
+      <section className="content-section academic-programs-section">
         <div className="section-title-row">
-
           <div>
-
             <span className="page-kicker">
               البرامج الأكاديمية
             </span>
 
-            <h2>
-              البرامج المتاحة
-            </h2>
+            <h2>البرامج المتاحة</h2>
 
+            <p>
+              تعرّف على البرامج والتخصصات المتاحة
+              داخل {faculty.name}.
+            </p>
           </div>
 
           <div className="academic-program-count">
-            <BookOpen size={17} />
+            <BookOpen
+              size={17}
+              aria-hidden="true"
+            />
 
             <span>
               {faculty.programs.length}{" "}
@@ -130,81 +143,83 @@ export default function FacultyDetails() {
                 : "برامج"}
             </span>
           </div>
-
         </div>
 
-
         <div className="program-grid">
-
           {faculty.programs.map(
-            (program) => (
+            (program, index) => (
               <article
                 className="program-card"
                 key={program.id}
+                style={
+                  {
+                    "--program-index": index,
+                  } as CSSProperties
+                }
               >
+                <div className="program-card__top">
+                  <div className="program-card__icon">
+                    <GraduationCap
+                      size={22}
+                      aria-hidden="true"
+                    />
+                  </div>
 
-                <div className="program-card__icon">
-                  <GraduationCap
-                    size={22}
-                  />
+                  <span className="program-card__number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                 </div>
 
                 <div className="program-card__content">
-
                   <span>
                     برنامج أكاديمي
                   </span>
 
-                  <h3>
-                    {program.name}
-                  </h3>
+                  <h3>{program.name}</h3>
 
                   <p>
                     {program.description}
                   </p>
-
                 </div>
 
-                <CheckCircle2
-                  size={20}
-                />
+                <div className="program-card__footer">
+                  <span>برنامج متاح</span>
 
+                  <CheckCircle2
+                    size={19}
+                    aria-hidden="true"
+                  />
+                </div>
               </article>
             )
           )}
-
         </div>
-
       </section>
 
-
-      {/* =========================
-          INFO
-          ========================= */}
-
+      {/* Information */}
       <section className="academic-info-box">
-
         <div className="academic-info-box__icon">
-          <BookOpen size={24} />
+          <BookOpen
+            size={24}
+            aria-hidden="true"
+          />
         </div>
 
         <div>
+          <span>دليل أكاديمي</span>
 
           <h2>
-            عن البرامج الأكاديمية
+            استكشف البرنامج المناسب لك
           </h2>
 
           <p>
-            يمكنك استكشاف البرامج المتاحة
-            والتعرف على المجال الأكاديمي
-            الذي يناسب اهتماماتك وخططك
-            المستقبلية.
+            يمكنك استكشاف البرامج المتاحة داخل
+            الكلية والتعرف على المجالات الأكاديمية
+            المختلفة لمساعدتك في فهم الخيارات
+            المتاحة أمامك.
           </p>
-
         </div>
-
       </section>
-
-    </div>
+    </main>
   );
 }

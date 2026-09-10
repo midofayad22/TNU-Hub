@@ -9,40 +9,55 @@ interface ProtectedAdminRouteProps {
 export default function ProtectedAdminRoute({
   children,
 }: ProtectedAdminRouteProps) {
-  const { user, profile, loading } = useAuth();
+  const {
+    user,
+    profile,
+    loading,
+  } = useAuth();
+
   const location = useLocation();
 
-  // لسه بنتأكد من حالة تسجيل الدخول
   if (loading) {
     return (
-      <div className="admin-auth-loading" dir="rtl">
+      <div
+        className="admin-auth-loading"
+        dir="rtl"
+      >
         <div className="admin-auth-loading__card">
           <div className="admin-auth-loading__spinner" />
-          <p>جاري التحقق من الحساب...</p>
+
+          <p>
+            جاري التحقق من الحساب...
+          </p>
         </div>
       </div>
     );
   }
 
-  // المستخدم غير مسجل الدخول
   if (!user) {
     return (
       <Navigate
         to="/login"
         replace
-        state={{ from: location.pathname }}
+        state={{
+          from: location.pathname,
+        }}
       />
     );
   }
 
-  // المستخدم مسجل لكن ليس Admin
-  if (
-    !profile ||
-    (profile.role !== "admin" && profile.role !== "root_admin")
-  ) {
-    return <Navigate to="/" replace />;
+  const isAdmin =
+    profile?.role === "admin" ||
+    profile?.role === "root_admin";
+
+  if (!isAdmin) {
+    return (
+      <Navigate
+        to="/"
+        replace
+      />
+    );
   }
 
-  // Admin أو Root Admin
   return <>{children}</>;
 }

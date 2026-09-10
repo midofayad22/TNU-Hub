@@ -9,13 +9,13 @@
 
 :root {
   /* Brand */
-  --tnu-primary: #0f766e;
-  --tnu-primary-hover: #0b625b;
-  --tnu-primary-active: #09554f;
+  --tnu-primary: #0f4176;
+  --tnu-primary-hover: #0b3462;
+  --tnu-primary-active: #092e55;
   --tnu-primary-soft: #e8f6f4;
   --tnu-primary-subtle: #f2faf9;
 
-  --tnu-accent: #2f8f83;
+  --tnu-accent: #2f4c8f;
   --tnu-accent-soft: #e9f7f5;
 
   /* Background */
@@ -38,7 +38,7 @@
   --tnu-border-strong: #cbd7d4;
 
   /* Semantic */
-  --tnu-success: #198754;
+  --tnu-success: #195b87;
   --tnu-success-soft: #eaf7f0;
 
   --tnu-warning: #b7791f;
@@ -98,7 +98,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --tnu-primary: #45a99e;
+  --tnu-primary: #457ea9;
   --tnu-primary-hover: #5bb8ae;
   --tnu-primary-active: #36958b;
   --tnu-primary-soft: #15322f;

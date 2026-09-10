@@ -11,7 +11,13 @@ import {
   X,
 } from "lucide-react";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
+
 import { Link } from "react-router-dom";
 
 import { useProfile } from "../../context/useProfile";
@@ -40,32 +46,64 @@ export default function Profile() {
   const [formData, setFormData] =
     useState<ProfileData>(emptyProfile);
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] =
+    useState(false);
 
-  const selectedFaculty = faculties.find(
-    (faculty) => faculty.name === formData.faculty
+  const selectedFaculty = useMemo(
+    () =>
+      faculties.find(
+        (faculty) =>
+          faculty.name === formData.faculty,
+      ),
+    [formData.faculty],
   );
 
   const availablePrograms =
     selectedFaculty?.programs ?? [];
 
+  const completedFields = [
+    profile.name,
+    profile.faculty,
+    profile.program,
+    profile.academicYear,
+  ].filter((value) => value.trim() !== "").length;
+
+  const completionPercentage =
+    completedFields * 25;
+
   const isProfileComplete =
-    profile.name.trim() !== "" &&
-    profile.faculty.trim() !== "" &&
-    profile.program.trim() !== "" &&
-    profile.academicYear.trim() !== "";
+    completionPercentage === 100;
+
+  const avatarLetter =
+    profile.name.trim().charAt(0) || "؟";
 
   const openEditProfile = () => {
-    setFormData(profile);
+    setFormData({
+      name: profile.name,
+      faculty: profile.faculty,
+      program: profile.program,
+      academicYear: profile.academicYear,
+    });
+
     setIsEditing(true);
   };
 
   const closeEditProfile = () => {
-    setFormData(profile);
+    setFormData({
+      name: profile.name,
+      faculty: profile.faculty,
+      program: profile.program,
+      academicYear: profile.academicYear,
+    });
+
     setIsEditing(false);
   };
 
-  const saveProfile = () => {
+  const saveProfile = (
+    event?: FormEvent<HTMLFormElement>,
+  ) => {
+    event?.preventDefault();
+
     const cleanedProfile: ProfileData = {
       name: formData.name.trim(),
       faculty: formData.faculty.trim(),
@@ -73,13 +111,22 @@ export default function Profile() {
       academicYear: formData.academicYear.trim(),
     };
 
+    if (
+      !cleanedProfile.name ||
+      !cleanedProfile.faculty ||
+      !cleanedProfile.program ||
+      !cleanedProfile.academicYear
+    ) {
+      return;
+    }
+
     updateProfile(cleanedProfile);
     setIsEditing(false);
   };
 
   const updateField = (
     field: keyof ProfileData,
-    value: string
+    value: string,
   ) => {
     setFormData((current) => ({
       ...current,
@@ -87,7 +134,9 @@ export default function Profile() {
     }));
   };
 
-  const updateFaculty = (facultyName: string) => {
+  const updateFaculty = (
+    facultyName: string,
+  ) => {
     setFormData((current) => ({
       ...current,
       faculty: facultyName,
@@ -95,35 +144,96 @@ export default function Profile() {
     }));
   };
 
-  const avatarLetter =
-    profile.name.trim().charAt(0) || "؟";
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeEditProfile();
+      }
+    };
+
+    document.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+    };
+  }, [isEditing, profile]);
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [isEditing]);
+
+  const canSave =
+    formData.name.trim() !== "" &&
+    formData.faculty.trim() !== "" &&
+    formData.program.trim() !== "" &&
+    formData.academicYear.trim() !== "";
 
   return (
     <main
       className="page-shell profile-page"
       dir="rtl"
     >
-      {/* Profile Header */}
+      {/* =========================================
+          PROFILE HERO
+          ========================================= */}
 
       <section className="profile-header">
-        <div className="profile-avatar">
-          {avatarLetter}
-        </div>
+        <div className="profile-header__identity">
+          <div
+            className="profile-avatar"
+            aria-hidden="true"
+          >
+            {avatarLetter}
+          </div>
 
-        <div className="profile-main">
-          <span className="page-kicker">
-            حساب الطالب
-          </span>
+          <div className="profile-main">
+            <span className="page-kicker">
+              حساب الطالب
+            </span>
 
-          <h1>
-            {profile.name || "أكمل ملفك الشخصي"}
-          </h1>
+            <h1>
+              {profile.name.trim()
+                ? profile.name
+                : "أكمل ملفك الشخصي"}
+            </h1>
 
-          <p>
-            {isProfileComplete
-              ? `طالب جامعي · ${profile.program}`
-              : "أضف بياناتك الأكاديمية لتخصيص تجربتك."}
-          </p>
+            <p>
+              {isProfileComplete
+                ? `طالب جامعي · ${profile.program}`
+                : "أضف بياناتك الأكاديمية لتخصيص تجربتك داخل المنصة."}
+            </p>
+
+            {profile.faculty && (
+              <div className="profile-main__meta">
+                <GraduationCap
+                  size={15}
+                  aria-hidden="true"
+                />
+
+                <span>
+                  {profile.faculty}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="profile-header__actions">
@@ -132,7 +242,10 @@ export default function Profile() {
             className="profile-edit-button"
             onClick={openEditProfile}
           >
-            <Edit3 size={16} />
+            <Edit3
+              size={16}
+              aria-hidden="true"
+            />
 
             <span>
               {isProfileComplete
@@ -146,17 +259,75 @@ export default function Profile() {
             className="profile-settings-button"
             aria-label="الإعدادات"
           >
-            <Settings size={17} />
+            <Settings
+              size={17}
+              aria-hidden="true"
+            />
           </Link>
         </div>
       </section>
 
-      {/* Quick Stats */}
+      {/* =========================================
+          PROFILE COMPLETION
+          ========================================= */}
+
+      <section className="profile-completion-card">
+        <div className="profile-completion-card__top">
+          <div className="profile-completion-card__identity">
+            <div className="profile-completion-card__icon">
+              <User
+                size={19}
+                aria-hidden="true"
+              />
+            </div>
+
+            <div>
+              <span>
+                حالة الملف الشخصي
+              </span>
+
+              <strong>
+                {isProfileComplete
+                  ? "ملفك مكتمل"
+                  : `اكتمال الملف ${completionPercentage}%`}
+              </strong>
+            </div>
+          </div>
+
+          <span className="profile-completion-card__percentage">
+            {completionPercentage}%
+          </span>
+        </div>
+
+        <div
+          className="profile-progress"
+          aria-label={`اكتمال الملف ${completionPercentage}%`}
+        >
+          <span
+            style={{
+              width: `${completionPercentage}%`,
+            }}
+          />
+        </div>
+
+        <p>
+          {isProfileComplete
+            ? "بياناتك الأكاديمية مكتملة ويمكن للمنصة تخصيص تجربتك بشكل أفضل."
+            : "أكمل بياناتك الأكاديمية حتى تحصل على تجربة أكثر تخصيصًا داخل TNU Hub."}
+        </p>
+      </section>
+
+      {/* =========================================
+          QUICK STATS
+          ========================================= */}
 
       <section className="profile-stats">
         <div className="profile-stat">
           <div className="profile-stat__icon">
-            <CheckCircle2 size={19} />
+            <CheckCircle2
+              size={19}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -167,7 +338,10 @@ export default function Profile() {
 
         <div className="profile-stat">
           <div className="profile-stat__icon">
-            <CalendarDays size={19} />
+            <CalendarDays
+              size={19}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -178,7 +352,10 @@ export default function Profile() {
 
         <div className="profile-stat">
           <div className="profile-stat__icon">
-            <Bell size={19} />
+            <Bell
+              size={19}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -188,10 +365,12 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Main Grid */}
+      {/* =========================================
+          INFORMATION GRID
+          ========================================= */}
 
       <div className="profile-grid">
-        {/* Academic Information */}
+        {/* Academic */}
 
         <section className="profile-card">
           <div className="profile-card__header">
@@ -200,12 +379,20 @@ export default function Profile() {
               <h2>المعلومات الأكاديمية</h2>
             </div>
 
-            <GraduationCap size={21} />
+            <div className="profile-card__header-icon">
+              <GraduationCap
+                size={21}
+                aria-hidden="true"
+              />
+            </div>
           </div>
 
           <div className="profile-row">
             <div className="profile-row__icon">
-              <GraduationCap size={18} />
+              <GraduationCap
+                size={18}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="profile-row__content">
@@ -220,7 +407,10 @@ export default function Profile() {
 
           <div className="profile-row">
             <div className="profile-row__icon">
-              <BookOpen size={18} />
+              <BookOpen
+                size={18}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="profile-row__content">
@@ -235,7 +425,10 @@ export default function Profile() {
 
           <div className="profile-row">
             <div className="profile-row__icon">
-              <CalendarDays size={18} />
+              <CalendarDays
+                size={18}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="profile-row__content">
@@ -249,7 +442,7 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Account Information */}
+        {/* Account */}
 
         <section className="profile-card">
           <div className="profile-card__header">
@@ -258,12 +451,20 @@ export default function Profile() {
               <h2>معلومات الحساب</h2>
             </div>
 
-            <User size={21} />
+            <div className="profile-card__header-icon">
+              <User
+                size={21}
+                aria-hidden="true"
+              />
+            </div>
           </div>
 
           <div className="profile-row">
             <div className="profile-row__icon">
-              <User size={18} />
+              <User
+                size={18}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="profile-row__content">
@@ -274,13 +475,17 @@ export default function Profile() {
 
           <div className="profile-row">
             <div className="profile-row__icon">
-              <Bell size={18} />
+              <Bell
+                size={18}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="profile-row__content">
               <span>الإشعارات</span>
 
               <strong className="profile-status">
+                <span />
                 مفعلة
               </strong>
             </div>
@@ -288,13 +493,23 @@ export default function Profile() {
 
           <div className="profile-row">
             <div className="profile-row__icon">
-              <CheckCircle2 size={18} />
+              <CheckCircle2
+                size={18}
+                aria-hidden="true"
+              />
             </div>
 
             <div className="profile-row__content">
               <span>حالة الحساب</span>
 
-              <strong className="profile-status">
+              <strong
+                className={`profile-status ${
+                  isProfileComplete
+                    ? "profile-status--success"
+                    : "profile-status--warning"
+                }`}
+              >
+                <span />
                 {isProfileComplete
                   ? "الملف مكتمل"
                   : "الملف غير مكتمل"}
@@ -304,15 +519,20 @@ export default function Profile() {
         </section>
       </div>
 
-      {/* Profile Completion */}
+      {/* =========================================
+          INCOMPLETE PROFILE CTA
+          ========================================= */}
 
       {!isProfileComplete && (
         <section className="profile-completion">
           <div className="profile-completion__icon">
-            <User size={20} />
+            <User
+              size={20}
+              aria-hidden="true"
+            />
           </div>
 
-          <div>
+          <div className="profile-completion__content">
             <strong>
               أكمل ملفك الشخصي
             </strong>
@@ -332,7 +552,9 @@ export default function Profile() {
         </section>
       )}
 
-      {/* Activity */}
+      {/* =========================================
+          ACTIVITY
+          ========================================= */}
 
       <section className="profile-activity">
         <div className="profile-activity__header">
@@ -348,7 +570,10 @@ export default function Profile() {
 
         <div className="profile-activity__empty">
           <div className="profile-activity__empty-icon">
-            <CalendarDays size={21} />
+            <CalendarDays
+              size={21}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -363,14 +588,17 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Edit Profile Modal */}
+      {/* =========================================
+          EDIT PROFILE MODAL
+          ========================================= */}
 
       {isEditing && (
         <div
           className="profile-modal-backdrop"
           onMouseDown={(event) => {
             if (
-              event.target === event.currentTarget
+              event.target ===
+              event.currentTarget
             ) {
               closeEditProfile();
             }
@@ -389,6 +617,11 @@ export default function Profile() {
                 <h2 id="profile-modal-title">
                   بيانات الملف الشخصي
                 </h2>
+
+                <p>
+                  حدّث بياناتك الأكاديمية لتخصيص
+                  تجربتك داخل المنصة.
+                </p>
               </div>
 
               <button
@@ -397,14 +630,18 @@ export default function Profile() {
                 onClick={closeEditProfile}
                 aria-label="إغلاق"
               >
-                <X size={18} />
+                <X
+                  size={18}
+                  aria-hidden="true"
+                />
               </button>
             </div>
 
-            <div className="profile-form">
-              {/* Name */}
-
-              <label>
+            <form
+              className="profile-form"
+              onSubmit={saveProfile}
+            >
+              <label className="profile-form__field">
                 <span>الاسم</span>
 
                 <input
@@ -413,23 +650,23 @@ export default function Profile() {
                   onChange={(event) =>
                     updateField(
                       "name",
-                      event.target.value
+                      event.target.value,
                     )
                   }
                   placeholder="اكتب اسمك"
+                  autoComplete="name"
+                  autoFocus
                 />
               </label>
 
-              {/* Faculty */}
-
-              <label>
+              <label className="profile-form__field">
                 <span>الكلية</span>
 
                 <select
                   value={formData.faculty}
                   onChange={(event) =>
                     updateFaculty(
-                      event.target.value
+                      event.target.value,
                     )
                   }
                 >
@@ -448,9 +685,7 @@ export default function Profile() {
                 </select>
               </label>
 
-              {/* Program */}
-
-              <label>
+              <label className="profile-form__field">
                 <span>البرنامج</span>
 
                 <select
@@ -458,10 +693,12 @@ export default function Profile() {
                   onChange={(event) =>
                     updateField(
                       "program",
-                      event.target.value
+                      event.target.value,
                     )
                   }
-                  disabled={!formData.faculty}
+                  disabled={
+                    !formData.faculty
+                  }
                 >
                   <option value="">
                     {!formData.faculty
@@ -477,22 +714,22 @@ export default function Profile() {
                       >
                         {program.name}
                       </option>
-                    )
+                    ),
                   )}
                 </select>
               </label>
 
-              {/* Academic Year */}
-
-              <label>
+              <label className="profile-form__field">
                 <span>العام الدراسي</span>
 
                 <select
-                  value={formData.academicYear}
+                  value={
+                    formData.academicYear
+                  }
                   onChange={(event) =>
                     updateField(
                       "academicYear",
-                      event.target.value
+                      event.target.value,
                     )
                   }
                 >
@@ -510,32 +747,30 @@ export default function Profile() {
                   ))}
                 </select>
               </label>
-            </div>
 
-            <div className="profile-modal__footer">
-              <button
-                type="button"
-                className="profile-modal__cancel"
-                onClick={closeEditProfile}
-              >
-                إلغاء
-              </button>
+              <div className="profile-modal__footer">
+                <button
+                  type="button"
+                  className="profile-modal__cancel"
+                  onClick={closeEditProfile}
+                >
+                  إلغاء
+                </button>
 
-              <button
-                type="button"
-                className="profile-modal__save"
-                onClick={saveProfile}
-                disabled={
-                  !formData.name.trim() ||
-                  !formData.faculty ||
-                  !formData.program ||
-                  !formData.academicYear
-                }
-              >
-                <Save size={16} />
-                حفظ البيانات
-              </button>
-            </div>
+                <button
+                  type="submit"
+                  className="profile-modal__save"
+                  disabled={!canSave}
+                >
+                  <Save
+                    size={16}
+                    aria-hidden="true"
+                  />
+
+                  حفظ البيانات
+                </button>
+              </div>
+            </form>
           </section>
         </div>
       )}

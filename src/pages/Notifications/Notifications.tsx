@@ -1,4 +1,9 @@
 import {
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
+import {
   Bell,
   CheckCircle2,
   CheckCheck,
@@ -6,7 +11,6 @@ import {
   Megaphone,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
 
 type NotificationType = "announcement" | "request" | "event";
 
@@ -58,7 +62,7 @@ export default function Notifications() {
 
   const unreadCount = useMemo(
     () => items.filter((item) => !item.read).length,
-    [items]
+    [items],
   );
 
   const filteredNotifications = useMemo(() => {
@@ -74,36 +78,47 @@ export default function Notifications() {
       current.map((item) =>
         item.id === id
           ? { ...item, read: true }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
   const markAllAsRead = () => {
+    if (unreadCount === 0) return;
+
     setItems((current) =>
       current.map((item) => ({
         ...item,
         read: true,
-      }))
+      })),
     );
   };
 
   const deleteNotification = (id: number) => {
     setItems((current) =>
-      current.filter((item) => item.id !== id)
+      current.filter((item) => item.id !== id),
     );
   };
 
   return (
     <main className="page-shell notifications-page" dir="rtl">
-      {/* Header */}
       <section className="notifications-header">
-        <div>
-          <span className="page-kicker">
-            التحديثات
-          </span>
+        <div className="notifications-header__content">
+          <span className="page-kicker">التحديثات</span>
 
-          <h1>الإشعارات</h1>
+          <div className="notifications-header__title-row">
+            <div className="notifications-header__title-icon">
+              <Bell size={21} aria-hidden="true" />
+            </div>
+
+            <h1>الإشعارات</h1>
+
+            {unreadCount > 0 && (
+              <span className="notifications-header__badge">
+                {unreadCount} جديد
+              </span>
+            )}
+          </div>
 
           <p>
             آخر التنبيهات والتحديثات الخاصة بك.
@@ -116,19 +131,18 @@ export default function Notifications() {
             className="notifications-mark-all"
             onClick={markAllAsRead}
           >
-            <CheckCheck size={17} />
-            تعليم الكل كمقروء
+            <CheckCheck size={17} aria-hidden="true" />
+            <span>تعليم الكل كمقروء</span>
           </button>
         )}
       </section>
 
-      {/* Summary */}
-      <section className="notifications-summary">
+      <section className="notifications-summary" aria-label="ملخص الإشعارات">
         <div className="notifications-summary__icon">
-          <Bell size={20} />
+          <Bell size={20} aria-hidden="true" />
         </div>
 
-        <div>
+        <div className="notifications-summary__content">
           <strong>
             {unreadCount === 0
               ? "لا توجد إشعارات جديدة"
@@ -140,13 +154,29 @@ export default function Notifications() {
             وطلباتك والفعاليات.
           </p>
         </div>
+
+        <div
+          className={`notifications-summary__status ${
+            unreadCount > 0
+              ? "notifications-summary__status--active"
+              : ""
+          }`}
+          aria-hidden="true"
+        >
+          <span />
+        </div>
       </section>
 
-      {/* Filters */}
       <div className="notifications-toolbar">
-        <div className="notifications-filters">
+        <div
+          className="notifications-filters"
+          role="tablist"
+          aria-label="تصفية الإشعارات"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={filter === "all"}
             className={
               filter === "all"
                 ? "notification-filter notification-filter--active"
@@ -154,12 +184,14 @@ export default function Notifications() {
             }
             onClick={() => setFilter("all")}
           >
-            الكل
-            <span>{items.length}</span>
+            <span>الكل</span>
+            <strong>{items.length}</strong>
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={filter === "unread"}
             className={
               filter === "unread"
                 ? "notification-filter notification-filter--active"
@@ -167,18 +199,26 @@ export default function Notifications() {
             }
             onClick={() => setFilter("unread")}
           >
-            غير مقروء
-            <span>{unreadCount}</span>
+            <span>غير مقروء</span>
+            <strong>{unreadCount}</strong>
           </button>
         </div>
+
+        <span className="notifications-toolbar__count">
+          {filteredNotifications.length}{" "}
+          {filteredNotifications.length === 1
+            ? "إشعار"
+            : "إشعارات"}
+        </span>
       </div>
 
-      {/* Notifications */}
       {filteredNotifications.length > 0 ? (
-        <section className="notifications-list">
-          {filteredNotifications.map((notification) => {
-            const Icon =
-              notificationIcons[notification.type];
+        <section
+          className="notifications-list"
+          aria-label="قائمة الإشعارات"
+        >
+          {filteredNotifications.map((notification, index) => {
+            const Icon = notificationIcons[notification.type];
 
             return (
               <article
@@ -188,40 +228,57 @@ export default function Notifications() {
                     ? "notification-card--unread"
                     : ""
                 }`}
-                onClick={() =>
-                  markAsRead(notification.id)
+                style={
+                  {
+                    "--notification-index": index,
+                  } as CSSProperties
                 }
               >
-                <div className="notification-icon">
-                  <Icon size={19} />
-                </div>
-
-                <div className="notification-content">
-                  <div className="notification-content__top">
-                    <h2>{notification.title}</h2>
-
-                    {!notification.read && (
-                      <span className="notification-unread-dot" />
-                    )}
+                <button
+                  type="button"
+                  className="notification-card__main"
+                  onClick={() => markAsRead(notification.id)}
+                  aria-label={
+                    notification.read
+                      ? `فتح ${notification.title}`
+                      : `تعليم ${notification.title} كمقروء`
+                  }
+                >
+                  <div
+                    className={`notification-icon notification-icon--${notification.type}`}
+                  >
+                    <Icon size={19} aria-hidden="true" />
                   </div>
 
-                  <p>{notification.description}</p>
+                  <div className="notification-content">
+                    <div className="notification-content__top">
+                      <h2>{notification.title}</h2>
 
-                  <span className="notification-time">
-                    {notification.time}
-                  </span>
-                </div>
+                      {!notification.read && (
+                        <span
+                          className="notification-unread-dot"
+                          aria-label="غير مقروء"
+                        />
+                      )}
+                    </div>
+
+                    <p>{notification.description}</p>
+
+                    <span className="notification-time">
+                      {notification.time}
+                    </span>
+                  </div>
+                </button>
 
                 <button
                   type="button"
                   className="notification-delete"
-                  aria-label="حذف الإشعار"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    deleteNotification(notification.id);
-                  }}
+                  aria-label={`حذف ${notification.title}`}
+                  onClick={() =>
+                    deleteNotification(notification.id)
+                  }
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </article>
             );
@@ -230,8 +287,14 @@ export default function Notifications() {
       ) : (
         <section className="notifications-empty">
           <div className="notifications-empty__icon">
-            <Bell size={27} />
+            <Bell size={27} aria-hidden="true" />
           </div>
+
+          <span className="notifications-empty__eyebrow">
+            {filter === "unread"
+              ? "كل شيء محدث"
+              : "صندوق الإشعارات"}
+          </span>
 
           <h2>
             {filter === "unread"
@@ -242,6 +305,16 @@ export default function Notifications() {
           <p>
             عندما تصل إليك تحديثات جديدة ستظهر هنا.
           </p>
+
+          {filter === "unread" && items.length > 0 && (
+            <button
+              type="button"
+              className="notifications-empty__action"
+              onClick={() => setFilter("all")}
+            >
+              عرض كل الإشعارات
+            </button>
+          )}
         </section>
       )}
     </main>

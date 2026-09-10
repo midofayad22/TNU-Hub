@@ -2,16 +2,36 @@ import {
   Bell,
   ChevronLeft,
   Filter,
+  LoaderCircle,
   Megaphone,
+  RefreshCw,
   Search,
   X,
 } from "lucide-react";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useProfile } from "../../context/useProfile";
-import { announcements } from "../../data/announcements";
+import { supabase } from "../../lib/supabase";
+
+interface AnnouncementTarget {
+  faculty?: string;
+  program?: string;
+  academicYear?: string;
+}
+
+interface Announcement {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  date: string;
+  target: AnnouncementTarget | null;
+  status: "منشور" | "مسودة";
+  created_at: string;
+  updated_at: string;
+}
 
 const categories = [
   "الكل",
@@ -21,6 +41,32 @@ const categories = [
   "أنشطة",
 ];
 
+const formatDate = (date: string) => {
+  if (!date) {
+    return "—";
+  }
+
+  return new Intl.DateTimeFormat("ar-EG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${date}T00:00:00`));
+};
+
+const hasTarget = (
+  target: AnnouncementTarget | null
+) => {
+  if (!target) {
+    return false;
+  }
+
+  return Boolean(
+    target.faculty ||
+      target.program ||
+      target.academicYear
+  );
+};
+
 export default function Announcements() {
   const { profile } = useProfile();
 
@@ -28,19 +74,96 @@ export default function Announcements() {
   const [activeCategory, setActiveCategory] =
     useState("الكل");
 
+  const [announcements, setAnnouncements] = useState<
+    Announcement[]
+  >([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadAnnouncements = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const { data, error: fetchError } =
+        await supabase
+          .from("announcements")
+          .select(
+            `
+              id,
+              title,
+              category,
+              content,
+              date,
+              target,
+              status,
+              created_at,
+              updated_at
+            `
+          )
+          .eq("status", "منشور")
+          .order("date", { ascending: false })
+          .order("created_at", {
+            ascending: false,
+          });
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      const normalizedAnnouncements: Announcement[] =
+        (data ?? []).map((announcement) => ({
+          id: announcement.id,
+          title: announcement.title,
+          category: announcement.category,
+          content: announcement.content,
+          date: announcement.date,
+          target:
+            announcement.target &&
+            typeof announcement.target === "object"
+              ? (announcement.target as AnnouncementTarget)
+              : null,
+          status:
+            announcement.status as
+              | "منشور"
+              | "مسودة",
+          created_at: announcement.created_at,
+          updated_at: announcement.updated_at,
+        }));
+
+      setAnnouncements(normalizedAnnouncements);
+    } catch (err) {
+      console.error(
+        "Error loading announcements:",
+        err
+      );
+
+      setError(
+        "تعذر تحميل الإعلانات. حاول مرة أخرى."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadAnnouncements();
+  }, []);
+
   /*
    * تحديد هل الإعلان موجه للطالب الحالي أم لا
    */
   const matchesStudent = (
-    announcement: (typeof announcements)[number]
+    announcement: Announcement
   ) => {
     const target = announcement.target;
 
     /*
-     * إذا لم يوجد target
-     * فهذا إعلان عام ويظهر للجميع.
+     * لا يوجد target أو target فارغ
+     * = إعلان عام يظهر لجميع الطلاب.
      */
-    if (!target) {
+    if (!hasTarget(target)) {
       return true;
     }
 
@@ -49,7 +172,7 @@ export default function Announcements() {
      * يجب أن تطابق كلية الطالب.
      */
     if (
-      target.faculty &&
+      target?.faculty &&
       target.faculty !== profile.faculty
     ) {
       return false;
@@ -60,7 +183,7 @@ export default function Announcements() {
      * يجب أن يطابق برنامج الطالب.
      */
     if (
-      target.program &&
+      target?.program &&
       target.program !== profile.program
     ) {
       return false;
@@ -71,8 +194,9 @@ export default function Announcements() {
      * يجب أن تطابق سنة الطالب.
      */
     if (
-      target.academicYear &&
-      target.academicYear !== profile.academicYear
+      target?.academicYear &&
+      target.academicYear !==
+        profile.academicYear
     ) {
       return false;
     }
@@ -93,7 +217,7 @@ export default function Announcements() {
 
       const searchableText = [
         announcement.title,
-        announcement.description,
+        announcement.content,
         announcement.category,
       ]
         .join(" ")
@@ -110,6 +234,7 @@ export default function Announcements() {
       );
     });
   }, [
+    announcements,
     search,
     activeCategory,
     profile.faculty,
@@ -121,25 +246,24 @@ export default function Announcements() {
    * الإعلانات المخصصة للطالب فقط
    */
   const personalizedAnnouncements =
-    filteredAnnouncements.filter(
-      (announcement) => Boolean(announcement.target)
+    filteredAnnouncements.filter((announcement) =>
+      hasTarget(announcement.target)
     );
 
   /*
-   * الإعلان المميز
+   * الإعلان المميز:
+   * حاليًا نستخدم أحدث إعلان كإعلان مميز.
    */
   const featuredAnnouncement =
-    filteredAnnouncements.find(
-      (item) => item.featured
-    ) ?? null;
+    filteredAnnouncements[0] ?? null;
 
   /*
    * باقي الإعلانات
    */
   const regularAnnouncements =
     filteredAnnouncements.filter(
-      (item) =>
-        item.id !==
+      (announcement) =>
+        announcement.id !==
         featuredAnnouncement?.id
     );
 
@@ -158,7 +282,6 @@ export default function Announcements() {
       ===================================================== */}
 
       <section className="page-hero announcements-hero">
-
         <div>
           <span className="page-kicker">
             ابقَ على اطلاع
@@ -167,8 +290,8 @@ export default function Announcements() {
           <h1>الإعلانات</h1>
 
           <p>
-            آخر الأخبار والتنبيهات والمعلومات المهمة الخاصة
-            بالطلاب.
+            آخر الأخبار والتنبيهات والمعلومات المهمة
+            الخاصة بالطلاب.
           </p>
 
           {profile.name.trim() && (
@@ -182,17 +305,39 @@ export default function Announcements() {
         <div className="page-hero__icon">
           <Bell size={30} />
         </div>
-
       </section>
+
+      {/* =====================================================
+          ERROR
+      ===================================================== */}
+
+      {error && (
+        <section
+          className="admin-alert admin-alert--error"
+          role="alert"
+        >
+          <span>{error}</span>
+
+          <button
+            type="button"
+            className="admin-alert__retry"
+            onClick={() =>
+              void loadAnnouncements()
+            }
+          >
+            إعادة المحاولة
+          </button>
+        </section>
+      )}
 
       {/* =====================================================
           PERSONALIZED NOTICE
       ===================================================== */}
 
-      {personalizedAnnouncements.length > 0 &&
+      {!loading &&
+        personalizedAnnouncements.length > 0 &&
         profile.faculty && (
           <section className="announcements-personalized">
-
             <div className="announcements-personalized__icon">
               <Bell size={19} />
             </div>
@@ -207,7 +352,6 @@ export default function Announcements() {
                 سنتك الدراسية.
               </p>
             </div>
-
           </section>
         )}
 
@@ -216,9 +360,7 @@ export default function Announcements() {
       ===================================================== */}
 
       <section className="announcements-toolbar">
-
         <div className="announcements-search">
-
           <Search size={19} />
 
           <input
@@ -241,19 +383,17 @@ export default function Announcements() {
               <X size={16} />
             </button>
           )}
-
         </div>
 
         <div className="announcements-count">
-
           <strong>
-            {filteredAnnouncements.length}
+            {loading
+              ? "..."
+              : filteredAnnouncements.length}
           </strong>
 
           <span>إعلان</span>
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -261,19 +401,13 @@ export default function Announcements() {
       ===================================================== */}
 
       <section className="announcements-filters">
-
         <div className="announcements-filters__label">
-
           <Filter size={15} />
-
           <span>التصنيف</span>
-
         </div>
 
         <div className="announcements-filters__list">
-
           {categories.map((category) => {
-
             const isActive =
               activeCategory === category;
 
@@ -295,9 +429,7 @@ export default function Announcements() {
               </button>
             );
           })}
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -305,11 +437,8 @@ export default function Announcements() {
       ===================================================== */}
 
       <section className="announcements-content">
-
         <div className="section-heading section-heading--with-action">
-
           <div>
-
             <span className="section-heading__eyebrow">
               آخر المستجدات
             </span>
@@ -320,14 +449,51 @@ export default function Announcements() {
                 ? "نتائج الإعلانات"
                 : "آخر الإعلانات"}
             </h2>
-
           </div>
 
+          {!loading && (
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={() =>
+                void loadAnnouncements()
+              }
+              aria-label="تحديث الإعلانات"
+              title="تحديث الإعلانات"
+            >
+              <RefreshCw size={17} />
+              <span>تحديث</span>
+            </button>
+          )}
         </div>
 
-        {filteredAnnouncements.length === 0 ? (
-          <div className="announcements-empty">
+        {/* =================================================
+            LOADING
+        ================================================= */}
 
+        {loading ? (
+          <div className="announcements-empty">
+            <div className="announcements-empty__icon">
+              <LoaderCircle
+                size={24}
+                className="admin-spin"
+              />
+            </div>
+
+            <h3>
+              جاري تحميل الإعلانات
+            </h3>
+
+            <p>
+              يتم الآن جلب أحدث الإعلانات من المنصة.
+            </p>
+          </div>
+        ) : filteredAnnouncements.length === 0 ? (
+          /* =================================================
+              EMPTY
+          ================================================= */
+
+          <div className="announcements-empty">
             <div className="announcements-empty__icon">
               <Search size={24} />
             </div>
@@ -341,14 +507,16 @@ export default function Announcements() {
               لعرض جميع الإعلانات.
             </p>
 
-            <button
-              type="button"
-              className="button button--primary"
-              onClick={clearFilters}
-            >
-              عرض جميع الإعلانات
-            </button>
-
+            {(search ||
+              activeCategory !== "الكل") && (
+              <button
+                type="button"
+                className="button button--primary"
+                onClick={clearFilters}
+              >
+                عرض جميع الإعلانات
+              </button>
+            )}
           </div>
         ) : (
           <>
@@ -361,29 +529,29 @@ export default function Announcements() {
                 to={`/announcements/${featuredAnnouncement.id}`}
                 className="announcement-featured"
               >
-
                 <div className="announcement-featured__icon">
                   <Megaphone size={24} />
                 </div>
 
                 <div className="announcement-featured__content">
-
                   <div className="announcement-featured__meta">
-
                     <span>
                       {featuredAnnouncement.category}
                     </span>
 
-                    {featuredAnnouncement.target && (
+                    {hasTarget(
+                      featuredAnnouncement.target
+                    ) && (
                       <span className="announcement-target-badge">
                         مخصص لك
                       </span>
                     )}
 
                     <time>
-                      {featuredAnnouncement.date}
+                      {formatDate(
+                        featuredAnnouncement.date
+                      )}
                     </time>
-
                   </div>
 
                   <h2>
@@ -391,16 +559,14 @@ export default function Announcements() {
                   </h2>
 
                   <p>
-                    {featuredAnnouncement.description}
+                    {featuredAnnouncement.content}
                   </p>
 
                   <span className="announcement-featured__action">
                     قراءة الإعلان
                     <ChevronLeft size={17} />
                   </span>
-
                 </div>
-
               </Link>
             )}
 
@@ -408,65 +574,61 @@ export default function Announcements() {
                 LIST
             ================================================= */}
 
-            <div className="announcement-list">
-
-              {regularAnnouncements.map(
-                (announcement) => (
-                  <Link
-                    to={`/announcements/${announcement.id}`}
-                    className="announcement-card"
-                    key={announcement.id}
-                  >
-
-                    <div className="announcement-card__icon">
-                      <Megaphone size={20} />
-                    </div>
-
-                    <div className="announcement-card__content">
-
-                      <div className="announcement-card__meta">
-
-                        <span>
-                          {announcement.category}
-                        </span>
-
-                        {announcement.target && (
-                          <span className="announcement-target-badge">
-                            مخصص لك
-                          </span>
-                        )}
-
-                        <time>
-                          {announcement.date}
-                        </time>
-
+            {regularAnnouncements.length > 0 && (
+              <div className="announcement-list">
+                {regularAnnouncements.map(
+                  (announcement) => (
+                    <Link
+                      to={`/announcements/${announcement.id}`}
+                      className="announcement-card"
+                      key={announcement.id}
+                    >
+                      <div className="announcement-card__icon">
+                        <Megaphone size={20} />
                       </div>
 
-                      <h2>
-                        {announcement.title}
-                      </h2>
+                      <div className="announcement-card__content">
+                        <div className="announcement-card__meta">
+                          <span>
+                            {announcement.category}
+                          </span>
 
-                      <p>
-                        {announcement.description}
-                      </p>
+                          {hasTarget(
+                            announcement.target
+                          ) && (
+                            <span className="announcement-target-badge">
+                              مخصص لك
+                            </span>
+                          )}
 
-                      <span className="announcement-card__link">
-                        قراءة الإعلان
-                        <ChevronLeft size={15} />
-                      </span>
+                          <time>
+                            {formatDate(
+                              announcement.date
+                            )}
+                          </time>
+                        </div>
 
-                    </div>
+                        <h2>
+                          {announcement.title}
+                        </h2>
 
-                  </Link>
-                )
-              )}
+                        <p>
+                          {announcement.content}
+                        </p>
 
-            </div>
+                        <span className="announcement-card__link">
+                          قراءة الإعلان
+                          <ChevronLeft size={15} />
+                        </span>
+                      </div>
+                    </Link>
+                  )
+                )}
+              </div>
+            )}
           </>
         )}
-
       </section>
-
     </main>
   );
 }

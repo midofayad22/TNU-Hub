@@ -12,7 +12,6 @@ export interface ProfileContextValue {
   updateProfile: (data: ProfileData) => void;
 }
 
-export const ProfileContext =
-  createContext<ProfileContextValue | undefined>(
-    undefined
-  );
+export const ProfileContext = createContext<
+  ProfileContextValue | undefined
+>(undefined);

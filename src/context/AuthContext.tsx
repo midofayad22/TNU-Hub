@@ -1,12 +1,14 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
   type ReactNode,
 } from "react";
 
-import type { User, Session } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
+
 import { supabase } from "../lib/supabase";
 
 export type UserRole = "student" | "admin" | "root_admin";
@@ -35,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, email, role")
@@ -48,63 +50,103 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setProfile(data);
-  };
+    if (!data) {
+      setProfile(null);
+      return;
+    }
 
-  const refreshProfile = async () => {
-    if (!user) return;
+    setProfile(data as UserProfile);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
 
     await loadProfile(user.id);
-  };
+  }, [user, loadProfile]);
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Sign out error:", error);
+      throw error;
+    }
+
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session: currentSession },
+          error,
+        } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (error) {
+          console.error("Get session error:", error);
+        }
 
-      setSession(session);
-      setUser(session?.user ?? null);
+        if (!mounted) return;
 
-      if (session?.user) {
-        await loadProfile(session.user.id);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          await loadProfile(currentSession.user.id);
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error("Initialize auth error:", error);
+
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-
-      setLoading(false);
     };
 
-    initializeAuth();
+    void initializeAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
       if (!mounted) return;
 
-      setSession(session);
-      setUser(session?.user ?? null);
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
 
-      if (session?.user) {
-        await loadProfile(session.user.id);
-      } else {
+      if (!currentSession?.user) {
         setProfile(null);
+        setLoading(false);
+        return;
       }
 
-      setLoading(false);
+      void loadProfile(currentSession.user.id).finally(() => {
+        if (mounted) {
+          setLoading(false);
+        }
+      });
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  }, [loadProfile]);
 
   return (
     <AuthContext.Provider

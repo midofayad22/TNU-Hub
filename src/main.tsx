@@ -5,7 +5,6 @@ import { AuthProvider } from "./context/AuthContext";
 
 import "./styles/globals.css";
 import "./styles/utilities.css";
-import "./styles/tnu-hub.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,3 +1,8 @@
+import type {
+  CSSProperties,
+  KeyboardEvent,
+} from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpLeft,
@@ -14,8 +19,6 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-
-import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useProfile } from "../../context/useProfile";
@@ -65,33 +68,20 @@ const quickActions = [
 
 export default function Home() {
   const navigate = useNavigate();
-
   const { profile } = useProfile();
 
   const [searchValue, setSearchValue] = useState("");
 
-  const studentName =
-    profile.name.trim() || "الطالب";
+  const studentName = profile.name.trim() || "الطالب";
 
   const hasAcademicData =
     profile.faculty.trim() !== "" &&
     profile.program.trim() !== "" &&
     profile.academicYear.trim() !== "";
 
-  /*
-   * ============================================================
-   * PERSONALIZATION
-   * ============================================================
-   *
-   * الفعالية أو الإعلان:
-   *
-   * - بدون target = عام ويظهر للجميع.
-   * - target.faculty = يظهر للكلية المحددة.
-   * - target.program = يظهر للبرنامج المحدد.
-   * - target.academicYear = يظهر للسنة المحددة.
-   *
-   * ويمكن الجمع بينهم.
-   */
+  /* ============================================================
+     PERSONALIZATION
+     ============================================================ */
 
   const matchesTarget = (
     target:
@@ -100,7 +90,7 @@ export default function Home() {
           program?: string;
           academicYear?: string;
         }
-      | undefined
+      | undefined,
   ) => {
     if (!target) {
       return true;
@@ -122,8 +112,7 @@ export default function Home() {
 
     if (
       target.academicYear &&
-      target.academicYear !==
-        profile.academicYear
+      target.academicYear !== profile.academicYear
     ) {
       return false;
     }
@@ -131,15 +120,13 @@ export default function Home() {
     return true;
   };
 
-  /*
-   * ============================================================
-   * PERSONALIZED ANNOUNCEMENTS
-   * ============================================================
-   */
+  /* ============================================================
+     PERSONALIZED ANNOUNCEMENTS
+     ============================================================ */
 
   const relevantAnnouncements = useMemo(() => {
     return announcements.filter((announcement) =>
-      matchesTarget(announcement.target)
+      matchesTarget(announcement.target),
     );
   }, [
     profile.faculty,
@@ -147,28 +134,19 @@ export default function Home() {
     profile.academicYear,
   ]);
 
-  /*
-   * نجيب الإعلانات الموجهة للطالب فقط.
-   *
-   * الإعلانات العامة لا تدخل هنا لأنها ليست
-   * "مخصصة لك".
-   */
-
-  const personalizedAnnouncements =
-    relevantAnnouncements.filter(
-      (announcement) =>
-        Boolean(announcement.target)
+  const personalizedAnnouncements = useMemo(() => {
+    return relevantAnnouncements.filter(
+      (announcement) => Boolean(announcement.target),
     );
+  }, [relevantAnnouncements]);
 
-  /*
-   * ============================================================
-   * PERSONALIZED EVENTS
-   * ============================================================
-   */
+  /* ============================================================
+     PERSONALIZED EVENTS
+     ============================================================ */
 
   const relevantEvents = useMemo(() => {
     return events.filter((event) =>
-      matchesTarget(event.target)
+      matchesTarget(event.target),
     );
   }, [
     profile.faculty,
@@ -176,136 +154,101 @@ export default function Home() {
     profile.academicYear,
   ]);
 
-  const personalizedEvents =
-    relevantEvents.filter(
-      (event) => Boolean(event.target)
+  const personalizedEvents = useMemo(() => {
+    return relevantEvents.filter(
+      (event) => Boolean(event.target),
     );
+  }, [relevantEvents]);
 
-  /*
-   * ============================================================
-   * ANNOUNCEMENTS TO SHOW
-   * ============================================================
-   *
-   * لو عند الطالب إعلانات مخصصة:
-   * نعرضها أولًا.
-   *
-   * وبعدها الإعلانات العامة.
-   *
-   * ولو مفيش بيانات Profile:
-   * نعرض المحتوى العام.
-   */
+  /* ============================================================
+     ANNOUNCEMENTS TO SHOW
+     ============================================================ */
 
   const latestAnnouncements = useMemo(() => {
-    const personalized =
-      relevantAnnouncements.filter(
-        (announcement) =>
-          Boolean(announcement.target)
-      );
+    const personalized = relevantAnnouncements.filter(
+      (announcement) => Boolean(announcement.target),
+    );
 
-    const general =
-      relevantAnnouncements.filter(
-        (announcement) =>
-          !announcement.target
-      );
+    const general = relevantAnnouncements.filter(
+      (announcement) => !announcement.target,
+    );
 
-    return [
-      ...personalized,
-      ...general,
-    ].slice(0, 3);
+    return [...personalized, ...general].slice(0, 3);
   }, [relevantAnnouncements]);
-
-  /*
-   * الإعلان المميز:
-   *
-   * الأولوية للإعلان الموجه للطالب لو موجود.
-   * ثم الإعلان المميز العام.
-   * ثم أول إعلان متاح.
-   */
 
   const featuredAnnouncement =
     personalizedAnnouncements[0] ??
     relevantAnnouncements.find(
-      (announcement) =>
-        announcement.featured
+      (announcement) => announcement.featured,
     ) ??
     relevantAnnouncements[0] ??
     announcements[0];
 
-  /*
-   * ============================================================
-   * EVENTS TO SHOW
-   * ============================================================
-   */
+  /* ============================================================
+     EVENTS TO SHOW
+     ============================================================ */
 
   const latestEvents = useMemo(() => {
-    const personalized =
-      relevantEvents.filter(
-        (event) => Boolean(event.target)
-      );
+    const personalized = relevantEvents.filter(
+      (event) => Boolean(event.target),
+    );
 
-    const general =
-      relevantEvents.filter(
-        (event) => !event.target
-      );
+    const general = relevantEvents.filter(
+      (event) => !event.target,
+    );
 
-    return [
-      ...personalized,
-      ...general,
-    ].slice(0, 3);
+    return [...personalized, ...general].slice(0, 3);
   }, [relevantEvents]);
-
-  /*
-   * الأولوية للفعالية المخصصة.
-   * وبعدها الـ featured العامة.
-   */
 
   const featuredEvent =
     personalizedEvents[0] ??
-    relevantEvents.find(
-      (event) => event.featured
-    ) ??
+    relevantEvents.find((event) => event.featured) ??
     relevantEvents[0] ??
     events[0];
 
-  /*
-   * ============================================================
-   * SEARCH
-   * ============================================================
-   */
+  /* ============================================================
+     SEARCH
+     ============================================================ */
 
   const handleSearch = () => {
     const value = searchValue.trim();
 
-    if (!value) return;
+    if (!value) {
+      return;
+    }
 
     navigate(
-      `/explore?search=${encodeURIComponent(
-        value
-      )}`
+      `/explore?search=${encodeURIComponent(value)}`,
     );
   };
 
-  /*
-   * ============================================================
-   * RENDER
-   * ============================================================
-   */
+  const handleSearchKeyDown = (
+    event: KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
 
   return (
-    <div
-      className="page-shell home-page"
-      dir="rtl"
-    >
+    <main className="page-shell home-page" dir="rtl">
       {/* =====================================================
           HERO
       ===================================================== */}
 
       <section className="home-hero">
+        <div className="home-hero__background" aria-hidden="true">
+          <span className="home-hero__orb home-hero__orb--one" />
+          <span className="home-hero__orb home-hero__orb--two" />
+          <span className="home-hero__grid" />
+        </div>
 
         <div className="home-hero__main">
-
           <div className="home-hero__eyebrow">
-
             <span className="home-hero__eyebrow-line" />
 
             <span>
@@ -313,7 +256,6 @@ export default function Home() {
                 ? `مرحبًا بك، ${studentName}`
                 : "الحياة الجامعية، في مكان واحد"}
             </span>
-
           </div>
 
           <h1>
@@ -329,41 +271,36 @@ export default function Home() {
           </p>
 
           <div className="home-search">
-
-            <Search size={19} />
+            <Search
+              size={19}
+              aria-hidden="true"
+            />
 
             <input
               type="search"
               value={searchValue}
               onChange={(event) =>
-                setSearchValue(
-                  event.target.value
-                )
+                setSearchValue(event.target.value)
               }
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  handleSearch();
-                }
-              }}
+              onKeyDown={handleSearchKeyDown}
               placeholder="ابحث عن فعالية، إعلان، كلية أو خدمة..."
               aria-label="البحث في المنصة"
             />
 
-            <button
-              type="button"
-              onClick={handleSearch}
-            >
-              بحث
-              <ArrowLeft size={16} />
-            </button>
-
+            {searchValue.trim() && (
+              <button
+                type="button"
+                onClick={handleSearch}
+                aria-label="تنفيذ البحث"
+              >
+                بحث
+                <ArrowLeft size={16} />
+              </button>
+            )}
           </div>
 
           <div className="home-hero__suggestions">
-
-            <span>
-              اقتراحات:
-            </span>
+            <span>اقتراحات:</span>
 
             <Link to="/events">
               الفعاليات
@@ -376,25 +313,17 @@ export default function Home() {
             <Link to="/help">
               المساعدة
             </Link>
-
           </div>
-
         </div>
 
         <div className="home-hero__aside">
-
           <div className="home-hero__aside-top">
-
-            <span>
-              اتحاد الطلاب
-            </span>
+            <span>اتحاد الطلاب</span>
 
             <Sparkles size={18} />
-
           </div>
 
           <div className="home-hero__statement">
-
             <span className="home-hero__number">
               01
             </span>
@@ -408,21 +337,14 @@ export default function Home() {
             <p>
               مكان واحد يجمع أهم ما يخص حياتك الجامعية.
             </p>
-
           </div>
 
           <div className="home-hero__aside-bottom">
-
-            <span>
-              اكتشف المنصة
-            </span>
+            <span>اكتشف المنصة</span>
 
             <ArrowUpLeft size={17} />
-
           </div>
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -430,52 +352,37 @@ export default function Home() {
       ===================================================== */}
 
       {hasAcademicData &&
-        (
-          personalizedAnnouncements.length > 0 ||
-          personalizedEvents.length > 0
-        ) && (
+        (personalizedAnnouncements.length > 0 ||
+          personalizedEvents.length > 0) && (
           <section className="home-personalized">
-
             <div className="home-personalized__icon">
               <Sparkles size={19} />
             </div>
 
             <div className="home-personalized__content">
-
-              <strong>
-                محتوى مختار لك
-              </strong>
+              <strong>محتوى مختار لك</strong>
 
               <p>
-                خصصنا لك بعض الإعلانات والفعاليات
-                بناءً على بياناتك الأكاديمية.
+                خصصنا لك بعض الإعلانات والفعاليات بناءً على
+                بياناتك الأكاديمية.
               </p>
-
             </div>
 
             <div className="home-personalized__stats">
-
-              {personalizedAnnouncements.length >
-                0 && (
+              {personalizedAnnouncements.length > 0 && (
                 <span>
                   <Bell size={15} />
-                  {personalizedAnnouncements.length}
-                  {" "}
-                  إعلانات
+                  {personalizedAnnouncements.length} إعلانات
                 </span>
               )}
 
               {personalizedEvents.length > 0 && (
                 <span>
                   <CalendarDays size={15} />
-                  {personalizedEvents.length}
-                  {" "}
-                  فعاليات
+                  {personalizedEvents.length} فعاليات
                 </span>
               )}
-
             </div>
-
           </section>
         )}
 
@@ -484,73 +391,57 @@ export default function Home() {
       ===================================================== */}
 
       <section className="home-section home-section--actions">
-
         <div className="home-section__heading">
-
           <div>
-
             <span className="section-overline">
               ابدأ من هنا
             </span>
 
-            <h2>
-              ماذا تحتاج اليوم؟
-            </h2>
-
+            <h2>ماذا تحتاج اليوم؟</h2>
           </div>
 
           <p>
             اختصارات سريعة لأكثر الخدمات استخدامًا.
           </p>
-
         </div>
 
         <div className="home-actions-grid">
+          {quickActions.map((action, index) => {
+            const Icon = action.icon;
 
-          {quickActions.map(
-            (action, index) => {
+            return (
+              <Link
+                to={action.to}
+                className="home-action"
+                key={action.title}
+                style={
+                  {
+                    "--home-action-index": index,
+                  } as CSSProperties
+                }
+              >
+                <span className="home-action__number">
+                  0{index + 1}
+                </span>
 
-              const Icon = action.icon;
+                <div className="home-action__icon">
+                  <Icon size={21} />
+                </div>
 
-              return (
-                <Link
-                  to={action.to}
-                  className="home-action"
-                  key={action.title}
-                >
+                <div className="home-action__content">
+                  <h3>{action.title}</h3>
 
-                  <span className="home-action__number">
-                    0{index + 1}
-                  </span>
+                  <p>{action.description}</p>
+                </div>
 
-                  <div className="home-action__icon">
-                    <Icon size={21} />
-                  </div>
-
-                  <div className="home-action__content">
-
-                    <h3>
-                      {action.title}
-                    </h3>
-
-                    <p>
-                      {action.description}
-                    </p>
-
-                  </div>
-
-                  <ArrowUpLeft
-                    className="home-action__arrow"
-                    size={19}
-                  />
-
-                </Link>
-              );
-            }
-          )}
-
+                <ArrowUpLeft
+                  className="home-action__arrow"
+                  size={19}
+                />
+              </Link>
+            );
+          })}
         </div>
-
       </section>
 
       {/* =====================================================
@@ -558,31 +449,24 @@ export default function Home() {
       ===================================================== */}
 
       <div className="home-main-grid">
-
         {/* ===================================================
             ANNOUNCEMENTS
         =================================================== */}
 
         <section className="home-section">
-
           <div className="home-section__heading home-section__heading--compact">
-
             <div>
-
               <span className="section-overline">
-                {personalizedAnnouncements.length >
-                0
+                {personalizedAnnouncements.length > 0
                   ? "مخصص لك"
                   : "ابقَ على اطلاع"}
               </span>
 
               <h2>
-                {personalizedAnnouncements.length >
-                0
+                {personalizedAnnouncements.length > 0
                   ? "إعلانات تهمك"
                   : "آخر الإعلانات"}
               </h2>
-
             </div>
 
             <Link
@@ -592,17 +476,14 @@ export default function Home() {
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
-
           </div>
 
-          {featuredAnnouncement && (
+          {featuredAnnouncement ? (
             <Link
               to={`/announcements/${featuredAnnouncement.id}`}
               className="featured-announcement"
             >
-
               <div className="featured-announcement__top">
-
                 <span className="content-label">
                   {featuredAnnouncement.category}
                 </span>
@@ -610,7 +491,6 @@ export default function Home() {
                 <time>
                   {featuredAnnouncement.date}
                 </time>
-
               </div>
 
               <div className="featured-announcement__icon">
@@ -635,41 +515,47 @@ export default function Home() {
                 قراءة الإعلان
                 <ArrowLeft size={15} />
               </span>
-
             </Link>
+          ) : (
+            <div className="home-content-empty">
+              <Bell size={22} />
+              <h3>لا توجد إعلانات حاليًا</h3>
+              <p>
+                سنعرض أحدث الإعلانات هنا فور توفرها.
+              </p>
+            </div>
           )}
 
           <div className="content-list">
-
             {latestAnnouncements
               .filter(
                 (announcement) =>
                   announcement.id !==
-                  featuredAnnouncement?.id
+                  featuredAnnouncement?.id,
               )
-              .map((announcement) => (
+              .map((announcement, index) => (
                 <Link
                   to={`/announcements/${announcement.id}`}
                   className="content-list__item"
                   key={announcement.id}
+                  style={
+                    {
+                      "--home-list-index": index,
+                    } as CSSProperties
+                  }
                 >
-
                   <div className="content-list__icon">
                     <FileText size={18} />
                   </div>
 
                   <div>
-
-                    <h3>
-                      {announcement.title}
-                    </h3>
+                    <h3>{announcement.title}</h3>
 
                     <span>
                       {announcement.category}
                       {" · "}
                       {announcement.date}
                     </span>
-
                   </div>
 
                   {announcement.target && (
@@ -679,12 +565,9 @@ export default function Home() {
                   )}
 
                   <ChevronLeft size={17} />
-
                 </Link>
               ))}
-
           </div>
-
         </section>
 
         {/* ===================================================
@@ -692,11 +575,8 @@ export default function Home() {
         =================================================== */}
 
         <section className="home-section">
-
           <div className="home-section__heading home-section__heading--compact">
-
             <div>
-
               <span className="section-overline">
                 {personalizedEvents.length > 0
                   ? "مخصص لك"
@@ -708,7 +588,6 @@ export default function Home() {
                   ? "فعاليات تهمك"
                   : "الفعاليات القادمة"}
               </h2>
-
             </div>
 
             <Link
@@ -718,23 +597,17 @@ export default function Home() {
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
-
           </div>
 
-          {featuredEvent && (
+          {featuredEvent ? (
             <Link
               to={`/events/${featuredEvent.id}`}
               className="featured-event"
             >
-
               <div className="featured-event__date">
-
                 <CalendarDays size={19} />
 
-                <span>
-                  {featuredEvent.date}
-                </span>
-
+                <span>{featuredEvent.date}</span>
               </div>
 
               <span className="content-label">
@@ -747,16 +620,11 @@ export default function Home() {
                 </span>
               )}
 
-              <h3>
-                {featuredEvent.title}
-              </h3>
+              <h3>{featuredEvent.title}</h3>
 
-              <p>
-                {featuredEvent.description}
-              </p>
+              <p>{featuredEvent.description}</p>
 
               <div className="featured-event__meta">
-
                 <span>
                   <Clock3 size={15} />
                   {featuredEvent.time}
@@ -766,56 +634,56 @@ export default function Home() {
                   <Users size={15} />
                   {featuredEvent.attendees} طالب
                 </span>
-
               </div>
 
               <div className="featured-event__footer">
-
-                <span>
-                  {featuredEvent.location}
-                </span>
+                <span>{featuredEvent.location}</span>
 
                 <span>
                   التفاصيل
                   <ArrowLeft size={15} />
                 </span>
-
               </div>
-
             </Link>
+          ) : (
+            <div className="home-content-empty">
+              <CalendarDays size={22} />
+              <h3>لا توجد فعاليات حاليًا</h3>
+              <p>
+                سنعرض الفعاليات القادمة هنا فور إضافتها.
+              </p>
+            </div>
           )}
 
           <div className="content-list">
-
             {latestEvents
               .filter(
                 (event) =>
-                  event.id !==
-                  featuredEvent?.id
+                  event.id !== featuredEvent?.id,
               )
-              .map((event) => (
+              .map((event, index) => (
                 <Link
                   to={`/events/${event.id}`}
                   className="content-list__item"
                   key={event.id}
+                  style={
+                    {
+                      "--home-list-index": index,
+                    } as CSSProperties
+                  }
                 >
-
                   <div className="content-list__icon">
                     <CalendarDays size={18} />
                   </div>
 
                   <div>
-
-                    <h3>
-                      {event.title}
-                    </h3>
+                    <h3>{event.title}</h3>
 
                     <span>
                       {event.date}
                       {" · "}
                       {event.time}
                     </span>
-
                   </div>
 
                   {event.target && (
@@ -825,14 +693,10 @@ export default function Home() {
                   )}
 
                   <ChevronLeft size={17} />
-
                 </Link>
               ))}
-
           </div>
-
         </section>
-
       </div>
 
       {/* =====================================================
@@ -840,19 +704,13 @@ export default function Home() {
       ===================================================== */}
 
       <section className="home-section home-requests-section">
-
         <div className="home-section__heading home-section__heading--compact">
-
           <div>
-
             <span className="section-overline">
               المتابعة
             </span>
 
-            <h2>
-              طلباتك الأخيرة
-            </h2>
-
+            <h2>طلباتك الأخيرة</h2>
           </div>
 
           <Link
@@ -862,69 +720,75 @@ export default function Home() {
             كل الطلبات
             <ChevronLeft size={16} />
           </Link>
-
         </div>
 
-        <div className="home-requests">
+        {requests.length > 0 ? (
+          <div className="home-requests">
+            {requests.map((request, index) => {
+              const StatusIcon =
+                requestStatusIcons[request.status];
 
-          {requests.map((request) => {
+              const statusColor =
+                requestStatusColors[request.status];
 
-            const StatusIcon =
-              requestStatusIcons[
-                request.status
-              ];
-
-            const statusColor =
-              requestStatusColors[
-                request.status
-              ];
-
-            return (
-              <Link
-                to={`/requests/${request.id}`}
-                className="home-request"
-                key={request.id}
-              >
-
-                <div className="home-request__main">
-
-                  <div className="home-request__icon">
-                    <ClipboardList size={18} />
-                  </div>
-
-                  <div>
-
-                    <span className="home-request__id">
-                      {request.id}
-                    </span>
-
-                    <h3>
-                      {request.title}
-                    </h3>
-
-                    <span>
-                      {request.category}
-                    </span>
-
-                  </div>
-
-                </div>
-
-                <div
-                  className={`home-request__status home-request__status--${statusColor}`}
+              return (
+                <Link
+                  to={`/requests/${request.id}`}
+                  className="home-request"
+                  key={request.id}
+                  style={
+                    {
+                      "--home-request-index": index,
+                    } as CSSProperties
+                  }
                 >
-                  <StatusIcon size={15} />
-                  {request.status}
-                </div>
+                  <div className="home-request__main">
+                    <div className="home-request__icon">
+                      <ClipboardList size={18} />
+                    </div>
 
-                <ChevronLeft size={17} />
+                    <div>
+                      <span className="home-request__id">
+                        {request.id}
+                      </span>
 
-              </Link>
-            );
-          })}
+                      <h3>{request.title}</h3>
 
-        </div>
+                      <span>
+                        {request.category}
+                      </span>
+                    </div>
+                  </div>
 
+                  <div
+                    className={`home-request__status home-request__status--${statusColor}`}
+                  >
+                    <StatusIcon size={15} />
+                    {request.status}
+                  </div>
+
+                  <ChevronLeft size={17} />
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="home-content-empty home-content-empty--requests">
+            <ClipboardList size={22} />
+            <h3>لا توجد طلبات بعد</h3>
+            <p>
+              عندما ترسل طلب مساعدة، ستتمكن من متابعته من هنا.
+            </p>
+
+            <Link
+              to="/requests/new"
+              className="button button--primary"
+            >
+              إنشاء طلب
+              <ArrowLeft size={16} />
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* =====================================================
@@ -932,26 +796,19 @@ export default function Home() {
       ===================================================== */}
 
       <section className="home-final">
-
-        <div className="home-final__mark">
+        <div className="home-final__mark" aria-hidden="true">
           ط
         </div>
 
         <div className="home-final__content">
+          <span>تحتاج إلى مساعدة؟</span>
 
-          <span>
-            تحتاج إلى مساعدة؟
-          </span>
-
-          <h2>
-            لا تعرف من أين تبدأ؟
-          </h2>
+          <h2>لا تعرف من أين تبدأ؟</h2>
 
           <p>
-            مركز المساعدة موجود لمساعدتك في الوصول إلى المكان المناسب
-            أو إرسال طلب لفريق اتحاد الطلاب.
+            مركز المساعدة موجود لمساعدتك في الوصول إلى المكان
+            المناسب أو إرسال طلب لفريق اتحاد الطلاب.
           </p>
-
         </div>
 
         <Link
@@ -961,9 +818,7 @@ export default function Home() {
           ابدأ من مركز المساعدة
           <ArrowLeft size={17} />
         </Link>
-
       </section>
-
-    </div>
+    </main>
   );
 }

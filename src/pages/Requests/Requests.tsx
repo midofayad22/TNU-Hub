@@ -7,7 +7,11 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Link } from "react-router-dom";
 
 import { requests } from "../../data/requests";
@@ -27,7 +31,8 @@ const categories = [
 export default function Requests() {
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState("الكل");
-  const [activeCategory, setActiveCategory] = useState("الكل");
+  const [activeCategory, setActiveCategory] =
+    useState("الكل");
 
   const filteredRequests = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -56,17 +61,29 @@ export default function Requests() {
     });
   }, [search, activeStatus, activeCategory]);
 
-  const pendingCount = requests.filter(
-    (item) => item.status === "قيد الانتظار"
-  ).length;
+  const pendingCount = useMemo(
+    () =>
+      requests.filter(
+        (item) => item.status === "قيد الانتظار",
+      ).length,
+    [],
+  );
 
-  const reviewingCount = requests.filter(
-    (item) => item.status === "قيد المراجعة"
-  ).length;
+  const reviewingCount = useMemo(
+    () =>
+      requests.filter(
+        (item) => item.status === "قيد المراجعة",
+      ).length,
+    [],
+  );
 
-  const solvedCount = requests.filter(
-    (item) => item.status === "تم الحل"
-  ).length;
+  const solvedCount = useMemo(
+    () =>
+      requests.filter(
+        (item) => item.status === "تم الحل",
+      ).length,
+    [],
+  );
 
   const clearFilters = () => {
     setSearch("");
@@ -75,7 +92,7 @@ export default function Requests() {
   };
 
   const hasFilters =
-    search ||
+    Boolean(search.trim()) ||
     activeStatus !== "الكل" ||
     activeCategory !== "الكل";
 
@@ -83,10 +100,25 @@ export default function Requests() {
     <main className="page-shell requests-page" dir="rtl">
       {/* Header */}
       <section className="requests-header">
-        <div>
-          <span className="page-kicker">المتابعة</span>
+        <div className="requests-header__content">
+          <span className="page-kicker">
+            المتابعة
+          </span>
 
-          <h1>طلباتي</h1>
+          <div className="requests-header__title-row">
+            <div className="requests-header__icon">
+              <FileText
+                size={21}
+                aria-hidden="true"
+              />
+            </div>
+
+            <h1>طلباتي</h1>
+
+            <span className="requests-header__count">
+              {requests.length} طلب
+            </span>
+          </div>
 
           <p>
             تابع جميع الطلبات والاستفسارات التي أرسلتها
@@ -98,16 +130,22 @@ export default function Requests() {
           to="/requests/new"
           className="requests-new-button"
         >
-          <Plus size={18} />
-          طلب جديد
+          <Plus size={18} aria-hidden="true" />
+          <span>طلب جديد</span>
         </Link>
       </section>
 
       {/* Stats */}
-      <section className="requests-stats">
+      <section
+        className="requests-stats"
+        aria-label="ملخص الطلبات"
+      >
         <div className="request-stat">
           <div className="request-stat__icon">
-            <FileText size={20} />
+            <FileText
+              size={20}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -118,7 +156,10 @@ export default function Requests() {
 
         <div className="request-stat">
           <div className="request-stat__icon request-stat__icon--warning">
-            <Clock3 size={20} />
+            <Clock3
+              size={20}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -129,7 +170,10 @@ export default function Requests() {
 
         <div className="request-stat">
           <div className="request-stat__icon request-stat__icon--info">
-            <Clock3 size={20} />
+            <Clock3
+              size={20}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -140,7 +184,10 @@ export default function Requests() {
 
         <div className="request-stat">
           <div className="request-stat__icon request-stat__icon--success">
-            <CheckCircle2 size={20} />
+            <CheckCircle2
+              size={20}
+              aria-hidden="true"
+            />
           </div>
 
           <div>
@@ -153,7 +200,10 @@ export default function Requests() {
       {/* Search */}
       <section className="requests-toolbar">
         <div className="requests-search">
-          <Search size={19} />
+          <Search
+            size={19}
+            aria-hidden="true"
+          />
 
           <input
             type="search"
@@ -172,7 +222,10 @@ export default function Requests() {
               className="requests-search__clear"
               aria-label="مسح البحث"
             >
-              <X size={16} />
+              <X
+                size={16}
+                aria-hidden="true"
+              />
             </button>
           )}
         </div>
@@ -182,7 +235,7 @@ export default function Requests() {
         </span>
       </section>
 
-      {/* Status Filters */}
+      {/* Filters */}
       <section className="requests-filter-row">
         <div className="requests-filter-group">
           <span className="requests-filter-label">
@@ -191,7 +244,8 @@ export default function Requests() {
 
           <div className="requests-filter-list">
             {statuses.map((status) => {
-              const isActive = activeStatus === status;
+              const isActive =
+                activeStatus === status;
 
               return (
                 <button
@@ -202,7 +256,9 @@ export default function Requests() {
                       ? "requests-filter--active"
                       : ""
                   }`}
-                  onClick={() => setActiveStatus(status)}
+                  onClick={() =>
+                    setActiveStatus(status)
+                  }
                   aria-pressed={isActive}
                 >
                   {status}
@@ -214,7 +270,10 @@ export default function Requests() {
 
         <div className="requests-filter-group">
           <span className="requests-filter-label">
-            <Filter size={14} />
+            <Filter
+              size={14}
+              aria-hidden="true"
+            />
             النوع
           </span>
 
@@ -257,61 +316,90 @@ export default function Requests() {
                 : "جميع طلباتك"}
             </h2>
           </div>
+
+          {hasFilters && (
+            <button
+              type="button"
+              className="requests-clear-inline"
+              onClick={clearFilters}
+            >
+              <X
+                size={14}
+                aria-hidden="true"
+              />
+              مسح الفلاتر
+            </button>
+          )}
         </div>
 
         {filteredRequests.length > 0 ? (
           <div className="request-list">
-            {filteredRequests.map((request, index) => (
-              <Link
-                to={`/requests/${request.id}`}
-                className="request-card"
-                key={request.id}
-                style={
-                  {
-                    "--request-index": index,
-                  } as React.CSSProperties
-                }
-              >
-                <div className="request-card__top">
-                  <span className="request-id">
-                    {request.id}
-                  </span>
+            {filteredRequests.map(
+              (request, index) => (
+                <Link
+                  to={`/requests/${request.id}`}
+                  className="request-card"
+                  key={request.id}
+                  style={
+                    {
+                      "--request-index": index,
+                    } as CSSProperties
+                  }
+                >
+                  <div className="request-card__top">
+                    <span className="request-id">
+                      {request.id}
+                    </span>
 
-                  <span
-                    className={`status-badge status-badge--${request.status}`}
-                  >
-                    {request.status}
-                  </span>
-                </div>
+                    <span
+                      className={`status-badge status-badge--${request.status}`}
+                    >
+                      {request.status}
+                    </span>
+                  </div>
 
-                <div className="request-card__body">
-                  <h2>{request.title}</h2>
+                  <div className="request-card__body">
+                    <h2>{request.title}</h2>
 
-                  <span className="request-category">
-                    {request.category}
-                  </span>
+                    <span className="request-category">
+                      {request.category}
+                    </span>
 
-                  <p>{request.description}</p>
-                </div>
+                    <p>{request.description}</p>
+                  </div>
 
-                <div className="request-card__bottom">
-                  <span>{request.createdAt}</span>
+                  <div className="request-card__bottom">
+                    <span>
+                      {request.createdAt}
+                    </span>
 
-                  <span>
-                    عرض التفاصيل
-                    <span aria-hidden="true">←</span>
-                  </span>
-                </div>
-              </Link>
-            ))}
+                    <span className="request-card__details">
+                      عرض التفاصيل
+                      <span aria-hidden="true">
+                        ←
+                      </span>
+                    </span>
+                  </div>
+                </Link>
+              ),
+            )}
           </div>
         ) : (
           <div className="requests-empty">
             <div className="requests-empty__icon">
-              <Search size={25} />
+              <Search
+                size={25}
+                aria-hidden="true"
+              />
             </div>
 
-            <h3>لم نجد أي طلبات مطابقة</h3>
+            <span className="requests-empty__eyebrow">
+              لا توجد نتائج
+            </span>
+
+            <h3>
+              لم نجد أي طلبات مطابقة
+            </h3>
 
             <p>
               جرّب استخدام كلمة مختلفة أو غيّر الفلاتر

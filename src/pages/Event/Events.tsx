@@ -3,17 +3,19 @@ import {
   Check,
   ChevronLeft,
   Clock3,
+  LoaderCircle,
   MapPin,
+  RefreshCw,
   Search,
   Users,
   X,
 } from "lucide-react";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useProfile } from "../../context/useProfile";
-import { events } from "../../data/events";
+import { supabase } from "../../lib/supabase";
 
 const categories = [
   "الكل",
@@ -30,60 +32,261 @@ const eventTypes = [
   "السابقة",
 ];
 
+interface EventTarget {
+  faculty?: string;
+  program?: string;
+  academicYear?: string;
+}
+
+interface StudentEvent {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  capacity: number | null;
+  target: EventTarget | null;
+  status: "قادمة" | "منتهية" | "مسودة";
+  created_at: string;
+  updated_at: string;
+}
+
+const hasTarget = (target: EventTarget | null) => {
+  if (!target) return false;
+
+  return Boolean(
+    target.faculty ||
+      target.program ||
+      target.academicYear
+  );
+};
+
+const formatDate = (date: string) => {
+  if (!date) return "—";
+
+  return new Intl.DateTimeFormat("ar-EG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${date}T00:00:00`));
+};
+
+const formatTime = (time: string) => {
+  if (!time) return "—";
+
+  const [hoursString, minutesString] = time.split(":");
+
+  const hours = Number(hoursString);
+  const minutes = Number(minutesString);
+
+  if (
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes)
+  ) {
+    return time;
+  }
+
+  const date = new Date();
+
+  date.setHours(hours, minutes, 0, 0);
+
+  return new Intl.DateTimeFormat("ar-EG", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+};
+
+const isEventUpcoming = (event: StudentEvent) => {
+  if (event.status === "قادمة") return true;
+
+  if (event.status === "منتهية") return false;
+
+  const eventDate = new Date(
+    `${event.date}T${event.time || "00:00"}`
+  );
+
+  return eventDate.getTime() >= Date.now();
+};
+
 export default function Events() {
   const { profile } = useProfile();
+
+  const [events, setEvents] = useState<StudentEvent[]>([]);
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] =
     useState("الكل");
-
   const [activeType, setActiveType] =
     useState("الكل");
 
   const [registeredEvents, setRegisteredEvents] =
     useState<string[]>([]);
 
-  /*
-   * هل الفعالية مناسبة للطالب الحالي؟
-   */
+  const [registrationLoading, setRegistrationLoading] =
+    useState<string | null>(null);
+
+  const [registrationError, setRegistrationError] =
+    useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const { data, error: fetchError } =
+        await supabase
+          .from("events")
+          .select(`
+            id,
+            title,
+            category,
+            description,
+            date,
+            time,
+            location,
+            capacity,
+            target,
+            status,
+            created_at,
+            updated_at
+          `)
+          .in("status", ["قادمة", "منتهية"])
+          .order("date", {
+            ascending: true,
+          })
+          .order("time", {
+            ascending: true,
+          });
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      const normalizedEvents: StudentEvent[] =
+        (data ?? []).map((event) => ({
+          id: event.id,
+          title: event.title,
+          category: event.category,
+          description: event.description,
+          date: event.date,
+          time: event.time,
+          location: event.location,
+          capacity: event.capacity,
+          target:
+            event.target &&
+            typeof event.target === "object"
+              ? (event.target as EventTarget)
+              : null,
+          status:
+            event.status as
+              | "قادمة"
+              | "منتهية"
+              | "مسودة",
+          created_at: event.created_at,
+          updated_at: event.updated_at,
+        }));
+
+      setEvents(normalizedEvents);
+    } catch (err) {
+      console.error(
+        "Error loading events:",
+        err
+      );
+
+      setError(
+        "تعذر تحميل الفعاليات. حاول مرة أخرى."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMyRegistrations = async () => {
+    try {
+      const {
+        data: userData,
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      const user = userData.user;
+
+      if (!user) {
+        setRegisteredEvents([]);
+        return;
+      }
+
+      const {
+        data,
+        error: registrationFetchError,
+      } = await supabase
+        .from("event_registrations")
+        .select("event_id")
+        .eq("student_id", user.id);
+
+      if (registrationFetchError) {
+        throw registrationFetchError;
+      }
+
+      setRegisteredEvents(
+        (data ?? []).map(
+          (registration) =>
+            registration.event_id
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Error loading registrations:",
+        err
+      );
+
+      setRegistrationError(
+        "تعذر تحميل حالة التسجيل في الفعاليات."
+      );
+    }
+  };
+
+  useEffect(() => {
+    void loadEvents();
+    void loadMyRegistrations();
+  }, []);
+
   const matchesStudent = (
-    event: (typeof events)[number]
+    event: StudentEvent
   ) => {
     const target = event.target;
 
-    /*
-     * عدم وجود target = فعالية عامة
-     */
-    if (!target) {
+    if (!hasTarget(target)) {
       return true;
     }
 
-    /*
-     * مطابقة الكلية
-     */
     if (
-      target.faculty &&
+      target?.faculty &&
       target.faculty !== profile.faculty
     ) {
       return false;
     }
 
-    /*
-     * مطابقة البرنامج
-     */
     if (
-      target.program &&
+      target?.program &&
       target.program !== profile.program
     ) {
       return false;
     }
 
-    /*
-     * مطابقة السنة الدراسية
-     */
     if (
-      target.academicYear &&
-      target.academicYear !== profile.academicYear
+      target?.academicYear &&
+      target.academicYear !==
+        profile.academicYear
     ) {
       return false;
     }
@@ -91,36 +294,17 @@ export default function Events() {
     return true;
   };
 
-  /*
-   * هل الفعالية مخصصة فعلًا للطالب؟
-   */
-  const isPersonalizedEvent = (
-    event: (typeof events)[number]
-  ) => {
-    return Boolean(event.target);
-  };
-
   const filteredEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return events.filter((event) => {
-      /*
-       * أولًا:
-       * نتأكد أن الفعالية متاحة لهذا الطالب.
-       */
       const matchesTarget =
         matchesStudent(event);
 
-      /*
-       * التصنيف
-       */
       const matchesCategory =
         activeCategory === "الكل" ||
         event.category === activeCategory;
 
-      /*
-       * البحث
-       */
       const searchableText = [
         event.title,
         event.description,
@@ -134,31 +318,17 @@ export default function Events() {
         !query ||
         searchableText.includes(query);
 
-      /*
-       * البيانات الحالية كلها فعاليات قادمة.
-       *
-       * لاحقًا عندما نضيف تاريخًا حقيقيًا للبيانات،
-       * سنستبدل هذا المنطق بمقارنة التاريخ الحالي.
-       */
-      const isUpcoming = true;
+      const upcoming =
+        isEventUpcoming(event);
 
-      /*
-       * نوع الفعالية
-       */
       const matchesType =
         activeType === "الكل" ||
-        (
-          activeType === "مقترحة لك" &&
-          isPersonalizedEvent(event)
-        ) ||
-        (
-          activeType === "القادمة" &&
-          isUpcoming
-        ) ||
-        (
-          activeType === "السابقة" &&
-          !isUpcoming
-        );
+        (activeType === "مقترحة لك" &&
+          hasTarget(event.target)) ||
+        (activeType === "القادمة" &&
+          upcoming) ||
+        (activeType === "السابقة" &&
+          !upcoming);
 
       return (
         matchesTarget &&
@@ -168,6 +338,7 @@ export default function Events() {
       );
     });
   }, [
+    events,
     search,
     activeCategory,
     activeType,
@@ -176,17 +347,14 @@ export default function Events() {
     profile.academicYear,
   ]);
 
-  /*
-   * الفعاليات المخصصة المتاحة للطالب
-   */
   const personalizedEvents =
     filteredEvents.filter((event) =>
-      Boolean(event.target)
+      hasTarget(event.target)
     );
 
   const featuredEvent =
-    filteredEvents.find(
-      (event) => event.featured
+    filteredEvents.find((event) =>
+      isEventUpcoming(event)
     ) ?? null;
 
   const regularEvents =
@@ -195,16 +363,139 @@ export default function Events() {
         event.id !== featuredEvent?.id
     );
 
-  const toggleRegistration = (
-    eventId: string
+  const toggleRegistration = async (
+    event: StudentEvent
   ) => {
-    setRegisteredEvents((current) =>
-      current.includes(eventId)
-        ? current.filter(
-            (id) => id !== eventId
+    if (registrationLoading) return;
+
+    if (!isEventUpcoming(event)) {
+      setRegistrationError(
+        "لا يمكن التسجيل في فعالية منتهية."
+      );
+      return;
+    }
+
+    setRegistrationError("");
+    setRegistrationLoading(event.id);
+
+    try {
+      const {
+        data: userData,
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      const user = userData.user;
+
+      if (!user) {
+        setRegistrationError(
+          "يجب تسجيل الدخول أولًا للتسجيل في الفعالية."
+        );
+        return;
+      }
+
+      const isRegistered =
+        registeredEvents.includes(event.id);
+
+      /*
+       * Cancellation:
+       * The student can only delete his own registration
+       * because of the existing RLS policy.
+       */
+      if (isRegistered) {
+        const {
+          error: deleteError,
+        } = await supabase
+          .from("event_registrations")
+          .delete()
+          .eq("event_id", event.id)
+          .eq("student_id", user.id);
+
+        if (deleteError) {
+          throw deleteError;
+        }
+
+        setRegisteredEvents((current) =>
+          current.filter(
+            (id) => id !== event.id
           )
-        : [...current, eventId]
-    );
+        );
+
+        return;
+      }
+
+      /*
+       * Registration:
+       * Capacity checking and insertion are handled
+       * atomically inside PostgreSQL.
+       */
+      const {
+        error: registrationRpcError,
+      } = await supabase.rpc(
+        "register_for_event",
+        {
+          p_event_id: event.id,
+        }
+      );
+
+      if (registrationRpcError) {
+        const message =
+          registrationRpcError.message ?? "";
+
+        if (
+          message.includes("EVENT_FULL")
+        ) {
+          setRegistrationError(
+            "عذرًا، اكتملت سعة هذه الفعالية."
+          );
+          return;
+        }
+
+        if (
+          message.includes(
+            "EVENT_NOT_AVAILABLE"
+          )
+        ) {
+          setRegistrationError(
+            "هذه الفعالية لم تعد متاحة للتسجيل."
+          );
+          return;
+        }
+
+        if (
+          message.includes(
+            "UNAUTHENTICATED"
+          )
+        ) {
+          setRegistrationError(
+            "يجب تسجيل الدخول أولًا للتسجيل في الفعالية."
+          );
+          return;
+        }
+
+        throw registrationRpcError;
+      }
+
+      setRegisteredEvents((current) =>
+        current.includes(event.id)
+          ? current
+          : [...current, event.id]
+      );
+    } catch (err) {
+      console.error(
+        "Registration error:",
+        err
+      );
+
+      setRegistrationError(
+        "تعذر تنفيذ التسجيل الآن. حاول مرة أخرى."
+      );
+    } finally {
+      setRegistrationLoading(null);
+    }
   };
 
   const clearFilters = () => {
@@ -213,26 +504,77 @@ export default function Events() {
     setActiveType("الكل");
   };
 
+  if (loading) {
+    return (
+      <main
+        className="page-shell events-page"
+        dir="rtl"
+      >
+        <section className="events-empty">
+          <div className="events-empty__icon">
+            <LoaderCircle
+              size={25}
+              className="admin-spin"
+            />
+          </div>
+
+          <h3>
+            جاري تحميل الفعاليات
+          </h3>
+
+          <p>
+            يتم الآن جلب أحدث الفعاليات من المنصة.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main
+        className="page-shell events-page"
+        dir="rtl"
+      >
+        <section className="events-empty">
+          <div className="events-empty__icon">
+            <CalendarDays size={25} />
+          </div>
+
+          <h3>
+            تعذر تحميل الفعاليات
+          </h3>
+
+          <p>{error}</p>
+
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={() => {
+              void loadEvents();
+              void loadMyRegistrations();
+            }}
+          >
+            <RefreshCw size={16} />
+            إعادة المحاولة
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main
       className="page-shell events-page"
       dir="rtl"
     >
-      {/* =====================================================
-          HERO
-      ===================================================== */}
-
       <section className="page-hero events-hero">
-
         <div>
-
           <span className="page-kicker">
             شارك معنا
           </span>
 
-          <h1>
-            الفعاليات
-          </h1>
+          <h1>الفعاليات</h1>
 
           <p>
             اكتشف الفعاليات والورش والمسابقات والأنشطة،
@@ -245,23 +587,35 @@ export default function Events() {
               وبرنامجك الدراسي.
             </p>
           )}
-
         </div>
 
         <div className="page-hero__icon">
           <CalendarDays size={30} />
         </div>
-
       </section>
 
-      {/* =====================================================
-          PERSONALIZED NOTICE
-      ===================================================== */}
+      {registrationError && (
+        <section
+          className="admin-alert admin-alert--error"
+          role="alert"
+        >
+          <span>{registrationError}</span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setRegistrationError("")
+            }
+            aria-label="إغلاق التنبيه"
+          >
+            <X size={16} />
+          </button>
+        </section>
+      )}
 
       {personalizedEvents.length > 0 &&
         profile.faculty && (
           <section className="events-personalized">
-
             <div className="events-personalized__icon">
               <CalendarDays size={19} />
             </div>
@@ -276,18 +630,11 @@ export default function Events() {
                 أو سنتك الدراسية.
               </p>
             </div>
-
           </section>
         )}
 
-      {/* =====================================================
-          SEARCH
-      ===================================================== */}
-
       <section className="events-toolbar">
-
         <div className="events-search">
-
           <Search size={19} />
 
           <input
@@ -310,31 +657,32 @@ export default function Events() {
               <X size={16} />
             </button>
           )}
-
         </div>
 
         <div className="events-count">
-
           <strong>
             {filteredEvents.length}
           </strong>
 
-          <span>
-            فعالية
-          </span>
-
+          <span>فعالية</span>
         </div>
 
+        <button
+          type="button"
+          className="events-refresh"
+          onClick={() => {
+            void loadEvents();
+            void loadMyRegistrations();
+          }}
+          aria-label="تحديث الفعاليات"
+          title="تحديث الفعاليات"
+        >
+          <RefreshCw size={17} />
+        </button>
       </section>
 
-      {/* =====================================================
-          TYPE FILTER
-      ===================================================== */}
-
       <section className="events-type-tabs">
-
         {eventTypes.map((type) => {
-
           const isActive =
             activeType === type;
 
@@ -356,23 +704,15 @@ export default function Events() {
             </button>
           );
         })}
-
       </section>
 
-      {/* =====================================================
-          CATEGORY FILTER
-      ===================================================== */}
-
       <section className="events-filters">
-
         <span className="events-filters__label">
           نوع الفعالية
         </span>
 
         <div className="events-filters__list">
-
           {categories.map((category) => {
-
             const isActive =
               activeCategory === category;
 
@@ -394,21 +734,12 @@ export default function Events() {
               </button>
             );
           })}
-
         </div>
-
       </section>
 
-      {/* =====================================================
-          CONTENT
-      ===================================================== */}
-
       <section className="events-content">
-
         <div className="section-heading section-heading--with-action">
-
           <div>
-
             <span className="section-heading__eyebrow">
               اكتشف وشارك
             </span>
@@ -419,16 +750,15 @@ export default function Events() {
                 : search ||
                   activeCategory !== "الكل"
                 ? "نتائج الفعاليات"
+                : activeType === "السابقة"
+                ? "الفعاليات السابقة"
                 : "الفعاليات القادمة"}
             </h2>
-
           </div>
-
         </div>
 
         {filteredEvents.length === 0 ? (
           <div className="events-empty">
-
             <div className="events-empty__icon">
               <Search size={25} />
             </div>
@@ -449,45 +779,38 @@ export default function Events() {
             >
               عرض جميع الفعاليات
             </button>
-
           </div>
         ) : (
           <>
-            {/* =================================================
-                FEATURED
-            ================================================= */}
-
             {featuredEvent && (
               <article className="event-featured">
-
                 <div className="event-featured__date">
                   <CalendarDays size={18} />
 
                   <span>
-                    {featuredEvent.date}
+                    {formatDate(
+                      featuredEvent.date
+                    )}
                   </span>
                 </div>
 
                 <div className="event-featured__main">
-
                   <div className="event-featured__meta">
-
                     <span>
                       {featuredEvent.category}
                     </span>
 
-                    {featuredEvent.target && (
+                    {hasTarget(
+                      featuredEvent.target
+                    ) ? (
                       <small>
                         مقترحة لك
                       </small>
-                    )}
-
-                    {!featuredEvent.target && (
+                    ) : (
                       <small>
-                        فعالية مميزة
+                        فعالية قادمة
                       </small>
                     )}
-
                   </div>
 
                   <h2>
@@ -499,10 +822,11 @@ export default function Events() {
                   </p>
 
                   <div className="event-featured__info">
-
                     <span>
                       <Clock3 size={15} />
-                      {featuredEvent.time}
+                      {formatTime(
+                        featuredEvent.time
+                      )}
                     </span>
 
                     <span>
@@ -512,13 +836,13 @@ export default function Events() {
 
                     <span>
                       <Users size={15} />
-                      {featuredEvent.attendees} طالب
+                      {featuredEvent.capacity !== null
+                        ? `${featuredEvent.capacity} مقعد`
+                        : "سعة غير محددة"}
                     </span>
-
                   </div>
 
                   <div className="event-featured__actions">
-
                     <Link
                       to={`/events/${featuredEvent.id}`}
                       className="event-featured__details"
@@ -527,105 +851,121 @@ export default function Events() {
                       <ChevronLeft size={16} />
                     </Link>
 
-                    <button
-                      type="button"
-                      className={`event-register ${
+                    {(() => {
+                      const isRegistered =
                         registeredEvents.includes(
                           featuredEvent.id
-                        )
-                          ? "event-register--registered"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        toggleRegistration(
-                          featuredEvent.id
-                        )
-                      }
-                    >
-                      {registeredEvents.includes(
-                        featuredEvent.id
-                      ) ? (
-                        <>
-                          <Check size={16} />
-                          تم التسجيل
-                        </>
-                      ) : (
-                        "التسجيل في الفعالية"
-                      )}
-                    </button>
+                        );
 
+                      const isLoading =
+                        registrationLoading ===
+                        featuredEvent.id;
+
+                      return (
+                        <button
+                          type="button"
+                          className={`event-register ${
+                            isRegistered
+                              ? "event-register--registered"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            void toggleRegistration(
+                              featuredEvent
+                            )
+                          }
+                          disabled={isLoading}
+                          aria-busy={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <LoaderCircle
+                                size={16}
+                                className="admin-spin"
+                              />
+                              جاري التنفيذ...
+                            </>
+                          ) : isRegistered ? (
+                            <>
+                              <Check size={16} />
+                              مسجل بالفعل
+                            </>
+                          ) : (
+                            "التسجيل في الفعالية"
+                          )}
+                        </button>
+                      );
+                    })()}
                   </div>
-
                 </div>
-
               </article>
             )}
 
-            {/* =================================================
-                EVENT GRID
-            ================================================= */}
-
             <div className="event-grid">
-
               {regularEvents.map((event) => {
-
                 const isRegistered =
                   registeredEvents.includes(
                     event.id
                   );
+
+                const upcoming =
+                  isEventUpcoming(event);
+
+                const isLoading =
+                  registrationLoading ===
+                  event.id;
 
                 return (
                   <article
                     className="event-card"
                     key={event.id}
                   >
-
                     <Link
                       to={`/events/${event.id}`}
                       className="event-card__main-link"
                     >
-
                       <div className="event-card__top">
-
                         <div className="event-card__date">
-
                           <CalendarDays size={17} />
 
                           <span>
-                            {event.date}
+                            {formatDate(
+                              event.date
+                            )}
                           </span>
-
                         </div>
 
                         <div className="event-card__categories">
-
                           <span className="event-category">
                             {event.category}
                           </span>
 
-                          {event.target && (
+                          {hasTarget(
+                            event.target
+                          ) && (
                             <span className="event-personal-badge">
                               مقترحة لك
                             </span>
                           )}
 
+                          {!upcoming && (
+                            <span className="event-status-badge">
+                              منتهية
+                            </span>
+                          )}
                         </div>
-
                       </div>
 
-                      <h2>
-                        {event.title}
-                      </h2>
+                      <h2>{event.title}</h2>
 
                       <p>
                         {event.description}
                       </p>
 
                       <div className="event-card__info">
-
                         <span>
                           <Clock3 size={14} />
-                          {event.time}
+                          {formatTime(event.time)}
                         </span>
 
                         <span>
@@ -635,15 +975,14 @@ export default function Events() {
 
                         <span>
                           <Users size={14} />
-                          {event.attendees} طالب
+                          {event.capacity !== null
+                            ? `${event.capacity} مقعد`
+                            : "سعة غير محددة"}
                         </span>
-
                       </div>
-
                     </Link>
 
                     <div className="event-card__footer">
-
                       <Link
                         to={`/events/${event.id}`}
                         className="event-card__details"
@@ -652,41 +991,48 @@ export default function Events() {
                         <ChevronLeft size={15} />
                       </Link>
 
-                      <button
-                        type="button"
-                        className={`event-register event-register--small ${
-                          isRegistered
-                            ? "event-register--registered"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          toggleRegistration(
-                            event.id
-                          )
-                        }
-                      >
-                        {isRegistered ? (
-                          <>
-                            <Check size={14} />
-                            مسجل
-                          </>
-                        ) : (
-                          "سجل الآن"
-                        )}
-                      </button>
-
+                      {upcoming && (
+                        <button
+                          type="button"
+                          className={`event-register event-register--small ${
+                            isRegistered
+                              ? "event-register--registered"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            void toggleRegistration(
+                              event
+                            )
+                          }
+                          disabled={isLoading}
+                          aria-busy={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <LoaderCircle
+                                size={14}
+                                className="admin-spin"
+                              />
+                              جاري...
+                            </>
+                          ) : isRegistered ? (
+                            <>
+                              <Check size={14} />
+                              مسجل
+                            </>
+                          ) : (
+                            "سجل الآن"
+                          )}
+                        </button>
+                      )}
                     </div>
-
                   </article>
                 );
               })}
-
             </div>
           </>
         )}
-
       </section>
-
     </main>
   );
 }

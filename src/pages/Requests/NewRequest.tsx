@@ -1,10 +1,10 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
 import {
   ArrowRight,
   CheckCircle2,
   Send,
 } from "lucide-react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import {
   Link,
   useNavigate,
@@ -41,6 +41,12 @@ const categories = [
 const MIN_DESCRIPTION_LENGTH = 15;
 const MAX_DESCRIPTION_LENGTH = 1000;
 
+type FormErrors = {
+  title?: string;
+  category?: string;
+  description?: string;
+};
+
 export default function NewRequest() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -51,23 +57,26 @@ export default function NewRequest() {
   const [title, setTitle] = useState("");
   const [category, setCategory] =
     useState(initialCategory);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] =
+    useState("");
 
-  const [errors, setErrors] = useState<{
-    title?: string;
-    category?: string;
-    description?: string;
-  }>({});
+  const [errors, setErrors] =
+    useState<FormErrors>({});
 
   const [isSubmitted, setIsSubmitted] =
     useState(false);
 
   const validate = () => {
-    const nextErrors: typeof errors = {};
+    const nextErrors: FormErrors = {};
 
-    if (!title.trim()) {
-      nextErrors.title = "اكتب عنوانًا للطلب.";
-    } else if (title.trim().length < 5) {
+    const trimmedTitle = title.trim();
+    const trimmedDescription =
+      description.trim();
+
+    if (!trimmedTitle) {
+      nextErrors.title =
+        "اكتب عنوانًا للطلب.";
+    } else if (trimmedTitle.length < 5) {
       nextErrors.title =
         "عنوان الطلب يجب أن يكون 5 أحرف على الأقل.";
     }
@@ -77,11 +86,11 @@ export default function NewRequest() {
         "اختر نوع الطلب.";
     }
 
-    if (!description.trim()) {
+    if (!trimmedDescription) {
       nextErrors.description =
         "اكتب تفاصيل المشكلة أو الاستفسار.";
     } else if (
-      description.trim().length <
+      trimmedDescription.length <
       MIN_DESCRIPTION_LENGTH
     ) {
       nextErrors.description = `اكتب تفاصيل أكثر، الحد الأدنى ${MIN_DESCRIPTION_LENGTH} حرفًا.`;
@@ -89,10 +98,14 @@ export default function NewRequest() {
 
     setErrors(nextErrors);
 
-    return Object.keys(nextErrors).length === 0;
+    return (
+      Object.keys(nextErrors).length === 0
+    );
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
     if (!validate()) return;
@@ -104,12 +117,53 @@ export default function NewRequest() {
     }, 1400);
   };
 
+  const updateTitle = (value: string) => {
+    setTitle(value);
+
+    if (errors.title) {
+      setErrors((current) => ({
+        ...current,
+        title: undefined,
+      }));
+    }
+  };
+
+  const updateCategory = (value: string) => {
+    setCategory(value);
+
+    if (errors.category) {
+      setErrors((current) => ({
+        ...current,
+        category: undefined,
+      }));
+    }
+  };
+
+  const updateDescription = (
+    value: string,
+  ) => {
+    setDescription(value);
+
+    if (errors.description) {
+      setErrors((current) => ({
+        ...current,
+        description: undefined,
+      }));
+    }
+  };
+
   if (isSubmitted) {
     return (
-      <main className="page-shell new-request-page" dir="rtl">
+      <main
+        className="page-shell new-request-page"
+        dir="rtl"
+      >
         <div className="request-success">
           <div className="request-success__icon">
-            <CheckCircle2 size={34} />
+            <CheckCircle2
+              size={34}
+              aria-hidden="true"
+            />
           </div>
 
           <span>تم بنجاح</span>
@@ -117,8 +171,8 @@ export default function NewRequest() {
           <h1>تم إرسال طلبك</h1>
 
           <p>
-            تم استلام طلبك بنجاح، وسيتم توجيهه إلى الفريق
-            المختص لمراجعته.
+            تم استلام طلبك بنجاح، وسيتم توجيهه إلى
+            الفريق المختص لمراجعته.
           </p>
 
           <small>
@@ -130,20 +184,40 @@ export default function NewRequest() {
   }
 
   return (
-    <main className="page-shell new-request-page" dir="rtl">
-      <Link to="/requests" className="back-link">
-        <ArrowRight size={17} />
+    <main
+      className="page-shell new-request-page"
+      dir="rtl"
+    >
+      <Link
+        to="/requests"
+        className="back-link"
+      >
+        <ArrowRight
+          size={17}
+          aria-hidden="true"
+        />
         العودة إلى طلباتي
       </Link>
 
       <section className="form-header new-request-header">
-        <span className="page-kicker">طلب جديد</span>
+        <span className="page-kicker">
+          طلب جديد
+        </span>
 
-        <h1>إرسال طلب</h1>
+        <div className="new-request-header__title">
+          <div className="new-request-header__icon">
+            <Send
+              size={21}
+              aria-hidden="true"
+            />
+          </div>
+
+          <h1>إرسال طلب</h1>
+        </div>
 
         <p>
-          اشرح مشكلتك أو استفسارك بوضوح حتى نتمكن من
-          مساعدتك بشكل أفضل.
+          اشرح مشكلتك أو استفسارك بوضوح حتى نتمكن
+          من مساعدتك بشكل أفضل.
         </p>
       </section>
 
@@ -152,6 +226,14 @@ export default function NewRequest() {
         onSubmit={handleSubmit}
         noValidate
       >
+        <div className="request-form__intro">
+          <strong>أخبرنا بما تحتاج إليه</strong>
+          <span>
+            املأ البيانات التالية وسنوجّه طلبك
+            إلى الجهة المختصة.
+          </span>
+        </div>
+
         {/* Title */}
         <div className="form-field">
           <label htmlFor="request-title">
@@ -160,17 +242,11 @@ export default function NewRequest() {
 
           <input
             id="request-title"
+            type="text"
             value={title}
-            onChange={(event) => {
-              setTitle(event.target.value);
-
-              if (errors.title) {
-                setErrors((current) => ({
-                  ...current,
-                  title: undefined,
-                }));
-              }
-            }}
+            onChange={(event) =>
+              updateTitle(event.target.value)
+            }
             placeholder="مثال: مشكلة في تسجيل المقرر"
             className={
               errors.title
@@ -178,10 +254,20 @@ export default function NewRequest() {
                 : ""
             }
             aria-invalid={Boolean(errors.title)}
+            aria-describedby={
+              errors.title
+                ? "request-title-error"
+                : undefined
+            }
+            autoComplete="off"
           />
 
           {errors.title && (
-            <span className="form-error">
+            <span
+              id="request-title-error"
+              className="form-error"
+              role="alert"
+            >
               {errors.title}
             </span>
           )}
@@ -196,22 +282,24 @@ export default function NewRequest() {
           <select
             id="request-category"
             value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
-
-              if (errors.category) {
-                setErrors((current) => ({
-                  ...current,
-                  category: undefined,
-                }));
-              }
-            }}
+            onChange={(event) =>
+              updateCategory(
+                event.target.value,
+              )
+            }
             className={
               errors.category
                 ? "form-input--error"
                 : ""
             }
-            aria-invalid={Boolean(errors.category)}
+            aria-invalid={Boolean(
+              errors.category,
+            )}
+            aria-describedby={
+              errors.category
+                ? "request-category-error"
+                : undefined
+            }
           >
             <option value="">
               اختر نوع الطلب
@@ -228,7 +316,11 @@ export default function NewRequest() {
           </select>
 
           {errors.category && (
-            <span className="form-error">
+            <span
+              id="request-category-error"
+              className="form-error"
+              role="alert"
+            >
               {errors.category}
             </span>
           )}
@@ -241,7 +333,14 @@ export default function NewRequest() {
               تفاصيل الطلب
             </label>
 
-            <span>
+            <span
+              className={
+                description.length >
+                MAX_DESCRIPTION_LENGTH * 0.9
+                  ? "form-character-count form-character-count--warning"
+                  : "form-character-count"
+              }
+            >
               {description.length}/
               {MAX_DESCRIPTION_LENGTH}
             </span>
@@ -251,16 +350,11 @@ export default function NewRequest() {
             id="request-description"
             value={description}
             maxLength={MAX_DESCRIPTION_LENGTH}
-            onChange={(event) => {
-              setDescription(event.target.value);
-
-              if (errors.description) {
-                setErrors((current) => ({
-                  ...current,
-                  description: undefined,
-                }));
-              }
-            }}
+            onChange={(event) =>
+              updateDescription(
+                event.target.value,
+              )
+            }
             placeholder="اكتب تفاصيل المشكلة أو الاستفسار هنا..."
             rows={8}
             className={
@@ -268,22 +362,33 @@ export default function NewRequest() {
                 ? "form-input--error"
                 : ""
             }
-            aria-invalid={Boolean(errors.description)}
+            aria-invalid={Boolean(
+              errors.description,
+            )}
+            aria-describedby="request-description-help"
           />
 
-          <div className="form-field-footer">
+          <div
+            className="form-field-footer"
+            id="request-description-help"
+          >
             {errors.description ? (
-              <span className="form-error">
+              <span
+                className="form-error"
+                role="alert"
+              >
                 {errors.description}
               </span>
             ) : (
               <span>
-                حاول تقديم أكبر قدر ممكن من التفاصيل.
+                حاول تقديم أكبر قدر ممكن من
+                التفاصيل.
               </span>
             )}
 
             <span>
-              الحد الأدنى {MIN_DESCRIPTION_LENGTH} حرفًا
+              الحد الأدنى{" "}
+              {MIN_DESCRIPTION_LENGTH} حرفًا
             </span>
           </div>
         </div>
@@ -301,7 +406,10 @@ export default function NewRequest() {
             className="button button--primary request-submit"
             type="submit"
           >
-            <Send size={17} />
+            <Send
+              size={17}
+              aria-hidden="true"
+            />
             إرسال الطلب
           </button>
         </div>

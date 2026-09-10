@@ -10,7 +10,10 @@ export default function AdminLayout({
   children,
 }: AdminLayoutProps) {
   return (
-    <div className="admin-layout" dir="rtl">
+    <div
+      className="admin-layout"
+      dir="rtl"
+    >
       <AdminSidebar />
 
       <main className="admin-layout__main">
