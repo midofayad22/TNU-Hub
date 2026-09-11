@@ -19,16 +19,12 @@ export default function Header() {
   const { profile } = useProfile();
 
   const studentName =
-    authProfile?.full_name?.trim() ||
-    profile.name.trim() ||
-    "الطالب";
+    authProfile?.full_name?.trim() || profile.name.trim() || "الطالب";
 
-  const studentInitial =
-    studentName.charAt(0) || "؟";
+  const studentInitial = studentName.charAt(0) || "؟";
 
   const isAdmin =
-    authProfile?.role === "admin" ||
-    authProfile?.role === "root_admin";
+    authProfile?.role === "admin" || authProfile?.role === "root_admin";
 
   const handleLogout = async () => {
     await signOut();
@@ -38,28 +34,19 @@ export default function Header() {
   return (
     <header className="header" dir="rtl">
       <div className="header__inner">
-
         {/* Logo */}
-        <Link
-          to="/"
-          className="header__logo"
-        >
-          <span className="header__logo-mark">
-            ط
+        <Link to="/" className="header__logo">
+          <span className="header__logo-mark" aria-label="TNU Students">
+            <span className="header__logo-mark-main">TNU</span>
+            <span className="header__logo-mark-sub">STUDENTS</span>
           </span>
 
-          <span className="header__logo-text">
-            اتحاد الطلاب
-          </span>
+          <span className="header__logo-text">اتحاد الطلاب</span>
         </Link>
 
         {/* Search */}
         <div className="header__search">
-
-          <Search
-            className="header__search-icon"
-            size={19}
-          />
+          <Search className="header__search-icon" size={19} />
 
           <input
             type="search"
@@ -67,27 +54,20 @@ export default function Header() {
             aria-label="البحث في المنصة"
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                const value =
-                  event.currentTarget.value.trim();
+                const value = event.currentTarget.value.trim();
 
                 if (value) {
-                  navigate(
-                    `/explore?search=${encodeURIComponent(
-                      value
-                    )}`
-                  );
+                  navigate(`/explore?search=${encodeURIComponent(value)}`);
                 }
               }
             }}
           />
 
           <kbd>⌘ K</kbd>
-
         </div>
 
         {/* Actions */}
         <div className="header__actions">
-
           {!user ? (
             /* Login button */
             <button
@@ -105,9 +85,7 @@ export default function Header() {
                 type="button"
                 className="header__notification"
                 aria-label="الإشعارات"
-                onClick={() =>
-                  navigate("/notifications")
-                }
+                onClick={() => navigate("/notifications")}
               >
                 <Bell size={20} />
 
@@ -131,28 +109,17 @@ export default function Header() {
                 type="button"
                 className="header__profile"
                 aria-label="فتح الملف الشخصي"
-                onClick={() =>
-                  navigate("/profile")
-                }
+                onClick={() => navigate("/profile")}
               >
-
-                <span className="header__avatar">
-                  {studentInitial}
-                </span>
+                <span className="header__avatar">{studentInitial}</span>
 
                 <span className="header__profile-info">
                   <strong>{studentName}</strong>
 
-                  <small>
-                    {isAdmin ? "مسؤول" : "طالب"}
-                  </small>
+                  <small>{isAdmin ? "مسؤول" : "طالب"}</small>
                 </span>
 
-                <ChevronDown
-                  className="header__profile-chevron"
-                  size={16}
-                />
-
+                <ChevronDown className="header__profile-chevron" size={16} />
               </button>
 
               {/* Logout */}
@@ -166,9 +133,7 @@ export default function Header() {
               </button>
             </>
           )}
-
         </div>
-
       </div>
     </header>
   );

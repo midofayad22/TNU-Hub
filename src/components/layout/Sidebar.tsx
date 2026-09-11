@@ -73,11 +73,12 @@ export default function Sidebar() {
   return (
     <aside className="sidebar" dir="rtl">
       <div className="sidebar__brand">
-        <span className="sidebar__brand-mark">
-          ط
+        <span className="sidebar__brand-mark" aria-label="TNU Students">
+          <span className="sidebar__brand-mark-main">TNU</span>
+          <span className="sidebar__brand-mark-line"></span>
         </span>
 
-        <div>
+        <div className="sidebar__brand-info">
           <strong>اتحاد الطلاب</strong>
           <span>حياة جامعية أفضل</span>
         </div>
@@ -85,9 +86,7 @@ export default function Sidebar() {
 
       <nav className="sidebar__nav">
         <div className="sidebar__section">
-          <span className="sidebar__section-title">
-            الرئيسية
-          </span>
+          <span className="sidebar__section-title">الرئيسية</span>
 
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -98,11 +97,7 @@ export default function Sidebar() {
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `sidebar__link ${
-                    isActive
-                      ? "sidebar__link--active"
-                      : ""
-                  }`
+                  `sidebar__link ${isActive ? "sidebar__link--active" : ""}`
                 }
               >
                 <Icon size={19} />
@@ -114,9 +109,7 @@ export default function Sidebar() {
         </div>
 
         <div className="sidebar__section sidebar__section--bottom">
-          <span className="sidebar__section-title">
-            الحساب
-          </span>
+          <span className="sidebar__section-title">الحساب</span>
 
           {secondaryItems.map((item) => {
             const Icon = item.icon;
@@ -126,11 +119,7 @@ export default function Sidebar() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `sidebar__link ${
-                    isActive
-                      ? "sidebar__link--active"
-                      : ""
-                  }`
+                  `sidebar__link ${isActive ? "sidebar__link--active" : ""}`
                 }
               >
                 <Icon size={19} />
