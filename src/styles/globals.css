@@ -35160,3 +35160,1061 @@ html:not(.dark) .sidebar__brand-info span {
     animation: none;
   }
 }
+/* =========================================================
+   SETTINGS PAGE — DARK MODE
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+html.dark .settings-page {
+  color: #F5F8FC;
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+html.dark .settings-hero {
+  border-color: rgba(164, 190, 220, 0.12);
+
+  background:
+    linear-gradient(
+      145deg,
+      #111F33 0%,
+      #0F1C2E 100%
+    );
+
+  box-shadow:
+    0 8px 24px rgba(3, 14, 28, 0.24);
+}
+
+html.dark .settings-hero__content {
+  color: #F5F8FC;
+}
+
+html.dark .settings-hero .page-kicker {
+  color: #A9B8CA;
+}
+
+html.dark .settings-hero__title-row h1 {
+  color: #F5F8FC;
+}
+
+html.dark .settings-hero__icon {
+  border-color: rgba(164, 190, 220, 0.14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(36, 79, 125, 0.28),
+      rgba(22, 58, 99, 0.18)
+    );
+
+  color: #DCE8F4;
+}
+
+html.dark .settings-hero__content > p {
+  color: #A9B8CA;
+}
+
+html.dark .settings-hero__visual {
+  color: rgba(74, 113, 151, 0.28);
+}
+
+
+/* =========================================================
+   SAVE MESSAGE
+   ========================================================= */
+
+html.dark .settings-save-message {
+  border-color: rgba(196, 155, 32, 0.20);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(196, 155, 32, 0.10),
+      rgba(196, 155, 32, 0.05)
+    );
+
+  color: #E8D58A;
+
+  box-shadow:
+    0 6px 18px rgba(3, 14, 28, 0.18);
+}
+
+html.dark .settings-save-message__icon {
+  border-color: rgba(196, 155, 32, 0.18);
+
+  background: rgba(196, 155, 32, 0.12);
+
+  color: #D8B94D;
+}
+
+
+/* =========================================================
+   SETTINGS SECTION
+   ========================================================= */
+
+html.dark .settings-section {
+  border-color: rgba(164, 190, 220, 0.11);
+
+  background:
+    linear-gradient(
+      145deg,
+      #111F33,
+      #0F1C2E
+    );
+
+  box-shadow:
+    0 6px 20px rgba(3, 14, 28, 0.20);
+}
+
+
+/* =========================================================
+   SECTION HEADING
+   ========================================================= */
+
+html.dark .settings-section__heading {
+  color: #F5F8FC;
+}
+
+html.dark .settings-section__heading-icon {
+  border-color: rgba(164, 190, 220, 0.13);
+
+  background: rgba(36, 79, 125, 0.20);
+
+  color: #C7D8E9;
+}
+
+html.dark .settings-section__heading > div > span {
+  color: #8294A9;
+}
+
+html.dark .settings-section__heading h2 {
+  color: #F1F5F9;
+}
+
+
+/* =========================================================
+   THEME OPTIONS
+   ========================================================= */
+
+html.dark .settings-theme {
+  border-color: rgba(164, 190, 220, 0.10);
+
+  background: rgba(7, 17, 30, 0.35);
+}
+
+
+/* Individual option */
+
+html.dark .settings-theme-option {
+  border-color: transparent;
+
+  background: transparent;
+
+  color: #A9B8CA;
+}
+
+html.dark .settings-theme-option:hover {
+  border-color: rgba(164, 190, 220, 0.14);
+
+  background: rgba(36, 79, 125, 0.10);
+
+  color: #E7EEF6;
+}
+
+
+/* Active option */
+
+html.dark .settings-theme-option--active {
+  border-color: rgba(36, 79, 125, 0.55);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(36, 79, 125, 0.28),
+      rgba(27, 69, 111, 0.18)
+    );
+
+  color: #F5F8FC;
+
+  box-shadow:
+    0 5px 16px rgba(3, 14, 28, 0.18);
+}
+
+html.dark .settings-theme-option--active:hover {
+  border-color: rgba(80, 126, 169, 0.50);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(42, 89, 137, 0.32),
+      rgba(27, 69, 111, 0.22)
+    );
+}
+
+
+/* Theme option icon */
+
+html.dark .settings-theme-option__icon {
+  border-color: rgba(164, 190, 220, 0.12);
+
+  background: rgba(36, 79, 125, 0.16);
+
+  color: #BFD2E5;
+}
+
+html.dark .settings-theme-option--active
+.settings-theme-option__icon {
+  border-color: rgba(80, 126, 169, 0.28);
+
+  background: rgba(36, 79, 125, 0.28);
+
+  color: #DCE8F4;
+}
+
+
+/* Theme option text */
+
+html.dark .settings-theme-option__content strong {
+  color: #F1F5F9;
+}
+
+html.dark .settings-theme-option__content span {
+  color: #8FA2B7;
+}
+
+
+/* Radio */
+
+html.dark .settings-radio {
+  border-color: rgba(164, 190, 220, 0.25);
+
+  background: rgba(7, 17, 30, 0.30);
+}
+
+html.dark .settings-theme-option--active .settings-radio {
+  border-color: #2A5989;
+}
+
+html.dark .settings-radio span {
+  background: #C49B20;
+
+  box-shadow:
+    0 0 0 3px rgba(196, 155, 32, 0.10);
+}
+
+
+/* =========================================================
+   SETTINGS ROW — NOTIFICATIONS
+   ========================================================= */
+
+html.dark .settings-row {
+  border-color: rgba(164, 190, 220, 0.10);
+
+  background: rgba(7, 17, 30, 0.28);
+}
+
+html.dark .settings-row:hover {
+  border-color: rgba(80, 126, 169, 0.24);
+
+  background: rgba(36, 79, 125, 0.08);
+}
+
+
+/* Row icon */
+
+html.dark .settings-row__icon {
+  border-color: rgba(164, 190, 220, 0.12);
+
+  background: rgba(100, 116, 139, 0.12);
+
+  color: #94A3B8;
+}
+
+html.dark .settings-row__icon--active {
+  border-color: rgba(36, 79, 125, 0.28);
+
+  background: rgba(36, 79, 125, 0.20);
+
+  color: #C7D8E9;
+}
+
+
+/* Row content */
+
+html.dark .settings-row__content strong {
+  color: #F1F5F9;
+}
+
+html.dark .settings-row__content p {
+  color: #8FA2B7;
+}
+
+
+/* Notification state */
+
+html.dark .settings-row__state {
+  color: #8294A9;
+}
+
+html.dark .settings-row__state--active {
+  color: #D8B94D;
+}
+
+
+/* =========================================================
+   SWITCH
+   ========================================================= */
+
+html.dark .settings-switch {
+  border-color: rgba(164, 190, 220, 0.18);
+
+  background: #26384D;
+
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.20);
+}
+
+html.dark .settings-switch > span {
+  background: #A9B8CA;
+
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.28);
+}
+
+html.dark .settings-switch:hover {
+  border-color: rgba(80, 126, 169, 0.35);
+}
+
+
+/* Active switch */
+
+html.dark .settings-switch--active {
+  border-color: #244F7D;
+
+  background: #244F7D;
+}
+
+html.dark .settings-switch--active > span {
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   ACCOUNT LINKS
+   ========================================================= */
+
+html.dark .settings-links {
+  border-color: rgba(164, 190, 220, 0.10);
+
+  background: rgba(7, 17, 30, 0.28);
+}
+
+html.dark .settings-link {
+  border-color: transparent;
+
+  background: transparent;
+
+  color: #F1F5F9;
+}
+
+html.dark .settings-link:hover {
+  border-color: rgba(80, 126, 169, 0.24);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(36, 79, 125, 0.14),
+      rgba(27, 69, 111, 0.08)
+    );
+}
+
+
+/* Link icon */
+
+html.dark .settings-link__icon {
+  border-color: rgba(164, 190, 220, 0.12);
+
+  background: rgba(36, 79, 125, 0.18);
+
+  color: #C7D8E9;
+}
+
+html.dark .settings-link:hover .settings-link__icon {
+  background: rgba(36, 79, 125, 0.28);
+
+  color: #E0ECF7;
+}
+
+
+/* Link text */
+
+html.dark .settings-link__content strong {
+  color: #F1F5F9;
+}
+
+html.dark .settings-link__content span {
+  color: #8FA2B7;
+}
+
+
+/* Arrow */
+
+html.dark .settings-link__arrow {
+  color: #6F8298;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+html.dark .settings-link:hover .settings-link__arrow {
+  color: #BFD2E5;
+}
+
+
+/* =========================================================
+   FOOTER NOTE
+   ========================================================= */
+
+html.dark .settings-footer-note {
+  border-color: rgba(164, 190, 220, 0.11);
+
+  background:
+    linear-gradient(
+      145deg,
+      #111F33,
+      #0F1C2E
+    );
+
+  box-shadow:
+    0 6px 20px rgba(3, 14, 28, 0.18);
+}
+
+html.dark .settings-footer-note__icon {
+  border-color: rgba(36, 79, 125, 0.25);
+
+  background: rgba(36, 79, 125, 0.18);
+
+  color: #C7D8E9;
+}
+
+html.dark .settings-footer-note strong {
+  color: #E7EEF6;
+}
+
+html.dark .settings-footer-note p {
+  color: #8FA2B7;
+}
+
+
+/* =========================================================
+   SETTINGS — DARK MODE TRANSITIONS
+   ========================================================= */
+
+html.dark .settings-page,
+html.dark .settings-hero,
+html.dark .settings-section,
+html.dark .settings-save-message,
+html.dark .settings-row,
+html.dark .settings-theme,
+html.dark .settings-theme-option,
+html.dark .settings-link,
+html.dark .settings-footer-note {
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+/* =========================================================
+   DARK MODE — HEADER / SIDEBAR / NOTIFICATIONS
+   Theme system: html[data-theme="dark"]
+   ========================================================= */
+
+
+/* =========================================================
+   1. HEADER — DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"] .header {
+  background: rgba(7, 15, 27, 0.96);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__logo {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__logo-text {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__logo-mark {
+  background: linear-gradient(
+    145deg,
+    #163a63 0%,
+    #244f7d 100%
+  );
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(196, 155, 32, 0.08);
+}
+
+html[data-theme="dark"] .header__logo-mark-main {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .header__logo-mark-sub {
+  color: #dce7f2;
+}
+
+html[data-theme="dark"] .header__logo-mark::after {
+  background: #c49b20;
+}
+
+html[data-theme="dark"] .header__logo:hover .header__logo-mark {
+  border-color: rgba(196, 155, 32, 0.35);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(196, 155, 32, 0.12);
+}
+
+html[data-theme="dark"] .header__logo:hover .header__logo-text {
+  color: #ffffff;
+}
+
+
+/* Header Search */
+
+html[data-theme="dark"] .header__search {
+  background: #111d2d;
+  border-color: rgba(255, 255, 255, 0.09);
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__search:focus-within {
+  border-color: rgba(196, 155, 32, 0.45);
+  box-shadow: 0 0 0 3px rgba(196, 155, 32, 0.08);
+}
+
+html[data-theme="dark"] .header__search-icon {
+  color: #9fb1c5;
+}
+
+
+/* Header Buttons */
+
+html[data-theme="dark"] .header__login-button,
+html[data-theme="dark"] .header__notification,
+html[data-theme="dark"] .header__admin-button {
+  color: #dce7f2;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .header__login-button:hover,
+html[data-theme="dark"] .header__notification:hover,
+html[data-theme="dark"] .header__admin-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .header__notification-dot {
+  border-color: #07101c;
+}
+
+
+/* Header Profile */
+
+html[data-theme="dark"] .header__profile {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__avatar {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .header__profile-info {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__profile-chevron {
+  color: #9fb1c5;
+}
+
+html[data-theme="dark"] .header__logout {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .header__logout:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+
+/* =========================================================
+   2. SIDEBAR — DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"] .sidebar {
+  background: #091321;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #f5f8fc;
+}
+
+
+/* Sidebar Brand */
+
+html[data-theme="dark"] .sidebar__brand {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .sidebar__brand-mark {
+  background: linear-gradient(
+    145deg,
+    #163a63 0%,
+    #244f7d 100%
+  );
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(196, 155, 32, 0.07);
+}
+
+html[data-theme="dark"] .sidebar__brand-mark::before {
+  background: rgba(196, 155, 32, 0.8);
+}
+
+html[data-theme="dark"] .sidebar__brand-mark-main {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .sidebar__brand-mark-line {
+  background: #c49b20;
+}
+
+html[data-theme="dark"] .sidebar__brand-info strong {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .sidebar__brand-info span {
+  color: #94a7bb;
+}
+
+html[data-theme="dark"] .sidebar__brand:hover .sidebar__brand-mark {
+  border-color: rgba(196, 155, 32, 0.35);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(196, 155, 32, 0.1);
+}
+
+html[data-theme="dark"] .sidebar__brand:hover .sidebar__brand-info strong {
+  color: #ffffff;
+}
+
+
+/* Sidebar Sections */
+
+html[data-theme="dark"] .sidebar__section-title {
+  color: #7f94aa;
+}
+
+
+/* Sidebar Links */
+
+html[data-theme="dark"] .sidebar__link {
+  color: #b9c8d8;
+}
+
+html[data-theme="dark"] .sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .sidebar__link--active {
+  background: rgba(36, 79, 125, 0.28);
+  color: #ffffff;
+  border-color: rgba(196, 155, 32, 0.16);
+}
+
+html[data-theme="dark"] .sidebar__link--active svg {
+  color: #e7c75f;
+}
+
+
+/* =========================================================
+   NOTIFICATIONS — PREMIUM DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-page {
+  color: #f4f7fb;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-header {
+  color: #f4f7fb;
+}
+
+html[data-theme="dark"] .notifications-header__content {
+  color: #f4f7fb;
+}
+
+html[data-theme="dark"] .notifications-header .page-kicker {
+  color: #8fa5bb;
+}
+
+html[data-theme="dark"] .notifications-header__title-row h1 {
+  color: #f7f9fc;
+}
+
+html[data-theme="dark"] .notifications-header__title-icon {
+  color: #d9b84f;
+}
+
+html[data-theme="dark"] .notifications-header__badge {
+  background: rgba(196, 155, 32, 0.1);
+  border: 1px solid rgba(196, 155, 32, 0.24);
+  color: #e7c75f;
+}
+
+
+/* =========================================================
+   MARK ALL BUTTON
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-mark-all {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #c9d5e1;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .notifications-mark-all:hover {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(196, 155, 32, 0.28);
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-error {
+  background: rgba(127, 29, 29, 0.14);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
+}
+
+
+/* =========================================================
+   REALTIME SUMMARY
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-summary {
+  position: relative;
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(22, 58, 99, 0.32),
+      rgba(12, 27, 45, 0.78)
+    );
+
+  border: 1px solid rgba(120, 157, 193, 0.14);
+
+  color: #f4f7fb;
+
+  box-shadow:
+    0 14px 35px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+html[data-theme="dark"] .notifications-summary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.025),
+      transparent
+    );
+}
+
+html[data-theme="dark"] .notifications-summary__icon {
+  background: rgba(36, 79, 125, 0.3);
+  border: 1px solid rgba(159, 195, 231, 0.12);
+  color: #a9c8e5;
+}
+
+html[data-theme="dark"] .notifications-summary__content {
+  color: #f4f7fb;
+}
+
+html[data-theme="dark"] .notifications-summary__content strong {
+  color: #f7f9fc;
+}
+
+html[data-theme="dark"] .notifications-summary__status {
+  color: #8fa5bb;
+}
+
+html[data-theme="dark"] .notifications-summary__status--active {
+  color: #75d99a;
+}
+
+
+/* =========================================================
+   FILTER TOOLBAR
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-toolbar {
+  color: #f4f7fb;
+}
+
+html[data-theme="dark"] .notifications-filters {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 14px;
+}
+
+html[data-theme="dark"] .notification-filter {
+  background: transparent;
+  border-color: transparent;
+  color: #91a5b9;
+}
+
+html[data-theme="dark"] .notification-filter:hover {
+  background: rgba(255, 255, 255, 0.055);
+  color: #dce6ef;
+}
+
+html[data-theme="dark"] .notification-filter--active {
+  background: #163a63;
+  border-color: rgba(159, 195, 231, 0.12);
+  color: #ffffff;
+
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .notifications-toolbar__count {
+  color: #8196ab;
+}
+
+
+/* =========================================================
+   NOTIFICATION CARDS
+   ========================================================= */
+
+html[data-theme="dark"] .notification-card {
+  position: relative;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20, 34, 51, 0.92),
+      rgba(13, 25, 40, 0.96)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.065);
+
+  color: #f4f7fb;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+html[data-theme="dark"] .notification-card:hover {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(24, 42, 62, 0.96),
+      rgba(15, 30, 47, 0.98)
+    );
+
+  border-color: rgba(143, 177, 208, 0.17);
+
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.24);
+
+  transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   UNREAD NOTIFICATION
+   ========================================================= */
+
+html[data-theme="dark"] .notification-card--unread {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(22, 58, 99, 0.38),
+      rgba(14, 29, 46, 0.97)
+    );
+
+  border-color: rgba(80, 132, 180, 0.28);
+
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.2),
+    inset 3px 0 0 rgba(74, 126, 173, 0.75);
+}
+
+
+/* =========================================================
+   REALTIME NOTIFICATION
+   ========================================================= */
+
+html[data-theme="dark"] .notification-card--realtime {
+  border-color: rgba(196, 155, 32, 0.2);
+
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.2),
+    inset 3px 0 0 rgba(196, 155, 32, 0.65);
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+html[data-theme="dark"] .notification-icon {
+  background: rgba(36, 79, 125, 0.22);
+  border: 1px solid rgba(159, 195, 231, 0.1);
+  color: #a8c7e3;
+}
+
+html[data-theme="dark"] .notification-card--unread .notification-icon {
+  background: rgba(36, 79, 125, 0.32);
+  color: #bdd8ef;
+}
+
+html[data-theme="dark"] .notification-card--realtime .notification-icon {
+  background: rgba(196, 155, 32, 0.1);
+  border-color: rgba(196, 155, 32, 0.18);
+  color: #e1c45b;
+}
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+html[data-theme="dark"] .notification-content {
+  color: #dbe5ee;
+}
+
+html[data-theme="dark"] .notification-content__top h2 {
+  color: #f5f8fc;
+}
+
+html[data-theme="dark"] .notification-unread-dot {
+  background: #e7c75f;
+  box-shadow: 0 0 0 4px rgba(231, 199, 95, 0.08);
+}
+
+html[data-theme="dark"] .notification-time {
+  color: #7f94a9;
+}
+
+
+/* =========================================================
+   DELETE
+   ========================================================= */
+
+html[data-theme="dark"] .notification-delete {
+  color: #71869b;
+}
+
+html[data-theme="dark"] .notification-delete:hover {
+  background: rgba(239, 68, 68, 0.09);
+  color: #fca5a5;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+html[data-theme="dark"] .notification-card--loading {
+  background: #101d2d;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+html[data-theme="dark"] .notifications-empty {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18, 32, 49, 0.9),
+      rgba(12, 24, 39, 0.96)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  color: #f4f7fb;
+
+  box-shadow:
+    0 14px 35px rgba(0, 0, 0, 0.16);
+}
+
+html[data-theme="dark"] .notifications-empty__icon {
+  color: #7695b2;
+}
+
+html[data-theme="dark"] .notifications-empty__eyebrow {
+  color: #8196aa;
+}
+
+html[data-theme="dark"] .notifications-empty__action {
+  background: #163a63;
+  border-color: #163a63;
+  color: #ffffff;
+
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+html[data-theme="dark"] .notifications-empty__action:hover {
+  background: #1b456f;
+  border-color: #1b456f;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] .notification-card,
+  html[data-theme="dark"] .notification-filter {
+    transition: none;
+  }
+}
