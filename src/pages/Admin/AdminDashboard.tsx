@@ -10,6 +10,10 @@ import {
   RefreshCw,
   BookOpen,
   Building2,
+  ClipboardCheck,
+  Clock3,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 import {
@@ -25,7 +29,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 
 /* =========================================================
-  TYPES
+   TYPES
 ========================================================= */
 
 type AdminSection =
@@ -65,23 +69,98 @@ interface DashboardCard {
   href?: string;
 }
 
+interface AdminActionRequest {
+  id: number;
+  admin_id: string;
+  section: string;
+  action: "add" | "edit" | "delete";
+  status: "pending" | "approved" | "rejected";
+  payload: Record<string, unknown> | null;
+  created_at: string;
+}
+
 /* =========================================================
-  HELPERS
+   HELPERS
 ========================================================= */
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("ar-EG").format(value);
 }
 
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat("ar-EG", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(date));
+}
+
+function getSectionLabel(section: string) {
+  const labels: Record<string, string> = {
+    announcements: "الإعلانات",
+    events: "الفعاليات",
+    requests: "الطلبات",
+    resources: "المصادر",
+    faculties: "الكليات والبرامج",
+    students: "الطلاب",
+  };
+
+  return labels[section] || section;
+}
+
+function getActionLabel(action: string) {
+  const labels: Record<string, string> = {
+    add: "إضافة",
+    edit: "تعديل",
+    delete: "حذف",
+  };
+
+  return labels[action] || action;
+}
+
+function getRequestTitle(
+  request: AdminActionRequest
+) {
+  const payload = request.payload;
+
+  if (!payload) {
+    return "طلب إداري";
+  }
+
+  const possibleTitleKeys = [
+    "title",
+    "name",
+    "event_title",
+    "announcement_title",
+    "resource_title",
+  ];
+
+  for (const key of possibleTitleKeys) {
+    const value = payload[key];
+
+    if (
+      typeof value === "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+  }
+
+  return `${getActionLabel(
+    request.action
+  )} في ${getSectionLabel(
+    request.section
+  )}`;
+}
+
 /* =========================================================
-  COMPONENT
+   COMPONENT
 ========================================================= */
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
 
   /* =======================================================
-    STATE
+     STATE
   ======================================================= */
 
   const [permissions, setPermissions] = useState<
@@ -98,7 +177,17 @@ export default function AdminDashboard() {
     faculties: 0,
   });
 
+  const [adminRequests, setAdminRequests] = useState<
+    AdminActionRequest[]
+  >([]);
+
+  const [pendingAdminRequestsCount, setPendingAdminRequestsCount] =
+    useState(0);
+
   const [loading, setLoading] = useState(true);
+
+  const [loadingAdminRequests, setLoadingAdminRequests] =
+    useState(true);
 
   const [error, setError] = useState("");
 
@@ -106,7 +195,90 @@ export default function AdminDashboard() {
     profile?.role === "root_admin";
 
   /* =======================================================
-    LOAD DASHBOARD
+     LOAD ADMIN ACTION REQUESTS
+  ======================================================= */
+
+  const loadAdminRequests = useCallback(async () => {
+    if (!profile?.id) {
+      return;
+    }
+
+    setLoadingAdminRequests(true);
+
+    try {
+      let recentQuery = supabase
+        .from("admin_action_requests")
+        .select(
+          "id, admin_id, section, action, status, payload, created_at"
+        )
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(4);
+
+      let pendingQuery = supabase
+        .from("admin_action_requests")
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
+        .eq("status", "pending");
+
+      if (!isRootAdmin) {
+        recentQuery = recentQuery.eq(
+          "admin_id",
+          profile.id
+        );
+
+        pendingQuery = pendingQuery.eq(
+          "admin_id",
+          profile.id
+        );
+      }
+
+      const [
+        recentResult,
+        pendingResult,
+      ] = await Promise.all([
+        recentQuery,
+        pendingQuery,
+      ]);
+
+      if (recentResult.error) {
+        throw recentResult.error;
+      }
+
+      if (pendingResult.error) {
+        throw pendingResult.error;
+      }
+
+      setAdminRequests(
+        (recentResult.data ?? []) as AdminActionRequest[]
+      );
+
+      setPendingAdminRequestsCount(
+        pendingResult.count ?? 0
+      );
+    } catch (error) {
+      console.error(
+        "Admin action requests dashboard error:",
+        error
+      );
+
+      /*
+       * مهم:
+       * فشل تحميل طلبات الإدارة لا يجب أن يكسر
+       * باقي لوحة التحكم.
+       */
+      setAdminRequests([]);
+      setPendingAdminRequestsCount(0);
+    } finally {
+      setLoadingAdminRequests(false);
+    }
+  }, [profile?.id, isRootAdmin]);
+
+  /* =======================================================
+     LOAD DASHBOARD
   ======================================================= */
 
   const loadDashboard = useCallback(async () => {
@@ -118,10 +290,6 @@ export default function AdminDashboard() {
     setError("");
 
     try {
-      /* =====================================================
-        PERMISSIONS
-      ===================================================== */
-
       const permissionsPromise = isRootAdmin
         ? Promise.resolve({
             data: [],
@@ -133,10 +301,6 @@ export default function AdminDashboard() {
               "id, admin_id, section, can_view, can_add, can_edit, can_delete"
             )
             .eq("admin_id", profile.id);
-
-      /* =====================================================
-        ALL DASHBOARD COUNTS
-      ===================================================== */
 
       const [
         permissionsResult,
@@ -150,7 +314,6 @@ export default function AdminDashboard() {
       ] = await Promise.all([
         permissionsPromise,
 
-        /* STUDENTS */
         supabase
           .from("profiles")
           .select("id", {
@@ -159,7 +322,6 @@ export default function AdminDashboard() {
           })
           .eq("role", "student"),
 
-        /* ADMINS */
         supabase
           .from("profiles")
           .select("id", {
@@ -171,7 +333,6 @@ export default function AdminDashboard() {
             "root_admin",
           ]),
 
-        /* ANNOUNCEMENTS */
         supabase
           .from("announcements")
           .select("id", {
@@ -179,7 +340,6 @@ export default function AdminDashboard() {
             head: true,
           }),
 
-        /* EVENTS */
         supabase
           .from("events")
           .select("id", {
@@ -187,7 +347,6 @@ export default function AdminDashboard() {
             head: true,
           }),
 
-        /* REQUESTS */
         supabase
           .from("requests")
           .select("id", {
@@ -195,7 +354,6 @@ export default function AdminDashboard() {
             head: true,
           }),
 
-        /* RESOURCES */
         supabase
           .from("resources")
           .select("id", {
@@ -203,7 +361,6 @@ export default function AdminDashboard() {
             head: true,
           }),
 
-        /* FACULTIES */
         supabase
           .from("faculties")
           .select("id", {
@@ -211,10 +368,6 @@ export default function AdminDashboard() {
             head: true,
           }),
       ]);
-
-      /* =====================================================
-        ERROR CHECKING
-      ===================================================== */
 
       if (permissionsResult.error) {
         throw permissionsResult.error;
@@ -248,28 +401,26 @@ export default function AdminDashboard() {
         throw facultiesResult.error;
       }
 
-      /* =====================================================
-        SAVE PERMISSIONS
-      ===================================================== */
-
       setPermissions(
         (permissionsResult.data ??
           []) as AdminPermission[]
       );
 
-      /* =====================================================
-        SAVE STATS
-      ===================================================== */
-
       setStats({
-        students: studentsResult.count ?? 0,
-        admins: adminsResult.count ?? 0,
+        students:
+          studentsResult.count ?? 0,
+        admins:
+          adminsResult.count ?? 0,
         announcements:
           announcementsResult.count ?? 0,
-        events: eventsResult.count ?? 0,
-        requests: requestsResult.count ?? 0,
-        resources: resourcesResult.count ?? 0,
-        faculties: facultiesResult.count ?? 0,
+        events:
+          eventsResult.count ?? 0,
+        requests:
+          requestsResult.count ?? 0,
+        resources:
+          resourcesResult.count ?? 0,
+        faculties:
+          facultiesResult.count ?? 0,
       });
     } catch (err) {
       console.error(
@@ -286,15 +437,19 @@ export default function AdminDashboard() {
   }, [profile?.id, isRootAdmin]);
 
   /* =======================================================
-    INITIAL LOAD
+     INITIAL LOAD
   ======================================================= */
 
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
 
+  useEffect(() => {
+    loadAdminRequests();
+  }, [loadAdminRequests]);
+
   /* =======================================================
-    PERMISSIONS
+     PERMISSIONS
   ======================================================= */
 
   const canView = useCallback(
@@ -328,15 +483,13 @@ export default function AdminDashboard() {
   );
 
   /* =======================================================
-    DASHBOARD CARDS
+     DASHBOARD CARDS
   ======================================================= */
 
   const dashboardCards = useMemo<
     DashboardCard[]
   >(() => {
     const cards: DashboardCard[] = [];
-
-    /* STUDENTS */
 
     if (canView("students")) {
       cards.push({
@@ -352,8 +505,6 @@ export default function AdminDashboard() {
       });
     }
 
-    /* ADMINS */
-
     if (isRootAdmin) {
       cards.push({
         id: "admins",
@@ -367,8 +518,6 @@ export default function AdminDashboard() {
         href: "/admin/admins",
       });
     }
-
-    /* ANNOUNCEMENTS */
 
     if (canView("announcements")) {
       cards.push({
@@ -386,8 +535,6 @@ export default function AdminDashboard() {
       });
     }
 
-    /* EVENTS */
-
     if (canView("events")) {
       cards.push({
         id: "events",
@@ -401,8 +548,6 @@ export default function AdminDashboard() {
         href: "/admin/events",
       });
     }
-
-    /* REQUESTS */
 
     if (canView("requests")) {
       cards.push({
@@ -418,15 +563,15 @@ export default function AdminDashboard() {
       });
     }
 
-    /* RESOURCES */
-
     if (canView("resources")) {
       cards.push({
         id: "resources",
         label: "المصادر",
         value: loading
           ? "..."
-          : formatNumber(stats.resources),
+          : formatNumber(
+              stats.resources
+            ),
         description:
           "إجمالي المصادر التعليمية",
         icon: BookOpen,
@@ -434,15 +579,15 @@ export default function AdminDashboard() {
       });
     }
 
-    /* FACULTIES */
-
     if (canView("faculties")) {
       cards.push({
         id: "faculties",
         label: "الكليات",
         value: loading
           ? "..."
-          : formatNumber(stats.faculties),
+          : formatNumber(
+              stats.faculties
+            ),
         description:
           "إجمالي الكليات المسجلة",
         icon: Building2,
@@ -465,7 +610,7 @@ export default function AdminDashboard() {
   ]);
 
   /* =======================================================
-    NO PROFILE
+     NO PROFILE
   ======================================================= */
 
   if (!profile) {
@@ -473,7 +618,7 @@ export default function AdminDashboard() {
   }
 
   /* =======================================================
-    RENDER
+     RENDER
   ======================================================= */
 
   return (
@@ -481,9 +626,7 @@ export default function AdminDashboard() {
       className="admin-page"
       dir="rtl"
     >
-      {/* ===================================================
-          HEADER
-      =================================================== */}
+      {/* HEADER */}
 
       <section className="admin-page__header">
         <div>
@@ -519,9 +662,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      {/* ===================================================
-          ERROR
-      =================================================== */}
+      {/* ERROR */}
 
       {error && (
         <div
@@ -543,9 +684,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ===================================================
-          STATS
-      =================================================== */}
+      {/* STATS */}
 
       <section className="admin-stats-grid">
         {dashboardCards.map((card) => {
@@ -595,8 +734,153 @@ export default function AdminDashboard() {
       </section>
 
       {/* ===================================================
-          EMPTY PERMISSIONS STATE
+          ADMIN ACTION REQUESTS
       =================================================== */}
+
+      <section className="admin-panel admin-action-requests-panel">
+        <div className="admin-panel__header">
+          <div>
+            <span className="admin-panel__kicker">
+              {isRootAdmin
+                ? "المراجعة"
+                : "المتابعة"}
+            </span>
+
+            <h2>
+              {isRootAdmin
+                ? "طلبات الإدارة"
+                : "طلباتي الإدارية"}
+            </h2>
+          </div>
+
+          <Link
+            to={
+              isRootAdmin
+                ? "/admin/approvals"
+                : "/admin/my-requests"
+            }
+            className="admin-panel__header-link"
+          >
+            عرض الكل
+            <ArrowLeft size={15} />
+          </Link>
+        </div>
+
+        <div className="admin-action-requests-summary">
+          <div className="admin-action-requests-summary__icon">
+            {isRootAdmin ? (
+              <ClipboardCheck size={21} />
+            ) : (
+              <Clock3 size={21} />
+            )}
+          </div>
+
+          <div>
+            <strong>
+              {formatNumber(
+                pendingAdminRequestsCount
+              )}
+            </strong>
+
+            <span>
+              {isRootAdmin
+                ? "طلبات تنتظر مراجعتك"
+                : "طلبات قيد المراجعة"}
+            </span>
+          </div>
+        </div>
+
+        {loadingAdminRequests ? (
+          <div className="admin-action-request-empty">
+            جاري تحميل الطلبات...
+          </div>
+        ) : adminRequests.length === 0 ? (
+          <div className="admin-action-request-empty">
+            <CheckCircle2 size={22} />
+
+            <span>
+              {isRootAdmin
+                ? "لا توجد طلبات إدارية معلقة حاليًا."
+                : "لم تقم بإرسال أي طلبات إدارية بعد."}
+            </span>
+          </div>
+        ) : (
+          <div className="admin-action-request-list">
+            {adminRequests.map((request) => {
+              const statusClass =
+                request.status === "pending"
+                  ? "pending"
+                  : request.status === "approved"
+                    ? "approved"
+                    : "rejected";
+
+              return (
+                <div
+                  key={request.id}
+                  className="admin-action-request-item"
+                >
+                  <div className="admin-action-request-item__main">
+                    <strong>
+                      {getRequestTitle(
+                        request
+                      )}
+                    </strong>
+
+                    <span>
+                      {getActionLabel(
+                        request.action
+                      )}{" "}
+                      ·{" "}
+                      {getSectionLabel(
+                        request.section
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="admin-action-request-item__meta">
+                    <span
+                      className={`admin-action-request-item__status admin-action-request-item__status--${statusClass}`}
+                    >
+                      {request.status ===
+                        "pending" && (
+                        <Clock3 size={14} />
+                      )}
+
+                      {request.status ===
+                        "approved" && (
+                        <CheckCircle2
+                          size={14}
+                        />
+                      )}
+
+                      {request.status ===
+                        "rejected" && (
+                        <XCircle size={14} />
+                      )}
+
+                      {request.status ===
+                        "pending"
+                        ? "قيد المراجعة"
+                        : request.status ===
+                            "approved"
+                          ? "تمت الموافقة"
+                          : "تم الرفض"}
+                    </span>
+
+                    <small>
+                      {formatDate(
+                        request.created_at
+                      )}
+                    </small>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* EMPTY PERMISSIONS */}
 
       {!isRootAdmin &&
         !loading &&
@@ -617,9 +901,7 @@ export default function AdminDashboard() {
           </section>
         )}
 
-      {/* ===================================================
-          MAIN GRID
-      =================================================== */}
+      {/* MAIN GRID */}
 
       <section className="admin-dashboard-grid">
         <div className="admin-panel">

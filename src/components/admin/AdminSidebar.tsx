@@ -215,9 +215,6 @@ export default function AdminSidebar() {
 
       /*
        * Students are Root Admin only.
-       *
-       * We intentionally do not use admin_permissions
-       * for the students section.
        */
 
       if (section === "students") {
@@ -381,6 +378,33 @@ export default function AdminSidebar() {
                 </NavLink>
               );
             })
+          )}
+
+          {/* =================================================
+              SUB ADMIN — MY REQUESTS
+          ================================================= */}
+
+          {!isRootAdmin && !loadingPermissions && (
+            <NavLink
+              to="/admin/my-requests"
+              className={({ isActive }) =>
+                [
+                  "admin-sidebar__link",
+                  "admin-sidebar__link--request-tracking",
+                  isActive
+                    ? "admin-sidebar__link--active"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")
+              }
+            >
+              <ClipboardCheck size={19} />
+
+              <span>
+                طلباتي الإدارية
+              </span>
+            </NavLink>
           )}
         </div>
 

@@ -33,6 +33,7 @@ import AdminLayout from "../components/admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import Admins from "../pages/Admin/Admins";
 import AdminApprovals from "../pages/Admin/AdminApprovals";
+import AdminMyRequests from "../pages/Admin/AdminMyRequests";
 
 import AdminAnnouncements from "../pages/Admin/AdminAnnouncements";
 import AdminAnnouncementForm from "../pages/Admin/AdminAnnouncementForm";
@@ -255,13 +256,24 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Approval Center */}
+      {/* Approval Center - Root Admin */}
 
       <Route
         path="/admin/approvals"
         element={
           <AdminPage>
             <AdminApprovals />
+          </AdminPage>
+        }
+      />
+
+      {/* My Administrative Requests - Sub Admin */}
+
+      <Route
+        path="/admin/my-requests"
+        element={
+          <AdminPage>
+            <AdminMyRequests />
           </AdminPage>
         }
       />

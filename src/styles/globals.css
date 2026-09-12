@@ -40122,3 +40122,1863 @@ html[data-theme="dark"] .notifications-empty__action:hover {
     flex-direction: column;
   }
 }
+/* =========================================================
+   ADMIN — REQUEST TRACKING
+   Sub Admin / My Requests
+   White + Navy + Subtle Gold
+   ========================================================= */
+
+
+/* =========================================================
+   SIDEBAR — REQUEST TRACKING
+   ========================================================= */
+
+.admin-sidebar__link--request-tracking {
+  position: relative;
+}
+
+.admin-sidebar__link--request-tracking::after {
+  content: "";
+
+  position: absolute;
+  inset-inline-start: 10px;
+  top: 50%;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #d4af37;
+
+  opacity: 0;
+
+  transform: translateY(-50%) scale(0.6);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-sidebar__link--request-tracking:hover::after {
+  opacity: 0.8;
+  transform: translateY(-50%) scale(1);
+}
+
+.admin-sidebar__link--request-tracking.admin-sidebar__link--active {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #102a43,
+      #173f63
+    );
+
+  border-color: rgba(212, 175, 55, 0.2);
+
+  box-shadow:
+    0 8px 22px rgba(16, 42, 67, 0.14);
+}
+
+.admin-sidebar__link--request-tracking.admin-sidebar__link--active svg {
+  color: #d4af37;
+}
+
+.admin-sidebar__link--request-tracking.admin-sidebar__link--active::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+
+/* =========================================================
+   ADMIN — ACTION REQUESTS PANEL
+   Dashboard
+   ========================================================= */
+
+.admin-action-requests-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-action-requests-panel::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  inset-inline: 0;
+
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(212, 175, 55, 0.75),
+      transparent
+    );
+
+  opacity: 0.8;
+}
+
+.admin-action-requests-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 16px 18px;
+  margin-bottom: 18px;
+
+  border: 1px solid rgba(16, 42, 67, 0.08);
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.admin-action-requests-summary__content {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+}
+
+.admin-action-requests-summary__icon {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 42px;
+
+  border-radius: 12px;
+
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.admin-action-requests-summary__text {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.admin-action-requests-summary__text strong {
+  color: #102a43;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.admin-action-requests-summary__text span {
+  color: #6b7c8f;
+
+  font-size: 13px;
+}
+
+.admin-action-requests-summary__count {
+  min-width: 42px;
+  height: 34px;
+
+  padding: 0 11px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  color: #102a43;
+  background: rgba(212, 175, 55, 0.13);
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-action-request-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.admin-action-request-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  min-height: 72px;
+
+  padding: 13px 15px;
+
+  border: 1px solid rgba(16, 42, 67, 0.07);
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.admin-action-request-item:hover {
+  transform: translateY(-1px);
+
+  border-color: rgba(212, 175, 55, 0.3);
+
+  box-shadow:
+    0 8px 20px rgba(16, 42, 67, 0.07);
+}
+
+.admin-action-request-item__main {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.admin-action-request-item__title {
+  overflow: hidden;
+
+  color: #102a43;
+
+  font-size: 14px;
+  font-weight: 750;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.admin-action-request-item__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  color: #7a8998;
+
+  font-size: 12px;
+}
+
+.admin-action-request-item__meta-separator {
+  width: 3px;
+  height: 3px;
+
+  flex: 0 0 3px;
+
+  border-radius: 50%;
+
+  background: #b8c2cc;
+}
+
+.admin-action-request-item__status {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 82px;
+  min-height: 30px;
+
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-action-request-item__status--pending {
+  color: #8a6b13;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.admin-action-request-item__status--approved {
+  color: #102a43;
+  background: rgba(16, 42, 67, 0.08);
+}
+
+.admin-action-request-item__status--rejected {
+  color: #7b3d3d;
+  background: rgba(123, 61, 61, 0.08);
+}
+
+.admin-action-request-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 120px;
+
+  padding: 20px;
+
+  border: 1px dashed rgba(16, 42, 67, 0.12);
+  border-radius: 14px;
+
+  color: #7a8998;
+
+  background: rgba(16, 42, 67, 0.018);
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+.admin-action-requests-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  color: #102a43;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    gap 0.2s ease;
+}
+
+.admin-action-requests-link:hover {
+  color: #c19a22;
+  gap: 10px;
+}
+
+
+/* =========================================================
+   ADMIN — MY REQUESTS PAGE
+   ========================================================= */
+
+.admin-my-requests {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.admin-my-requests .admin-page__kicker {
+  color: #c6a04a;
+}
+
+.admin-my-requests .admin-page__header h1 {
+  color: #102a43;
+}
+
+.admin-my-requests .admin-page__header p {
+  color: #64748b;
+}
+
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.admin-my-requests__stats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 1rem;
+
+  margin-bottom: 1.5rem;
+}
+
+.admin-my-requests__stat {
+  display: flex;
+  align-items: center;
+
+  gap: 0.85rem;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 1rem 1.05rem;
+
+  border: 1px solid #e6ebf1;
+  border-radius: 16px;
+
+  background: #ffffff;
+  color: #102a43;
+
+  text-align: right;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 8px rgba(16, 42, 67, 0.035);
+
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.admin-my-requests__stat:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(16, 42, 67, 0.18);
+
+  box-shadow:
+    0 8px 24px rgba(16, 42, 67, 0.08);
+}
+
+.admin-my-requests__stat svg {
+  flex: 0 0 auto;
+
+  width: 40px;
+  height: 40px;
+
+  padding: 9px;
+
+  border-radius: 12px;
+
+  color: #102a43;
+  background: #f1f5f9;
+
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-my-requests__stat:hover svg {
+  transform: translateY(-1px);
+}
+
+.admin-my-requests__stat > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.2rem;
+
+  min-width: 0;
+}
+
+.admin-my-requests__stat strong {
+  color: #102a43;
+
+  font-size: 1.3rem;
+  font-weight: 800;
+
+  line-height: 1.1;
+}
+
+.admin-my-requests__stat span {
+  color: #64748b;
+
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   ACTIVE STAT
+   ========================================================= */
+
+.admin-my-requests__stat--active {
+  border-color: rgba(198, 160, 74, 0.45);
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fcfaf5 100%
+    );
+
+  box-shadow:
+    0 8px 24px rgba(16, 42, 67, 0.07),
+    inset 0 0 0 1px rgba(198, 160, 74, 0.06);
+}
+
+.admin-my-requests__stat--active svg {
+  color: #102a43;
+
+  background:
+    rgba(198, 160, 74, 0.14);
+}
+
+.admin-my-requests__stat--active strong {
+  color: #102a43;
+}
+
+
+/* =========================================================
+   PANEL COUNT
+   ========================================================= */
+
+.admin-my-requests__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 32px;
+
+  padding:
+    0.35rem
+    0.75rem;
+
+  border: 1px solid rgba(198, 160, 74, 0.22);
+  border-radius: 999px;
+
+  color: #102a43;
+
+  background:
+    rgba(198, 160, 74, 0.08);
+
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   EMPTY / LOADING
+   ========================================================= */
+
+.admin-my-requests__empty {
+  min-height: 260px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 2.5rem 1.5rem;
+
+  color: #64748b;
+
+  text-align: center;
+}
+
+.admin-my-requests__empty > svg {
+  margin-bottom: 0.8rem;
+
+  color: #c6a04a;
+}
+
+.admin-my-requests__empty h3 {
+  margin:
+    0 0
+    0.4rem;
+
+  color: #102a43;
+
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.admin-my-requests__empty p {
+  max-width: 420px;
+
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.admin-my-requests__empty > span {
+  color: #64748b;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   REQUEST LIST
+   ========================================================= */
+
+.admin-my-requests__list {
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border-top:
+    1px solid #eef2f6;
+}
+
+
+/* =========================================================
+   REQUEST ITEM
+   ========================================================= */
+
+.admin-my-requests__item {
+  position: relative;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 1rem;
+
+  padding: 1.15rem 0;
+
+  border-bottom:
+    1px solid #eef2f6;
+
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-my-requests__item:last-child {
+  border-bottom: 0;
+}
+
+.admin-my-requests__item:hover {
+  background:
+    rgba(16, 42, 67, 0.018);
+}
+
+
+/* =========================================================
+   REQUEST ICON
+   ========================================================= */
+
+.admin-my-requests__item-icon {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border:
+    1px solid
+    rgba(198, 160, 74, 0.2);
+
+  border-radius: 13px;
+
+  color: #102a43;
+
+  background: #f8fafc;
+
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.admin-my-requests__item:hover
+  .admin-my-requests__item-icon {
+  transform: translateY(-1px);
+
+  border-color:
+    rgba(198, 160, 74, 0.4);
+
+  background:
+    rgba(198, 160, 74, 0.08);
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+
+.admin-my-requests__item-main {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.admin-my-requests__item-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  margin-bottom: 0.55rem;
+}
+
+.admin-my-requests__item-title h3 {
+  min-width: 0;
+
+  margin: 0;
+
+  color: #102a43;
+
+  font-size: 0.95rem;
+  font-weight: 800;
+
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.admin-my-requests__status {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.35rem;
+
+  min-height: 28px;
+
+  padding:
+    0.28rem
+    0.65rem;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 999px;
+
+  font-size: 0.72rem;
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+
+/* Pending */
+
+.admin-my-requests__status--pending {
+  color: #8a6a20;
+
+  background:
+    rgba(198, 160, 74, 0.11);
+
+  border-color:
+    rgba(198, 160, 74, 0.2);
+}
+
+
+/* Approved */
+
+.admin-my-requests__status--approved {
+  color: #245f51;
+
+  background:
+    rgba(36, 95, 81, 0.08);
+
+  border-color:
+    rgba(36, 95, 81, 0.14);
+}
+
+
+/* Rejected */
+
+.admin-my-requests__status--rejected {
+  color: #8a3d3d;
+
+  background:
+    rgba(138, 61, 61, 0.07);
+
+  border-color:
+    rgba(138, 61, 61, 0.13);
+}
+
+
+/* =========================================================
+   META
+   ========================================================= */
+
+.admin-my-requests__item-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap:
+    0.45rem
+    0.7rem;
+
+  color: #64748b;
+
+  font-size: 0.76rem;
+
+  line-height: 1.5;
+}
+
+.admin-my-requests__item-meta span {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.35rem;
+}
+
+.admin-my-requests__item-meta
+  span:not(:last-child)::after {
+  content: "";
+
+  width: 3px;
+  height: 3px;
+
+  border-radius: 50%;
+
+  background: #cbd5e1;
+}
+
+
+/* =========================================================
+   REASON
+   ========================================================= */
+
+.admin-my-requests__item-main > p {
+  margin:
+    0.65rem
+    0
+    0;
+
+  padding:
+    0.65rem
+    0.75rem;
+
+  border-right:
+    2px solid
+    rgba(198, 160, 74, 0.55);
+
+  border-radius: 6px;
+
+  color: #64748b;
+
+  background: #fafbfc;
+
+  font-size: 0.78rem;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   REFRESH ANIMATION
+   ========================================================= */
+
+.admin-my-requests__spin {
+  animation:
+    admin-my-requests-spin
+    0.9s
+    linear
+    infinite;
+}
+
+@keyframes admin-my-requests-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   ERROR ALERT
+   ========================================================= */
+
+.admin-my-requests
+  .admin-alert--error {
+  color: #8a3d3d;
+
+  background:
+    rgba(138, 61, 61, 0.06);
+
+  border-color:
+    rgba(138, 61, 61, 0.14);
+}
+
+.admin-my-requests
+  .admin-alert--error svg {
+  color: #a84e4e;
+}
+
+.admin-my-requests
+  .admin-alert__retry {
+  color: #8a6a20;
+
+  transition:
+    color 180ms ease;
+}
+
+.admin-my-requests
+  .admin-alert__retry:hover {
+  color: #c19a22;
+}
+
+
+/* =========================================================
+   DARK MODE
+   IMPORTANT:
+   ThemeProvider uses:
+   document.documentElement.dataset.theme = theme;
+   
+   Therefore the correct selector is:
+   [data-theme="dark"]
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   SIDEBAR
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-sidebar__link--request-tracking.admin-sidebar__link--active {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #102a43,
+      #1b456d
+    );
+
+  border-color:
+    rgba(212, 175, 55, 0.28);
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"]
+  .admin-sidebar__link--request-tracking.admin-sidebar__link--active
+  svg {
+  color: #d7b866;
+}
+
+[data-theme="dark"]
+  .admin-sidebar__link--request-tracking::after {
+  background: #d7b866;
+}
+
+
+/* ---------------------------------------------------------
+   ACTION REQUESTS PANEL
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-action-requests-summary {
+  border-color:
+    rgba(255, 255, 255, 0.07);
+
+  background: #102235;
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"]
+  .admin-action-requests-summary__icon {
+  color: #d7b866;
+
+  background:
+    rgba(212, 175, 55, 0.1);
+}
+
+[data-theme="dark"]
+  .admin-action-requests-summary__text strong {
+  color: #f4f7fa;
+}
+
+[data-theme="dark"]
+  .admin-action-requests-summary__text span {
+  color: #9eacba;
+}
+
+[data-theme="dark"]
+  .admin-action-requests-summary__count {
+  color: #f4f7fa;
+
+  background:
+    rgba(212, 175, 55, 0.12);
+}
+
+
+/* Action request items */
+
+[data-theme="dark"]
+  .admin-action-request-item {
+  border-color:
+    rgba(255, 255, 255, 0.07);
+
+  background: #102235;
+}
+
+[data-theme="dark"]
+  .admin-action-request-item:hover {
+  border-color:
+    rgba(212, 175, 55, 0.28);
+
+  background: #142a3e;
+
+  box-shadow:
+    0 10px 24px
+    rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"]
+  .admin-action-request-item__title {
+  color: #f4f7fa;
+}
+
+[data-theme="dark"]
+  .admin-action-request-item__meta {
+  color: #9eacba;
+}
+
+[data-theme="dark"]
+  .admin-action-request-item__meta-separator {
+  background: #536575;
+}
+
+[data-theme="dark"]
+  .admin-action-request-item__status--pending {
+  color: #e5c45a;
+
+  background:
+    rgba(212, 175, 55, 0.12);
+}
+
+[data-theme="dark"]
+  .admin-action-request-item__status--approved {
+  color: #cbd8e4;
+
+  background:
+    rgba(203, 216, 228, 0.08);
+}
+
+[data-theme="dark"]
+  .admin-action-request-item__status--rejected {
+  color: #d99b9b;
+
+  background:
+    rgba(217, 155, 155, 0.08);
+}
+
+[data-theme="dark"]
+  .admin-action-request-empty {
+  color: #8f9eac;
+
+  border-color:
+    rgba(255, 255, 255, 0.08);
+
+  background:
+    rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"]
+  .admin-action-requests-link {
+  color: #e8edf2;
+}
+
+[data-theme="dark"]
+  .admin-action-requests-link:hover {
+  color: #d4af37;
+}
+
+
+/* ---------------------------------------------------------
+   MY REQUESTS — PAGE HEADER
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests {
+  color: #f4f7fa;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-page__kicker {
+  color: #d7b866;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-page__header
+  h1 {
+  color: #f8fafc;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-page__header
+  p {
+  color: #aebbc8;
+}
+
+
+/* ---------------------------------------------------------
+   MY REQUESTS — REFRESH BUTTON
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-secondary-button {
+  color: #e8edf2;
+
+  background: #182838;
+
+  border-color:
+    rgba(255, 255, 255, 0.09);
+
+  box-shadow:
+    0 6px 18px
+    rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-secondary-button:hover:not(:disabled) {
+  color: #ffffff;
+
+  background: #203449;
+
+  border-color:
+    rgba(198, 160, 74, 0.38);
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-secondary-button
+  svg {
+  color: #d7b866;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-secondary-button:disabled {
+  color: #718292;
+
+  background: #152330;
+
+  border-color:
+    rgba(255, 255, 255, 0.05);
+}
+
+
+/* ---------------------------------------------------------
+   MY REQUESTS — ERROR
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-alert--error {
+  color: #e7b4b4;
+
+  background:
+    rgba(135, 54, 54, 0.14);
+
+  border-color:
+    rgba(214, 112, 112, 0.24);
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-alert--error
+  svg {
+  color: #e39a9a;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-alert__retry {
+  color: #d7b866;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  .admin-alert__retry:hover {
+  color: #ebce7c;
+}
+
+
+/* ---------------------------------------------------------
+   MY REQUESTS — STATS
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__stat {
+  color: #edf2f6;
+
+  background: #172636;
+
+  border-color:
+    rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat:hover {
+  background: #1c2d3f;
+
+  border-color:
+    rgba(198, 160, 74, 0.28);
+
+  box-shadow:
+    0 12px 28px
+    rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat
+  svg {
+  color: #d7b866;
+
+  background:
+    rgba(255, 255, 255, 0.045);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat
+  strong {
+  color: #ffffff;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat
+  span {
+  color: #aebbc8;
+}
+
+
+/* Active stat */
+
+[data-theme="dark"]
+  .admin-my-requests__stat--active {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #20364b 0%,
+      #182c40 100%
+    );
+
+  border-color:
+    rgba(198, 160, 74, 0.5);
+
+  box-shadow:
+    0 0 0 1px
+    rgba(198, 160, 74, 0.08),
+    0 12px 30px
+    rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat--active
+  svg {
+  color: #e1c574;
+
+  background:
+    rgba(198, 160, 74, 0.13);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat--active
+  strong {
+  color: #ffffff;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__stat--active
+  span {
+  color: #c3ced8;
+}
+
+
+/* ---------------------------------------------------------
+   MY REQUESTS — MAIN PANEL
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests
+  > .admin-panel {
+  color: #edf2f6;
+
+  background: #142434;
+
+  border-color:
+    rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 14px 36px
+    rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  > .admin-panel
+  .admin-panel__header {
+  border-bottom-color:
+    rgba(255, 255, 255, 0.07);
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  > .admin-panel
+  .admin-panel__kicker {
+  color: #d7b866;
+}
+
+[data-theme="dark"]
+  .admin-my-requests
+  > .admin-panel
+  .admin-panel__header
+  h2 {
+  color: #f8fafc;
+}
+
+
+/* ---------------------------------------------------------
+   COUNT
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__count {
+  color: #d0d9e2;
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  border-color:
+    rgba(255, 255, 255, 0.08);
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY / LOADING
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__empty {
+  color: #9eacb9;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__empty
+  > svg {
+  color: #d7b866;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__empty
+  h3 {
+  color: #f4f7fa;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__empty
+  p,
+[data-theme="dark"]
+  .admin-my-requests__empty
+  > span {
+  color: #99a8b6;
+}
+
+
+/* ---------------------------------------------------------
+   REQUEST LIST
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__list {
+  border-top-color:
+    rgba(255, 255, 255, 0.07);
+}
+
+
+/* ---------------------------------------------------------
+   REQUEST ITEM
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__item {
+  color: #edf2f6;
+
+  border-bottom-color:
+    rgba(255, 255, 255, 0.07);
+
+  background: transparent;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__item:hover {
+  background:
+    rgba(255, 255, 255, 0.018);
+}
+
+
+/* ---------------------------------------------------------
+   REQUEST ICON
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__item-icon {
+  color: #d9b965;
+
+  background: #172536;
+
+  border-color:
+    rgba(198, 160, 74, 0.18);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__item:hover
+  .admin-my-requests__item-icon {
+  color: #e4c979;
+
+  background:
+    rgba(198, 160, 74, 0.1);
+
+  border-color:
+    rgba(198, 160, 74, 0.3);
+}
+
+
+/* ---------------------------------------------------------
+   REQUEST TITLE
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__item-title
+  h3 {
+  color: #f7f9fb;
+}
+
+
+/* ---------------------------------------------------------
+   META
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__item-meta {
+  color: #9eacb9;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__item-meta
+  span {
+  color: #aab7c3;
+}
+
+[data-theme="dark"]
+  .admin-my-requests__item-meta
+  span:not(:last-child)::after {
+  background: #475569;
+}
+
+
+/* ---------------------------------------------------------
+   REASON
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__item-main
+  > p {
+  color: #aab7c3;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  border-right-color:
+    rgba(198, 160, 74, 0.5);
+}
+
+
+/* ---------------------------------------------------------
+   STATUS — PENDING
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__status--pending {
+  color: #e1c574;
+
+  background:
+    rgba(198, 160, 74, 0.09);
+
+  border-color:
+    rgba(198, 160, 74, 0.24);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__status--pending
+  svg {
+  color: #d7b866;
+}
+
+
+/* ---------------------------------------------------------
+   STATUS — APPROVED
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__status--approved {
+  color: #a7d2bb;
+
+  background:
+    rgba(73, 132, 101, 0.11);
+
+  border-color:
+    rgba(96, 158, 124, 0.22);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__status--approved
+  svg {
+  color: #8fc7aa;
+}
+
+
+/* ---------------------------------------------------------
+   STATUS — REJECTED
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__status--rejected {
+  color: #e3aaaa;
+
+  background:
+    rgba(166, 71, 71, 0.11);
+
+  border-color:
+    rgba(206, 100, 100, 0.22);
+}
+
+[data-theme="dark"]
+  .admin-my-requests__status--rejected
+  svg {
+  color: #db8f8f;
+}
+
+
+/* ---------------------------------------------------------
+   SPINNER
+   --------------------------------------------------------- */
+
+[data-theme="dark"]
+  .admin-my-requests__spin {
+  color: #d7b866;
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .admin-my-requests__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .admin-my-requests__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 0.7rem;
+
+    margin-bottom: 1rem;
+  }
+
+  .admin-my-requests__stat {
+    padding: 0.85rem;
+
+    border-radius: 14px;
+  }
+
+  .admin-my-requests__stat svg {
+    width: 35px;
+    height: 35px;
+
+    padding: 8px;
+  }
+
+  .admin-my-requests__stat strong {
+    font-size: 1.1rem;
+  }
+
+  .admin-my-requests__stat span {
+    font-size: 0.7rem;
+  }
+
+  .admin-my-requests__count {
+    min-height: 29px;
+
+    padding-inline: 0.6rem;
+
+    font-size: 0.7rem;
+  }
+
+  .admin-my-requests__item {
+    gap: 0.7rem;
+
+    padding: 1rem 0;
+  }
+
+  .admin-my-requests__item-icon {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 11px;
+  }
+
+  .admin-my-requests__item-title {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 0.55rem;
+  }
+
+  .admin-my-requests__item-title h3 {
+    font-size: 0.88rem;
+  }
+
+  .admin-my-requests__status {
+    font-size: 0.68rem;
+  }
+
+  .admin-my-requests__item-meta {
+    gap:
+      0.35rem
+      0.55rem;
+
+    font-size: 0.7rem;
+  }
+
+  .admin-my-requests__item-main > p {
+    font-size: 0.72rem;
+  }
+
+  .admin-action-requests-summary {
+    align-items: flex-start;
+
+    padding: 14px;
+  }
+
+  .admin-action-requests-summary__content {
+    min-width: 0;
+  }
+
+  .admin-action-requests-summary__text {
+    min-width: 0;
+  }
+
+  .admin-action-requests-summary__text strong {
+    font-size: 14px;
+  }
+
+  .admin-action-requests-summary__text span {
+    font-size: 12px;
+  }
+
+  .admin-action-request-item {
+    align-items: flex-start;
+
+    gap: 10px;
+
+    padding: 12px;
+  }
+
+  .admin-action-request-item__status {
+    min-width: 72px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .admin-my-requests__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-my-requests__stat {
+    justify-content: flex-start;
+  }
+
+  .admin-my-requests__item {
+    align-items: flex-start;
+  }
+
+  .admin-action-requests-summary {
+    gap: 10px;
+  }
+
+  .admin-action-requests-summary__icon {
+    width: 38px;
+    height: 38px;
+
+    flex-basis: 38px;
+  }
+}
+/* =========================================================
+   ADMIN PANEL HEADER — VIEW ALL
+   ========================================================= */
+
+.admin-panel__header-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 38px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(16, 42, 67, 0.12);
+  border-radius: 10px;
+
+  background: rgba(16, 42, 67, 0.035);
+
+  color: #102a43;
+
+  font-size: 12.5px;
+  font-weight: 800;
+
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    gap 0.2s ease;
+}
+
+.admin-panel__header-link svg {
+  flex-shrink: 0;
+
+  transition:
+    transform 0.2s ease;
+}
+
+.admin-panel__header-link:hover {
+  color: #c19a22;
+
+  background: rgba(193, 154, 34, 0.08);
+  border-color: rgba(193, 154, 34, 0.28);
+
+  gap: 9px;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 14px rgba(16, 42, 67, 0.07);
+}
+
+.admin-panel__header-link:hover svg {
+  transform: translateX(-2px);
+}
+
+.admin-panel__header-link:active {
+  transform: translateY(0);
+
+  box-shadow: none;
+}
+
+.admin-panel__header-link:focus-visible {
+  outline: none;
+
+  border-color: #c19a22;
+
+  box-shadow:
+    0 0 0 3px rgba(193, 154, 34, 0.14);
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .admin-panel__header-link {
+  border-color: rgba(255, 255, 255, 0.11);
+
+  background: rgba(255, 255, 255, 0.045);
+
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .admin-panel__header-link:hover {
+  color: #dfbd58;
+
+  background: rgba(193, 154, 34, 0.11);
+  border-color: rgba(223, 189, 88, 0.32);
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .admin-panel__header-link:active {
+  background: rgba(193, 154, 34, 0.15);
+}
+
+[data-theme="dark"] .admin-panel__header-link:focus-visible {
+  border-color: #d4b24c;
+
+  box-shadow:
+    0 0 0 3px rgba(212, 178, 76, 0.14);
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .admin-panel__header-link {
+    min-height: 36px;
+    padding: 0 10px;
+
+    border-radius: 9px;
+
+    font-size: 12px;
+  }
+}
