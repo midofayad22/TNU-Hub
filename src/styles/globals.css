@@ -39275,3 +39275,850 @@ html[data-theme="dark"] .notifications-empty__action:hover {
     scroll-behavior: auto !important;
   }
 }
+/* =========================================================
+   ADMIN FACILITIES
+   Light + Dark + Responsive
+   ========================================================= */
+
+/* ---------- Stats ---------- */
+
+.admin-faculties-stats {
+  margin-bottom: 24px;
+}
+
+.admin-faculties-stats .admin-stat-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(15, 39, 71, 0.08);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 39, 71, 0.06);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.admin-faculties-stats .admin-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #0f2747,
+    #c9a24d
+  );
+  opacity: 0.9;
+}
+
+.admin-faculties-stats .admin-stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(201, 162, 77, 0.25);
+  box-shadow: 0 14px 32px rgba(15, 39, 71, 0.1);
+}
+
+.admin-faculties-stats .admin-stat-card__icon {
+  color: #0f2747;
+  background: rgba(15, 39, 71, 0.07);
+  border: 1px solid rgba(15, 39, 71, 0.08);
+}
+
+.admin-faculties-stats .admin-stat-card__value {
+  color: #0f2747;
+}
+
+
+/* =========================================================
+   MAIN GRID
+   ========================================================= */
+
+.admin-faculties-grid {
+  align-items: stretch;
+}
+
+.admin-faculties-grid .admin-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(15, 39, 71, 0.08);
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgba(15, 39, 71, 0.055);
+}
+
+
+/* ---------- Panel Header ---------- */
+
+.admin-faculties-grid .admin-panel__header {
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(15, 39, 71, 0.07);
+}
+
+.admin-faculties-grid .admin-panel__kicker {
+  color: #c9a24d;
+  font-weight: 700;
+}
+
+.admin-faculties-grid .admin-panel__header h2 {
+  color: #0f2747;
+}
+
+
+/* =========================================================
+   TOOLBAR / SEARCH
+   ========================================================= */
+
+.admin-faculties-toolbar {
+  margin: 18px 0;
+}
+
+.admin-faculties-toolbar .admin-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  width: 100%;
+  padding: 0 14px;
+  border: 1px solid rgba(15, 39, 71, 0.1);
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.admin-faculties-toolbar .admin-search:focus-within {
+  border-color: rgba(201, 162, 77, 0.65);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(201, 162, 77, 0.1);
+}
+
+.admin-faculties-toolbar .admin-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #0f2747;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.admin-faculties-toolbar .admin-search input::placeholder {
+  color: #94a3b8;
+}
+
+.admin-faculties-toolbar .admin-search > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-faculties-toolbar .admin-search > button:hover {
+  background: rgba(15, 39, 71, 0.07);
+  color: #0f2747;
+}
+
+
+/* =========================================================
+   FACULTIES LIST
+   ========================================================= */
+
+.admin-faculties-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-faculty-item {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid rgba(15, 39, 71, 0.08);
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.admin-faculty-item:hover {
+  border-color: rgba(201, 162, 77, 0.35);
+  box-shadow: 0 8px 22px rgba(15, 39, 71, 0.07);
+  transform: translateY(-1px);
+}
+
+.admin-faculty-item--active {
+  border-color: rgba(201, 162, 77, 0.65);
+  background: linear-gradient(
+    135deg,
+    #fffdf7 0%,
+    #ffffff 100%
+  );
+  box-shadow:
+    0 8px 24px rgba(15, 39, 71, 0.08),
+    inset 3px 0 0 #c9a24d;
+}
+
+
+/* ---------- Faculty Main Button ---------- */
+
+.admin-faculty-item__main {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 1;
+  min-width: 0;
+  padding: 15px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: right;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-faculty-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #0f2747;
+  border: 1px solid rgba(15, 39, 71, 0.08);
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.admin-faculty-item:hover .admin-faculty-item__icon,
+.admin-faculty-item--active .admin-faculty-item__icon {
+  background: #0f2747;
+  color: #ffffff;
+  transform: scale(1.03);
+}
+
+.admin-faculty-item__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 4px;
+}
+
+.admin-faculty-item__content strong {
+  width: 100%;
+  overflow: hidden;
+  color: #0f2747;
+  font-size: 0.94rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-faculty-item__content span {
+  width: 100%;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.79rem;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-faculty-item__content small {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 2px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(201, 162, 77, 0.1);
+  color: #8a6b22;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+
+/* ---------- Faculty Actions ---------- */
+
+.admin-faculty-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px;
+}
+
+
+/* =========================================================
+   PROGRAMS
+   ========================================================= */
+
+.admin-programs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-program-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(15, 39, 71, 0.08);
+  border-radius: 13px;
+  background: #ffffff;
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.admin-program-item:hover {
+  border-color: rgba(201, 162, 77, 0.32);
+  background: #fffefa;
+  box-shadow: 0 7px 20px rgba(15, 39, 71, 0.06);
+  transform: translateY(-1px);
+}
+
+.admin-program-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 11px;
+  background: rgba(15, 39, 71, 0.07);
+  color: #0f2747;
+}
+
+.admin-program-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-program-item__content strong {
+  overflow: hidden;
+  color: #0f2747;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-program-item__content span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-program-item__content small {
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 0.67rem;
+  direction: ltr;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-program-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   ICON BUTTONS
+   ========================================================= */
+
+.admin-faculties-grid .admin-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(15, 39, 71, 0.09);
+  border-radius: 9px;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-faculties-grid .admin-icon-button:hover {
+  color: #0f2747;
+  background: #f1f5f9;
+  border-color: rgba(15, 39, 71, 0.16);
+  transform: translateY(-1px);
+}
+
+.admin-faculties-grid .admin-icon-button--danger:hover {
+  color: #b42318;
+  background: #fff1f0;
+  border-color: rgba(180, 35, 24, 0.18);
+}
+
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.admin-faculties-grid .admin-empty-state {
+  min-height: 250px;
+  padding: 32px 20px;
+  border-radius: 13px;
+  background: #f8fafc;
+  border: 1px dashed rgba(15, 39, 71, 0.12);
+}
+
+.admin-faculties-grid .admin-empty-state > svg {
+  color: #c9a24d;
+}
+
+.admin-faculties-grid .admin-empty-state h2 {
+  color: #0f2747;
+}
+
+.admin-faculties-grid .admin-empty-state p {
+  color: #64748b;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+.dark .admin-faculties-stats .admin-stat-card,
+[data-theme="dark"] .admin-faculties-stats .admin-stat-card {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #111c2d;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+
+.dark .admin-faculties-stats .admin-stat-card:hover,
+[data-theme="dark"] .admin-faculties-stats .admin-stat-card:hover {
+  border-color: rgba(201, 162, 77, 0.28);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+.dark .admin-faculties-stats .admin-stat-card__icon,
+[data-theme="dark"] .admin-faculties-stats .admin-stat-card__icon {
+  background: rgba(201, 162, 77, 0.1);
+  border-color: rgba(201, 162, 77, 0.15);
+  color: #e3c66d;
+}
+
+.dark .admin-faculties-stats .admin-stat-card__value,
+[data-theme="dark"] .admin-faculties-stats .admin-stat-card__value {
+  color: #f8fafc;
+}
+
+
+/* ---------- Dark Panels ---------- */
+
+.dark .admin-faculties-grid .admin-panel,
+[data-theme="dark"] .admin-faculties-grid .admin-panel {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #111c2d;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dark .admin-faculties-grid .admin-panel__header,
+[data-theme="dark"] .admin-faculties-grid .admin-panel__header {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.dark .admin-faculties-grid .admin-panel__header h2,
+[data-theme="dark"] .admin-faculties-grid .admin-panel__header h2 {
+  color: #f8fafc;
+}
+
+
+/* ---------- Dark Search ---------- */
+
+.dark .admin-faculties-toolbar .admin-search,
+[data-theme="dark"] .admin-faculties-toolbar .admin-search {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: #0c1626;
+  color: #94a3b8;
+}
+
+.dark .admin-faculties-toolbar .admin-search:focus-within,
+[data-theme="dark"] .admin-faculties-toolbar .admin-search:focus-within {
+  border-color: rgba(201, 162, 77, 0.6);
+  background: #0c1626;
+  box-shadow: 0 0 0 4px rgba(201, 162, 77, 0.08);
+}
+
+.dark .admin-faculties-toolbar .admin-search input,
+[data-theme="dark"] .admin-faculties-toolbar .admin-search input {
+  color: #f8fafc;
+}
+
+.dark .admin-faculties-toolbar .admin-search input::placeholder,
+[data-theme="dark"] .admin-faculties-toolbar .admin-search input::placeholder {
+  color: #64748b;
+}
+
+.dark .admin-faculties-toolbar .admin-search > button:hover,
+[data-theme="dark"] .admin-faculties-toolbar .admin-search > button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+
+/* ---------- Dark Faculty Items ---------- */
+
+.dark .admin-faculty-item,
+[data-theme="dark"] .admin-faculty-item {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #0f1a2b;
+}
+
+.dark .admin-faculty-item:hover,
+[data-theme="dark"] .admin-faculty-item:hover {
+  border-color: rgba(201, 162, 77, 0.35);
+  background: #132137;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.dark .admin-faculty-item--active,
+[data-theme="dark"] .admin-faculty-item--active {
+  border-color: rgba(201, 162, 77, 0.55);
+  background: linear-gradient(
+    135deg,
+    #17263b 0%,
+    #101c2e 100%
+  );
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.22),
+    inset 3px 0 0 #c9a24d;
+}
+
+.dark .admin-faculty-item__icon,
+[data-theme="dark"] .admin-faculty-item__icon {
+  background: #17263a;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #dce6f2;
+}
+
+.dark .admin-faculty-item:hover .admin-faculty-item__icon,
+.dark .admin-faculty-item--active .admin-faculty-item__icon,
+[data-theme="dark"] .admin-faculty-item:hover .admin-faculty-item__icon,
+[data-theme="dark"] .admin-faculty-item--active .admin-faculty-item__icon {
+  background: #c9a24d;
+  color: #0a1b33;
+}
+
+.dark .admin-faculty-item__content strong,
+[data-theme="dark"] .admin-faculty-item__content strong {
+  color: #f8fafc;
+}
+
+.dark .admin-faculty-item__content span,
+[data-theme="dark"] .admin-faculty-item__content span {
+  color: #94a3b8;
+}
+
+.dark .admin-faculty-item__content small,
+[data-theme="dark"] .admin-faculty-item__content small {
+  background: rgba(201, 162, 77, 0.12);
+  color: #e3c66d;
+}
+
+
+/* ---------- Dark Program Items ---------- */
+
+.dark .admin-program-item,
+[data-theme="dark"] .admin-program-item {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #0f1a2b;
+}
+
+.dark .admin-program-item:hover,
+[data-theme="dark"] .admin-program-item:hover {
+  border-color: rgba(201, 162, 77, 0.3);
+  background: #132137;
+}
+
+.dark .admin-program-item__icon,
+[data-theme="dark"] .admin-program-item__icon {
+  background: rgba(201, 162, 77, 0.1);
+  color: #e3c66d;
+}
+
+.dark .admin-program-item__content strong,
+[data-theme="dark"] .admin-program-item__content strong {
+  color: #f8fafc;
+}
+
+.dark .admin-program-item__content span,
+[data-theme="dark"] .admin-program-item__content span {
+  color: #94a3b8;
+}
+
+.dark .admin-program-item__content small,
+[data-theme="dark"] .admin-program-item__content small {
+  color: #64748b;
+}
+
+
+/* ---------- Dark Icon Buttons ---------- */
+
+.dark .admin-faculties-grid .admin-icon-button,
+[data-theme="dark"] .admin-faculties-grid .admin-icon-button {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: #17263a;
+  color: #94a3b8;
+}
+
+.dark .admin-faculties-grid .admin-icon-button:hover,
+[data-theme="dark"] .admin-faculties-grid .admin-icon-button:hover {
+  background: #20324a;
+  color: #f8fafc;
+  border-color: rgba(201, 162, 77, 0.28);
+}
+
+.dark .admin-faculties-grid .admin-icon-button--danger:hover,
+[data-theme="dark"] .admin-faculties-grid .admin-icon-button--danger:hover {
+  background: rgba(180, 35, 24, 0.14);
+  color: #ff8d85;
+  border-color: rgba(255, 100, 90, 0.2);
+}
+
+
+/* ---------- Dark Empty States ---------- */
+
+.dark .admin-faculties-grid .admin-empty-state,
+[data-theme="dark"] .admin-faculties-grid .admin-empty-state {
+  background: #0c1626;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .admin-faculties-grid .admin-empty-state h2,
+[data-theme="dark"] .admin-faculties-grid .admin-empty-state h2 {
+  color: #f8fafc;
+}
+
+.dark .admin-faculties-grid .admin-empty-state p,
+[data-theme="dark"] .admin-faculties-grid .admin-empty-state p {
+  color: #94a3b8;
+}
+
+
+/* =========================================================
+   DARK MODAL / FORM
+   يعتمد على كلاسات الـModal الموجودة بالفعل عندك
+   ========================================================= */
+
+.dark .admin-modal,
+[data-theme="dark"] .admin-modal {
+  background: #111c2d;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.dark .admin-modal__header,
+[data-theme="dark"] .admin-modal__header {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .admin-modal__header h2,
+[data-theme="dark"] .admin-modal__header h2 {
+  color: #f8fafc;
+}
+
+.dark .admin-modal__close,
+[data-theme="dark"] .admin-modal__close {
+  color: #94a3b8;
+  background: #17263a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .admin-modal__close:hover,
+[data-theme="dark"] .admin-modal__close:hover {
+  color: #ffffff;
+  background: #20324a;
+}
+
+.dark .admin-form__field > span,
+[data-theme="dark"] .admin-form__field > span {
+  color: #e2e8f0;
+}
+
+.dark .admin-form__field input,
+.dark .admin-form__field select,
+.dark .admin-form__field textarea,
+[data-theme="dark"] .admin-form__field input,
+[data-theme="dark"] .admin-form__field select,
+[data-theme="dark"] .admin-form__field textarea {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #0c1626;
+  color: #f8fafc;
+}
+
+.dark .admin-form__field input:focus,
+.dark .admin-form__field select:focus,
+.dark .admin-form__field textarea:focus,
+[data-theme="dark"] .admin-form__field input:focus,
+[data-theme="dark"] .admin-form__field select:focus,
+[data-theme="dark"] .admin-form__field textarea:focus {
+  border-color: rgba(201, 162, 77, 0.65);
+  box-shadow: 0 0 0 4px rgba(201, 162, 77, 0.08);
+}
+
+.dark .admin-form__field small,
+[data-theme="dark"] .admin-form__field small {
+  color: #64748b;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1050px) {
+  .admin-faculties-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-faculties-grid .admin-panel {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .admin-faculties-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-faculty-item {
+    gap: 4px;
+  }
+
+  .admin-faculty-item__main {
+    padding: 13px;
+    gap: 10px;
+  }
+
+  .admin-faculty-item__icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .admin-faculty-item__content strong {
+    font-size: 0.86rem;
+  }
+
+  .admin-faculty-item__content span {
+    font-size: 0.74rem;
+  }
+
+  .admin-faculty-item__actions {
+    padding: 8px;
+  }
+
+  .admin-program-item {
+    padding: 12px;
+  }
+
+  .admin-program-item__icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .admin-faculties-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-faculties-toolbar {
+    margin: 14px 0;
+  }
+
+  .admin-faculty-item {
+    align-items: flex-start;
+  }
+
+  .admin-faculty-item__main {
+    align-items: flex-start;
+  }
+
+  .admin-faculty-item__icon {
+    margin-top: 1px;
+  }
+
+  .admin-faculty-item__content span {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .admin-faculty-item__actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .admin-program-item {
+    align-items: flex-start;
+  }
+
+  .admin-program-item__content span {
+    display: -webkit-box;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .admin-program-item__actions {
+    flex-direction: column;
+  }
+}
