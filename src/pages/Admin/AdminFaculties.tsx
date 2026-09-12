@@ -552,6 +552,87 @@ export default function AdminFaculties() {
     if (requestError) {
       throw requestError;
     }
+
+    /*
+     * -------------------------------------------------------
+     * NOTIFY ROOT ADMINS
+     * -------------------------------------------------------
+     *
+     * The action request has already been created
+     * successfully. Notification failure should not
+     * cancel the request itself.
+     */
+
+    const {
+      data: rootAdmins,
+      error: rootAdminsError,
+    } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "root_admin");
+
+    if (rootAdminsError) {
+      console.error(
+        "Failed to load root admins for faculties notification:",
+        rootAdminsError
+      );
+    } else if (
+      rootAdmins &&
+      rootAdmins.length > 0
+    ) {
+      const requestPayload =
+        payload as {
+          entity?: "faculty" | "program";
+          name?: string;
+          id?: string;
+          faculty?: {
+            name?: string;
+          };
+        };
+
+      const entityLabel =
+        requestPayload.entity === "program"
+          ? "البرنامج"
+          : "الكلية";
+
+      const actionLabel =
+        action === "add"
+          ? "إضافة"
+          : action === "edit"
+            ? "تعديل"
+            : "حذف";
+
+      const itemTitle =
+        requestPayload.name ||
+        requestPayload.faculty?.name ||
+        requestPayload.id ||
+        "عنصر أكاديمي";
+
+      const notifications = rootAdmins.map(
+        (rootAdmin) => ({
+          user_id: rootAdmin.id,
+          title: "طلب موافقة جديد",
+          message: `قام ${
+            profile.full_name || "المشرف"
+          } بإرسال طلب ${actionLabel} ${entityLabel} "${itemTitle}" في قسم الكليات والبرامج للمراجعة.`,
+          type: "approval",
+          is_read: false,
+        })
+      );
+
+      const {
+        error: notificationsError,
+      } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notificationsError) {
+        console.error(
+          "Failed to notify root admins about faculties action request:",
+          notificationsError
+        );
+      }
+    }
   };
 
   /*

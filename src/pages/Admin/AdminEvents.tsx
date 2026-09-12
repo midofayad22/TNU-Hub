@@ -454,6 +454,56 @@ export default function AdminEvents() {
       return false;
     }
 
+    /*
+     * =====================================================
+     * إشعار Root Admin
+     * =====================================================
+     *
+     * تم إنشاء طلب الحذف بنجاح.
+     * الآن نرسل إشعارًا لكل Root Admin.
+     *
+     * فشل الإشعار لا يلغي الطلب.
+     */
+    const {
+      data: rootAdmins,
+      error: rootAdminsError,
+    } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "root_admin");
+
+    if (rootAdminsError) {
+      console.error(
+        "Failed to load root admins for event delete notification:",
+        rootAdminsError
+      );
+    } else if (
+      rootAdmins &&
+      rootAdmins.length > 0
+    ) {
+      const notifications =
+        rootAdmins.map((rootAdmin) => ({
+          user_id: rootAdmin.id,
+          title: "طلب موافقة جديد",
+          message: `قام أحد المشرفين بإرسال طلب حذف في قسم الفعاليات للفعالية "${event.title}" للمراجعة.`,
+          type: "approval",
+          is_read: false,
+        }));
+
+      const {
+        error: notificationsError,
+      } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notificationsError) {
+        console.error(
+          "Failed to notify root admins about event delete request:",
+          notificationsError
+        );
+      }
+    }
+
     window.alert(
       "تم إرسال طلب حذف الفعالية إلى Root Admin للمراجعة."
     );

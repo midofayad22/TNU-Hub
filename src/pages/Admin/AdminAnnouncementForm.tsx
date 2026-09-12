@@ -21,7 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 type AnnouncementStatus = "منشور" | "مسودة";
 
 interface AnnouncementTarget {
-  type: "all" | "faculty" | "year";
+  type: "all" | "program" | "faculty" | "year";
   value?: string;
 }
 
@@ -33,6 +33,19 @@ interface AnnouncementRecord {
   date: string;
   target: AnnouncementTarget | null;
   status: AnnouncementStatus;
+}
+
+interface StudentProfile {
+  id: string;
+  role: string | null;
+  faculty: string | null;
+  program: string | null;
+  academic_year: string | null;
+}
+
+interface Program {
+  id: string;
+  name: string;
 }
 
 export default function AdminAnnouncementForm() {
@@ -47,20 +60,79 @@ export default function AdminAnnouncementForm() {
   const [title, setTitle] = useState("");
   const [category, setCategory] =
     useState("أكاديمي");
+
+  /*
+   * القيمة هنا هي اسم البرنامج المختار.
+   * "جميع الطلاب" هي القيمة الخاصة بالاستهداف العام.
+   */
   const [target, setTarget] =
     useState("جميع الطلاب");
+
   const [date, setDate] = useState("");
   const [content, setContent] = useState("");
+
   const [status, setStatus] =
     useState<AnnouncementStatus>("منشور");
 
+  const [programs, setPrograms] =
+    useState<Program[]>([]);
+
+  const [programsLoading, setProgramsLoading] =
+    useState(true);
+
   const [loading, setLoading] =
     useState(isEditMode);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const [canAdd, setCanAdd] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
+
+  /*
+   * =========================================================
+   * LOAD PROGRAMS
+   * =========================================================
+   */
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      setProgramsLoading(true);
+
+      const {
+        data,
+        error: programsError,
+      } = await supabase
+        .from("programs")
+        .select("id, name")
+        .order("name", {
+          ascending: true,
+        });
+
+      if (programsError) {
+        console.error(
+          "Failed to load programs:",
+          programsError
+        );
+
+        setPrograms([]);
+        setProgramsLoading(false);
+
+        return;
+      }
+
+      setPrograms(
+        (data ?? []).map((program) => ({
+          id: String(program.id),
+          name: String(program.name),
+        }))
+      );
+
+      setProgramsLoading(false);
+    };
+
+    loadPrograms();
+  }, []);
 
   /*
    * =========================================================
@@ -76,19 +148,22 @@ export default function AdminAnnouncementForm() {
     if (isRootAdmin) {
       setCanAdd(true);
       setCanEdit(true);
+
       return;
     }
 
     const loadPermissions = async () => {
-      const { data, error: permissionError } =
-        await supabase
-          .from("admin_permissions")
-          .select(
-            "can_add, can_edit, can_view"
-          )
-          .eq("admin_id", profile.id)
-          .eq("section", "announcements")
-          .maybeSingle();
+      const {
+        data,
+        error: permissionError,
+      } = await supabase
+        .from("admin_permissions")
+        .select(
+          "can_add, can_edit, can_view"
+        )
+        .eq("admin_id", profile.id)
+        .eq("section", "announcements")
+        .maybeSingle();
 
       if (permissionError) {
         console.error(
@@ -98,6 +173,7 @@ export default function AdminAnnouncementForm() {
 
         setCanAdd(false);
         setCanEdit(false);
+
         return;
       }
 
@@ -128,6 +204,7 @@ export default function AdminAnnouncementForm() {
 
       setDate(today);
       setLoading(false);
+
       return;
     }
 
@@ -135,22 +212,24 @@ export default function AdminAnnouncementForm() {
       setLoading(true);
       setError("");
 
-      const { data, error: fetchError } =
-        await supabase
-          .from("announcements")
-          .select(
-            `
-              id,
-              title,
-              category,
-              content,
-              date,
-              target,
-              status
-            `
-          )
-          .eq("id", id)
-          .single();
+      const {
+        data,
+        error: fetchError,
+      } = await supabase
+        .from("announcements")
+        .select(
+          `
+            id,
+            title,
+            category,
+            content,
+            date,
+            target,
+            status
+          `
+        )
+        .eq("id", id)
+        .single();
 
       if (fetchError) {
         console.error(
@@ -163,6 +242,7 @@ export default function AdminAnnouncementForm() {
         );
 
         setLoading(false);
+
         return;
       }
 
@@ -185,21 +265,40 @@ export default function AdminAnnouncementForm() {
         announcement.status ?? "منشور"
       );
 
+      /*
+       * =====================================================
+       * LOAD TARGET
+       * =====================================================
+       */
+
       if (!announcement.target) {
         setTarget("جميع الطلاب");
       } else if (
-        announcement.target.type === "faculty"
+        announcement.target.type === "program"
       ) {
         setTarget(
           announcement.target.value ||
-            "هندسة الحاسبات"
+            "جميع الطلاب"
+        );
+      } else if (
+        announcement.target.type === "faculty"
+      ) {
+        /*
+         * بيانات قديمة.
+         */
+        setTarget(
+          announcement.target.value ||
+            "جميع الطلاب"
         );
       } else if (
         announcement.target.type === "year"
       ) {
+        /*
+         * بيانات قديمة.
+         */
         setTarget(
           announcement.target.value ||
-            "الفرقة الأولى"
+            "جميع الطلاب"
         );
       } else {
         setTarget("جميع الطلاب");
@@ -224,28 +323,158 @@ export default function AdminAnnouncementForm() {
       };
     }
 
-    if (target === "هندسة الحاسبات") {
-      return {
-        type: "faculty",
-        value: "هندسة الحاسبات",
-      };
-    }
-
-    if (target === "الفرقة الأولى") {
-      return {
-        type: "year",
-        value: "الفرقة الأولى",
-      };
-    }
-
     return {
-      type: "all",
+      type: "program",
+      value: target,
     };
   };
 
   /*
    * =========================================================
-   * CREATE REQUEST
+   * CREATE STUDENT NOTIFICATIONS
+   * =========================================================
+   */
+
+  const createNotificationsForAnnouncement =
+    async (
+      announcementTitle: string,
+      announcementContent: string,
+      announcementTarget: AnnouncementTarget
+    ) => {
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await supabase
+        .from("profiles")
+        .select(
+          "id, role, faculty, program, academic_year"
+        );
+
+      if (profilesError) {
+        console.error(
+          "Failed to load profiles for notifications:",
+          profilesError
+        );
+
+        throw new Error(
+          "تم نشر الإعلان، لكن تعذر جلب الطلاب المستهدفين."
+        );
+      }
+
+      const targetValue =
+        announcementTarget.value?.trim();
+
+      const students =
+        (profiles ?? []).filter(
+          (student: StudentProfile) => {
+            /*
+             * استبعاد حسابات الإدارة.
+             */
+            if (
+              student.role === "admin" ||
+              student.role === "root_admin"
+            ) {
+              return false;
+            }
+
+            /*
+             * جميع الطلاب.
+             */
+            if (
+              announcementTarget.type === "all"
+            ) {
+              return true;
+            }
+
+            /*
+             * استهداف برنامج محدد.
+             */
+            if (
+              announcementTarget.type ===
+              "program"
+            ) {
+              return (
+                Boolean(targetValue) &&
+                student.program?.trim() ===
+                  targetValue
+              );
+            }
+
+            /*
+             * دعم البيانات القديمة.
+             */
+            if (
+              announcementTarget.type ===
+              "faculty"
+            ) {
+              return (
+                student.faculty?.trim() ===
+                  targetValue ||
+                student.program?.trim() ===
+                  targetValue
+              );
+            }
+
+            /*
+             * إعلان قديم يستهدف السنة الدراسية.
+             */
+            if (
+              announcementTarget.type === "year"
+            ) {
+              return (
+                student.academic_year?.trim() ===
+                targetValue
+              );
+            }
+
+            return false;
+          }
+        );
+
+      if (students.length === 0) {
+        console.warn(
+          "No students matched announcement target:",
+          announcementTarget
+        );
+
+        return;
+      }
+
+      const notifications = students.map(
+        (student: StudentProfile) => ({
+          user_id: student.id,
+          title: announcementTitle,
+          message: announcementContent,
+          type: "announcement",
+          is_read: false,
+        })
+      );
+
+      const {
+        error: notificationsError,
+      } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notificationsError) {
+        console.error(
+          "Failed to create announcement notifications:",
+          notificationsError
+        );
+
+        throw new Error(
+          "تم نشر الإعلان، لكن تعذر إنشاء إشعارات الطلاب."
+        );
+      }
+
+      console.log(
+        `Created ${notifications.length} announcement notifications.`
+      );
+    };
+
+  /*
+   * =========================================================
+   * CREATE ACTION REQUEST
    * =========================================================
    */
 
@@ -263,21 +492,31 @@ export default function AdminAnnouncementForm() {
       created_by: userId,
     };
 
-    const { error: requestError } =
-      await supabase
-        .from("admin_action_requests")
-        .insert({
-          admin_id: userId,
-          section: "announcements",
-          action,
-          target_id: id ?? null,
-          payload,
-          reason:
-            action === "add"
-              ? `طلب إضافة إعلان: ${title.trim()}`
-              : `طلب تعديل إعلان: ${title.trim()}`,
-          status: "pending",
-        });
+    /*
+     * =======================================================
+     * CREATE ADMIN ACTION REQUEST
+     * =======================================================
+     */
+
+    const {
+      data: createdRequest,
+      error: requestError,
+    } = await supabase
+      .from("admin_action_requests")
+      .insert({
+        admin_id: userId,
+        section: "announcements",
+        action,
+        target_id: id ?? null,
+        payload,
+        reason:
+          action === "add"
+            ? `طلب إضافة إعلان: ${title.trim()}`
+            : `طلب تعديل إعلان: ${title.trim()}`,
+        status: "pending",
+      })
+      .select("id")
+      .single();
 
     if (requestError) {
       console.error(
@@ -291,6 +530,84 @@ export default function AdminAnnouncementForm() {
 
       return false;
     }
+
+    /*
+     * =======================================================
+     * NOTIFY ROOT ADMINS
+     * =======================================================
+     *
+     * بعد إنشاء طلب الموافقة بنجاح،
+     * نبحث عن جميع حسابات Root Admin
+     * ونرسل لهم إشعارًا.
+     *
+     * هذا الجزء يعمل فقط مع Sub Admin،
+     * لأن Root Admin لا يصل أصلًا إلى هذه الدالة.
+     */
+
+    const {
+      data: rootAdmins,
+      error: rootAdminsError,
+    } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "root_admin");
+
+    if (rootAdminsError) {
+      console.error(
+        "Failed to load root admins for notification:",
+        rootAdminsError
+      );
+    } else if (
+      rootAdmins &&
+      rootAdmins.length > 0
+    ) {
+      const actionLabel =
+        action === "add"
+          ? "إضافة"
+          : "تعديل";
+
+      const notifications =
+        rootAdmins.map((rootAdmin) => ({
+          user_id: rootAdmin.id,
+          title: "طلب موافقة جديد",
+          message: `قام ${
+            profile?.full_name ||
+            "أحد المشرفين"
+          } بإرسال طلب ${actionLabel} إعلان "${title.trim()}" للمراجعة.`,
+          type: "approval",
+          is_read: false,
+        }));
+
+      const {
+        error: notificationError,
+      } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notificationError) {
+        /*
+         * مهم:
+         * فشل الإشعار لا يلغي طلب الموافقة.
+         *
+         * الطلب تم إنشاؤه بالفعل،
+         * لذلك نتركه موجودًا حتى يستطيع Root Admin
+         * مراجعته من صفحة Approvals.
+         */
+        console.error(
+          "Failed to notify root admins:",
+          notificationError
+        );
+      }
+    } else {
+      console.warn(
+        "No root admin account found. Approval notification was skipped."
+      );
+    }
+
+    console.log(
+      "Announcement action request created:",
+      createdRequest?.id
+    );
 
     return true;
   };
@@ -310,6 +627,7 @@ export default function AdminAnnouncementForm() {
       setError(
         "تعذر تحديد حساب المشرف الحالي."
       );
+
       return;
     }
 
@@ -317,6 +635,7 @@ export default function AdminAnnouncementForm() {
       setError(
         "من فضلك اكتب عنوان الإعلان."
       );
+
       return;
     }
 
@@ -324,6 +643,7 @@ export default function AdminAnnouncementForm() {
       setError(
         "من فضلك اكتب محتوى الإعلان."
       );
+
       return;
     }
 
@@ -331,6 +651,7 @@ export default function AdminAnnouncementForm() {
       setError(
         "من فضلك اختر تاريخ الإعلان."
       );
+
       return;
     }
 
@@ -338,6 +659,7 @@ export default function AdminAnnouncementForm() {
       setError(
         "لا تملك صلاحية تعديل الإعلانات."
       );
+
       return;
     }
 
@@ -345,7 +667,39 @@ export default function AdminAnnouncementForm() {
       setError(
         "لا تملك صلاحية إضافة الإعلانات."
       );
+
       return;
+    }
+
+    /*
+     * لو تم اختيار برنامج غير صالح
+     * بعد تحميل البرامج، نمنع الحفظ.
+     */
+
+    if (
+      target !== "جميع الطلاب" &&
+      programs.length > 0
+    ) {
+      const selectedProgramExists =
+        programs.some(
+          (program) =>
+            program.name === target
+        );
+
+      /*
+       * نسمح بالقيمة القديمة أثناء Edit.
+       */
+
+      if (
+        !selectedProgramExists &&
+        !isEditMode
+      ) {
+        setError(
+          "البرنامج المحدد غير موجود في قائمة البرامج."
+        );
+
+        return;
+      }
     }
 
     setSaving(true);
@@ -370,22 +724,25 @@ export default function AdminAnnouncementForm() {
       };
 
       /*
+       * =====================================================
        * EDIT
+       * =====================================================
        */
 
       if (isEditMode && id) {
-        const { error: updateError } =
-          await supabase
-            .from("announcements")
-            .update({
-              title: payload.title,
-              category: payload.category,
-              content: payload.content,
-              date: payload.date,
-              target: payload.target,
-              status: payload.status,
-            })
-            .eq("id", id);
+        const {
+          error: updateError,
+        } = await supabase
+          .from("announcements")
+          .update({
+            title: payload.title,
+            category: payload.category,
+            content: payload.content,
+            date: payload.date,
+            target: payload.target,
+            status: payload.status,
+          })
+          .eq("id", id);
 
         if (updateError) {
           console.error(
@@ -398,36 +755,99 @@ export default function AdminAnnouncementForm() {
           );
 
           setSaving(false);
+
+          return;
+        }
+
+        /*
+         * لا ننشئ Notifications جديدة عند التعديل
+         * حتى لا يحصل الطالب على إشعار مكرر.
+         */
+
+        navigate("/admin/announcements");
+
+        return;
+      }
+
+      /*
+       * =====================================================
+       * CREATE
+       * =====================================================
+       */
+
+      const {
+        data: createdAnnouncement,
+        error: insertError,
+      } = await supabase
+        .from("announcements")
+        .insert(payload)
+        .select(
+          "id, title, content, target, status"
+        )
+        .single();
+
+      if (insertError) {
+        console.error(
+          "Failed to create announcement:",
+          insertError
+        );
+
+        setError(
+          "تعذر إضافة الإعلان. حاول مرة أخرى."
+        );
+
+        setSaving(false);
+
+        return;
+      }
+
+      /*
+       * =====================================================
+       * CREATE STUDENT NOTIFICATIONS
+       * =====================================================
+       *
+       * فقط إذا كان الإعلان منشورًا.
+       */
+
+      if (
+        createdAnnouncement.status ===
+        "منشور"
+      ) {
+        try {
+          await createNotificationsForAnnouncement(
+            createdAnnouncement.title,
+            createdAnnouncement.content,
+            createdAnnouncement.target
+          );
+        } catch (notificationError) {
+          console.error(
+            "Announcement notification error:",
+            notificationError
+          );
+
+          /*
+           * الإعلان تم حفظه بالفعل.
+           * لذلك لا نحذفه إذا فشل إنشاء الإشعارات.
+           */
+
+          setError(
+            "تم نشر الإعلان، لكن حدثت مشكلة أثناء إرسال الإشعارات للطلاب."
+          );
+
+          setSaving(false);
+
           return;
         }
       }
 
       /*
-       * CREATE
+       * =====================================================
+       * SUCCESS
+       * =====================================================
        */
 
-      else {
-        const { error: insertError } =
-          await supabase
-            .from("announcements")
-            .insert(payload);
-
-        if (insertError) {
-          console.error(
-            "Failed to create announcement:",
-            insertError
-          );
-
-          setError(
-            "تعذر إضافة الإعلان. حاول مرة أخرى."
-          );
-
-          setSaving(false);
-          return;
-        }
-      }
-
       navigate("/admin/announcements");
+
       return;
     }
 
@@ -450,6 +870,7 @@ export default function AdminAnnouncementForm() {
 
     if (!requestCreated) {
       setSaving(false);
+
       return;
     }
 
@@ -470,7 +891,10 @@ export default function AdminAnnouncementForm() {
 
   if (loading) {
     return (
-      <div className="admin-page" dir="rtl">
+      <div
+        className="admin-page"
+        dir="rtl"
+      >
         <section className="admin-form-panel">
           <div className="admin-empty-state">
             <div className="admin-empty-state__icon">
@@ -480,10 +904,13 @@ export default function AdminAnnouncementForm() {
               />
             </div>
 
-            <h3>جارٍ تحميل الإعلان</h3>
+            <h3>
+              جارٍ تحميل الإعلان
+            </h3>
 
             <p>
-              يتم جلب بيانات الإعلان من قاعدة البيانات.
+              يتم جلب بيانات الإعلان من قاعدة
+              البيانات.
             </p>
           </div>
         </section>
@@ -498,10 +925,11 @@ export default function AdminAnnouncementForm() {
    */
 
   return (
-    <div className="admin-page" dir="rtl">
-      {/* =====================================================
-          HEADER
-      ====================================================== */}
+    <div
+      className="admin-page"
+      dir="rtl"
+    >
+      {/* HEADER */}
 
       <header className="admin-page__header">
         <div>
@@ -538,9 +966,7 @@ export default function AdminAnnouncementForm() {
         </div>
       </header>
 
-      {/* =====================================================
-          ERROR
-      ====================================================== */}
+      {/* ERROR */}
 
       {error && (
         <div
@@ -553,9 +979,7 @@ export default function AdminAnnouncementForm() {
         </div>
       )}
 
-      {/* =====================================================
-          FORM
-      ====================================================== */}
+      {/* FORM */}
 
       <form
         className="admin-form-panel"
@@ -567,11 +991,13 @@ export default function AdminAnnouncementForm() {
           </div>
 
           <div>
-            <h2>بيانات الإعلان</h2>
+            <h2>
+              بيانات الإعلان
+            </h2>
 
             <p>
-              اكتب المعلومات الأساسية التي سيظهر بها
-              الإعلان.
+              اكتب المعلومات الأساسية التي سيظهر
+              بها الإعلان.
             </p>
           </div>
         </div>
@@ -580,7 +1006,9 @@ export default function AdminAnnouncementForm() {
           {/* TITLE */}
 
           <label className="admin-form-field admin-form-field--full">
-            <span>عنوان الإعلان</span>
+            <span>
+              عنوان الإعلان
+            </span>
 
             <input
               type="text"
@@ -597,7 +1025,9 @@ export default function AdminAnnouncementForm() {
           {/* CATEGORY */}
 
           <label className="admin-form-field">
-            <span>التصنيف</span>
+            <span>
+              التصنيف
+            </span>
 
             <select
               value={category}
@@ -628,7 +1058,9 @@ export default function AdminAnnouncementForm() {
           {/* TARGET */}
 
           <label className="admin-form-field">
-            <span>الفئة المستهدفة</span>
+            <span>
+              الفئة المستهدفة
+            </span>
 
             <select
               value={target}
@@ -637,25 +1069,46 @@ export default function AdminAnnouncementForm() {
                   event.target.value
                 )
               }
+              disabled={programsLoading}
             >
               <option value="جميع الطلاب">
                 جميع الطلاب
               </option>
 
-              <option value="هندسة الحاسبات">
-                هندسة الحاسبات
-              </option>
+              {programs.map((program) => (
+                <option
+                  key={program.id}
+                  value={program.name}
+                >
+                  {program.name}
+                </option>
+              ))}
 
-              <option value="الفرقة الأولى">
-                الفرقة الأولى
-              </option>
+              {isEditMode &&
+                target !== "جميع الطلاب" &&
+                !programs.some(
+                  (program) =>
+                    program.name === target
+                ) && (
+                  <option value={target}>
+                    {target}
+                  </option>
+                )}
             </select>
+
+            <small>
+              {programsLoading
+                ? "جارٍ تحميل البرامج..."
+                : "اختر جميع الطلاب أو برنامجًا محددًا."}
+            </small>
           </label>
 
           {/* DATE */}
 
           <label className="admin-form-field">
-            <span>تاريخ الإعلان</span>
+            <span>
+              تاريخ الإعلان
+            </span>
 
             <div className="admin-input-with-icon">
               <CalendarDays size={17} />
@@ -676,7 +1129,9 @@ export default function AdminAnnouncementForm() {
           {/* STATUS */}
 
           <label className="admin-form-field">
-            <span>الحالة</span>
+            <span>
+              الحالة
+            </span>
 
             <select
               value={status}
@@ -695,12 +1150,18 @@ export default function AdminAnnouncementForm() {
                 مسودة
               </option>
             </select>
+
+            <small>
+              المسودة يتم حفظها بدون إرسال إشعارات للطلاب.
+            </small>
           </label>
 
           {/* CONTENT */}
 
           <label className="admin-form-field admin-form-field--full">
-            <span>محتوى الإعلان</span>
+            <span>
+              محتوى الإعلان
+            </span>
 
             <textarea
               value={content}
@@ -737,7 +1198,10 @@ export default function AdminAnnouncementForm() {
           <button
             type="submit"
             className="admin-primary-button"
-            disabled={saving}
+            disabled={
+              saving ||
+              programsLoading
+            }
           >
             {saving ? (
               <LoaderCircle

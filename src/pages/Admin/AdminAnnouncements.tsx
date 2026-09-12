@@ -9,7 +9,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
@@ -18,7 +23,7 @@ interface AnnouncementTarget {
   faculty?: string;
   program?: string;
   academicYear?: string;
-  type?: "all" | "faculty" | "year";
+  type?: "all" | "faculty" | "year" | "program";
   value?: string;
 }
 
@@ -46,16 +51,31 @@ const formatDate = (date: string) => {
   }).format(new Date(date));
 };
 
-const getTargetLabel = (target: AnnouncementTarget) => {
+const getTargetLabel = (
+  target: AnnouncementTarget
+) => {
   if (!target || Object.keys(target).length === 0) {
     return "جميع الطلاب";
   }
 
-  if (target.type === "faculty" && target.value) {
+  if (
+    target.type === "faculty" &&
+    target.value
+  ) {
     return target.value;
   }
 
-  if (target.type === "year" && target.value) {
+  if (
+    target.type === "year" &&
+    target.value
+  ) {
+    return target.value;
+  }
+
+  if (
+    target.type === "program" &&
+    target.value
+  ) {
     return target.value;
   }
 
@@ -73,116 +93,137 @@ const getTargetLabel = (target: AnnouncementTarget) => {
     parts.push(target.academicYear);
   }
 
-  return parts.length > 0 ? parts.join(" • ") : "جميع الطلاب";
+  return parts.length > 0
+    ? parts.join(" • ")
+    : "جميع الطلاب";
 };
 
 export default function AdminAnnouncements() {
   const { profile } = useAuth();
 
   const [search, setSearch] = useState("");
-  const [announcements, setAnnouncements] = useState<
-    AdminAnnouncement[]
-  >([]);
+
+  const [announcements, setAnnouncements] =
+    useState<AdminAnnouncement[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(
-    null
-  );
+
+  const [deletingId, setDeletingId] =
+    useState<string | null>(null);
+
   const [error, setError] = useState("");
 
-  const isRootAdmin = profile?.role === "root_admin";
+  const isRootAdmin =
+    profile?.role === "root_admin";
 
-  const [canView, setCanView] = useState(false);
-  const [canAdd, setCanAdd] = useState(false);
-  const [canEdit, setCanEdit] = useState(false);
-  const [canDelete, setCanDelete] = useState(false);
+  const [canView, setCanView] =
+    useState(false);
 
-  const loadPermissions = useCallback(async () => {
-    if (!profile?.id) {
-      return;
-    }
+  const [canAdd, setCanAdd] =
+    useState(false);
 
-    if (isRootAdmin) {
-      setCanView(true);
-      setCanAdd(true);
-      setCanEdit(true);
-      setCanDelete(true);
-      return;
-    }
+  const [canEdit, setCanEdit] =
+    useState(false);
 
-    const { data, error: permissionError } = await supabase
-      .from("admin_permissions")
-      .select(
-        "can_view, can_add, can_edit, can_delete"
-      )
-      .eq("admin_id", profile.id)
-      .eq("section", "announcements")
-      .maybeSingle();
+  const [canDelete, setCanDelete] =
+    useState(false);
 
-    if (permissionError) {
-      console.error(
-        "Failed to load announcement permissions:",
-        permissionError
+  const loadPermissions =
+    useCallback(async () => {
+      if (!profile?.id) {
+        return;
+      }
+
+      if (isRootAdmin) {
+        setCanView(true);
+        setCanAdd(true);
+        setCanEdit(true);
+        setCanDelete(true);
+
+        return;
+      }
+
+      const {
+        data,
+        error: permissionError,
+      } = await supabase
+        .from("admin_permissions")
+        .select(
+          "can_view, can_add, can_edit, can_delete"
+        )
+        .eq("admin_id", profile.id)
+        .eq("section", "announcements")
+        .maybeSingle();
+
+      if (permissionError) {
+        console.error(
+          "Failed to load announcement permissions:",
+          permissionError
+        );
+
+        setCanView(false);
+        setCanAdd(false);
+        setCanEdit(false);
+        setCanDelete(false);
+
+        return;
+      }
+
+      setCanView(Boolean(data?.can_view));
+      setCanAdd(Boolean(data?.can_add));
+      setCanEdit(Boolean(data?.can_edit));
+      setCanDelete(Boolean(data?.can_delete));
+    }, [profile?.id, isRootAdmin]);
+
+  const loadAnnouncements =
+    useCallback(async () => {
+      setLoading(true);
+      setError("");
+
+      const {
+        data,
+        error: fetchError,
+      } = await supabase
+        .from("announcements")
+        .select(
+          `
+            id,
+            title,
+            category,
+            content,
+            date,
+            target,
+            status,
+            created_at,
+            updated_at
+          `
+        )
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (fetchError) {
+        console.error(
+          "Failed to load announcements:",
+          fetchError
+        );
+
+        setError(
+          "حدث خطأ أثناء تحميل الإعلانات. حاول مرة أخرى."
+        );
+
+        setAnnouncements([]);
+        setLoading(false);
+
+        return;
+      }
+
+      setAnnouncements(
+        (data ?? []) as AdminAnnouncement[]
       );
 
-      setCanView(false);
-      setCanAdd(false);
-      setCanEdit(false);
-      setCanDelete(false);
-
-      return;
-    }
-
-    setCanView(Boolean(data?.can_view));
-    setCanAdd(Boolean(data?.can_add));
-    setCanEdit(Boolean(data?.can_edit));
-    setCanDelete(Boolean(data?.can_delete));
-  }, [profile?.id, isRootAdmin]);
-
-  const loadAnnouncements = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    const { data, error: fetchError } = await supabase
-      .from("announcements")
-      .select(
-        `
-          id,
-          title,
-          category,
-          content,
-          date,
-          target,
-          status,
-          created_at,
-          updated_at
-        `
-      )
-      .order("created_at", {
-        ascending: false,
-      });
-
-    if (fetchError) {
-      console.error(
-        "Failed to load announcements:",
-        fetchError
-      );
-
-      setError(
-        "حدث خطأ أثناء تحميل الإعلانات. حاول مرة أخرى."
-      );
-
-      setAnnouncements([]);
       setLoading(false);
-      return;
-    }
-
-    setAnnouncements(
-      (data ?? []) as AdminAnnouncement[]
-    );
-
-    setLoading(false);
-  }, []);
+    }, []);
 
   useEffect(() => {
     loadPermissions();
@@ -193,29 +234,43 @@ export default function AdminAnnouncements() {
   }, [loadAnnouncements]);
 
   const filteredAnnouncements = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = search
+      .trim()
+      .toLowerCase();
 
     if (!query) {
       return announcements;
     }
 
-    return announcements.filter((announcement) => {
-      const targetLabel = getTargetLabel(
-        announcement.target
-      );
+    return announcements.filter(
+      (announcement) => {
+        const targetLabel =
+          getTargetLabel(
+            announcement.target
+          );
 
-      return [
-        announcement.title,
-        announcement.category,
-        announcement.content,
-        targetLabel,
-        announcement.status,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(query);
-    });
+        return [
+          announcement.title,
+          announcement.category,
+          announcement.content,
+          targetLabel,
+          announcement.status,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      }
+    );
   }, [announcements, search]);
+
+  /*
+   * =========================================================
+   * CREATE DELETE REQUEST
+   * =========================================================
+   *
+   * Sub Admin لا يحذف الإعلان مباشرة.
+   * يتم إنشاء طلب للموافقة عليه من Root Admin.
+   */
 
   const createDeleteRequest = async (
     announcement: AdminAnnouncement
@@ -224,10 +279,14 @@ export default function AdminAnnouncements() {
       setError(
         "تعذر تحديد حساب المشرف الحالي."
       );
+
       return;
     }
 
-    const { error: requestError } = await supabase
+    const {
+      data: createdRequest,
+      error: requestError,
+    } = await supabase
       .from("admin_action_requests")
       .insert({
         admin_id: profile.id,
@@ -245,7 +304,9 @@ export default function AdminAnnouncements() {
         },
         reason: `طلب حذف الإعلان: ${announcement.title}`,
         status: "pending",
-      });
+      })
+      .select("id")
+      .single();
 
     if (requestError) {
       console.error(
@@ -260,15 +321,83 @@ export default function AdminAnnouncements() {
       return;
     }
 
+    /*
+     * =======================================================
+     * NOTIFY ROOT ADMINS
+     * =======================================================
+     *
+     * بعد إنشاء طلب الحذف بنجاح،
+     * نرسل إشعارًا إلى جميع حسابات Root Admin.
+     */
+
+    const {
+      data: rootAdmins,
+      error: rootAdminsError,
+    } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "root_admin");
+
+    if (rootAdminsError) {
+      console.error(
+        "Failed to load root admins for notification:",
+        rootAdminsError
+      );
+    } else if (
+      rootAdmins &&
+      rootAdmins.length > 0
+    ) {
+      const notifications =
+        rootAdmins.map((rootAdmin) => ({
+          user_id: rootAdmin.id,
+          title: "طلب موافقة جديد",
+          message: `قام ${
+            profile.full_name ||
+            "أحد المشرفين"
+          } بإرسال طلب حذف الإعلان "${announcement.title}" للمراجعة.`,
+          type: "approval",
+          is_read: false,
+        }));
+
+      const {
+        error: notificationError,
+      } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notificationError) {
+        /*
+         * الطلب تم إنشاؤه بالفعل،
+         * لذلك لا نلغيه إذا فشل الإشعار.
+         */
+        console.error(
+          "Failed to notify root admins:",
+          notificationError
+        );
+      }
+    } else {
+      console.warn(
+        "No root admin account found. Delete approval notification was skipped."
+      );
+    }
+
+    console.log(
+      "Announcement delete request created:",
+      createdRequest?.id
+    );
+
     window.alert(
       "تم إرسال طلب حذف الإعلان إلى Root Admin للمراجعة."
     );
   };
 
-  const handleDelete = async (id: string) => {
-    const announcement = announcements.find(
-      (item) => item.id === id
-    );
+  const handleDelete = async (
+    id: string
+  ) => {
+    const announcement =
+      announcements.find(
+        (item) => item.id === id
+      );
 
     if (!announcement) {
       return;
@@ -285,13 +414,32 @@ export default function AdminAnnouncements() {
     setDeletingId(id);
     setError("");
 
+    /*
+     * =======================================================
+     * SUB ADMIN
+     * =======================================================
+     */
+
     if (!isRootAdmin) {
-      await createDeleteRequest(announcement);
+      await createDeleteRequest(
+        announcement
+      );
+
       setDeletingId(null);
+
       return;
     }
 
-    const { error: deleteError } = await supabase
+    /*
+     * =======================================================
+     * ROOT ADMIN
+     * حذف مباشر
+     * =======================================================
+     */
+
+    const {
+      error: deleteError,
+    } = await supabase
       .from("announcements")
       .delete()
       .eq("id", id);
@@ -307,6 +455,7 @@ export default function AdminAnnouncements() {
       );
 
       setDeletingId(null);
+
       return;
     }
 
@@ -319,20 +468,37 @@ export default function AdminAnnouncements() {
     setDeletingId(null);
   };
 
+  /*
+   * =========================================================
+   * PROFILE CHECK
+   * =========================================================
+   */
+
   if (!profile) {
     return null;
   }
 
+  /*
+   * =========================================================
+   * ACCESS DENIED
+   * =========================================================
+   */
+
   if (!canView && !isRootAdmin) {
     return (
-      <div className="admin-page" dir="rtl">
+      <div
+        className="admin-page"
+        dir="rtl"
+      >
         <section className="admin-panel admin-panel--empty">
           <div className="admin-empty-state">
             <div className="admin-empty-state__icon">
               <ShieldCheck size={25} />
             </div>
 
-            <h3>الوصول غير متاح</h3>
+            <h3>
+              الوصول غير متاح
+            </h3>
 
             <p>
               لا تملك صلاحية الوصول إلى قسم الإعلانات.
@@ -350,11 +516,18 @@ export default function AdminAnnouncements() {
     );
   }
 
+  /*
+   * =========================================================
+   * PAGE
+   * =========================================================
+   */
+
   return (
-    <div className="admin-page" dir="rtl">
-      {/* =====================================================
-          HEADER
-      ====================================================== */}
+    <div
+      className="admin-page"
+      dir="rtl"
+    >
+      {/* HEADER */}
 
       <header className="admin-page__header">
         <div>
@@ -365,8 +538,8 @@ export default function AdminAnnouncements() {
           <h1>الإعلانات</h1>
 
           <p>
-            إدارة إعلانات المنصة وإضافة الإعلانات الجديدة أو
-            تعديلها.
+            إدارة إعلانات المنصة وإضافة الإعلانات
+            الجديدة أو تعديلها.
           </p>
         </div>
 
@@ -380,10 +553,16 @@ export default function AdminAnnouncements() {
           >
             <RefreshCw
               size={17}
-              className={loading ? "is-spinning" : ""}
+              className={
+                loading
+                  ? "is-spinning"
+                  : ""
+              }
             />
 
-            <span>تحديث</span>
+            <span>
+              تحديث
+            </span>
           </button>
 
           {canAdd && (
@@ -403,9 +582,7 @@ export default function AdminAnnouncements() {
         </div>
       </header>
 
-      {/* =====================================================
-          ERROR
-      ====================================================== */}
+      {/* ERROR */}
 
       {error && (
         <div
@@ -424,9 +601,7 @@ export default function AdminAnnouncements() {
         </div>
       )}
 
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
+      {/* CONTENT */}
 
       <section className="admin-panel">
         <div className="admin-panel__header">
@@ -449,7 +624,9 @@ export default function AdminAnnouncements() {
               type="search"
               value={search}
               onChange={(event) =>
-                setSearch(event.target.value)
+                setSearch(
+                  event.target.value
+                )
               }
               placeholder="ابحث عن إعلان..."
               aria-label="البحث عن إعلان"
@@ -457,9 +634,7 @@ export default function AdminAnnouncements() {
           </div>
         </div>
 
-        {/* ===================================================
-            LOADING
-        ==================================================== */}
+        {/* LOADING */}
 
         {loading ? (
           <div className="admin-empty-state">
@@ -470,16 +645,18 @@ export default function AdminAnnouncements() {
               />
             </div>
 
-            <h3>جارٍ تحميل الإعلانات</h3>
+            <h3>
+              جارٍ تحميل الإعلانات
+            </h3>
 
             <p>
-              يتم جلب أحدث البيانات من قاعدة البيانات.
+              يتم جلب أحدث البيانات من قاعدة
+              البيانات.
             </p>
           </div>
-        ) : filteredAnnouncements.length === 0 ? (
-          /* =================================================
-             EMPTY
-          ================================================== */
+        ) : filteredAnnouncements.length ===
+          0 ? (
+          /* EMPTY */
 
           <div className="admin-empty-state">
             <div className="admin-empty-state__icon">
@@ -502,7 +679,9 @@ export default function AdminAnnouncements() {
               <button
                 type="button"
                 className="admin-secondary-button"
-                onClick={() => setSearch("")}
+                onClick={() =>
+                  setSearch("")
+                }
               >
                 إظهار جميع الإعلانات
               </button>
@@ -522,9 +701,7 @@ export default function AdminAnnouncements() {
             ) : null}
           </div>
         ) : (
-          /* =================================================
-             LIST
-          ================================================== */
+          /* LIST */
 
           <div className="admin-list">
             {filteredAnnouncements.map(
@@ -535,7 +712,8 @@ export default function AdminAnnouncements() {
                   );
 
                 const isDeleting =
-                  deletingId === announcement.id;
+                  deletingId ===
+                  announcement.id;
 
                 return (
                   <article
@@ -550,12 +728,16 @@ export default function AdminAnnouncements() {
 
                         <div>
                           <h3>
-                            {announcement.title}
+                            {
+                              announcement.title
+                            }
                           </h3>
 
                           <div className="admin-announcement-card__meta">
                             <span>
-                              {announcement.category}
+                              {
+                                announcement.category
+                              }
                             </span>
 
                             <span>
@@ -573,7 +755,9 @@ export default function AdminAnnouncements() {
                             : "admin-status"
                         }
                       >
-                        {announcement.status}
+                        {
+                          announcement.status
+                        }
                       </span>
                     </div>
 
@@ -614,7 +798,9 @@ export default function AdminAnnouncements() {
                                 announcement.id
                               )
                             }
-                            disabled={isDeleting}
+                            disabled={
+                              isDeleting
+                            }
                             aria-label={`حذف ${announcement.title}`}
                           >
                             {isDeleting ? (

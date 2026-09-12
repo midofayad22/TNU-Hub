@@ -347,6 +347,10 @@ export default function AdminResources() {
 
   /*
    * Create action request
+   *
+   * Sub Admin:
+   * create approval request
+   * and notify all Root Admins.
    */
   const createActionRequest = async (
     userId: string,
@@ -365,13 +369,78 @@ export default function AdminResources() {
           payload,
           reason:
             action === "add"
-              ? "طلب إضافة مصدر جديد."
-              : "طلب تعديل مصدر موجود.",
+              ? `طلب إضافة مصدر: ${payload.title}`
+              : `طلب تعديل مصدر: ${payload.title}`,
           status: "pending",
         });
 
     if (requestError) {
       throw requestError;
+    }
+
+    /*
+     * Notify all Root Admins
+     */
+    const {
+      data: rootAdmins,
+      error: rootAdminsError,
+    } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "root_admin");
+
+    /*
+     * If loading Root Admins fails,
+     * the action request itself has already
+     * been created successfully.
+     *
+     * Therefore we only log the error.
+     */
+    if (rootAdminsError) {
+      console.error(
+        "Failed to load root admins for resource notification:",
+        rootAdminsError
+      );
+
+      return;
+    }
+
+    if (
+      rootAdmins &&
+      rootAdmins.length > 0
+    ) {
+      const actionLabel =
+        action === "add"
+          ? "إضافة"
+          : "تعديل";
+
+      const notifications =
+        rootAdmins.map((rootAdmin) => ({
+          user_id: rootAdmin.id,
+          title: "طلب موافقة جديد",
+          message: `قام ${
+            profile?.full_name || "المشرف"
+          } بإرسال طلب ${actionLabel} في قسم المصادر للعنصر "${payload.title}" للمراجعة.`,
+          type: "approval",
+          is_read: false,
+        }));
+
+      const {
+        error: notificationsError,
+      } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      /*
+       * Notification failure must not
+       * cancel the already-created request.
+       */
+      if (notificationsError) {
+        console.error(
+          "Failed to notify root admins about resource request:",
+          notificationsError
+        );
+      }
     }
   };
 
@@ -447,7 +516,8 @@ export default function AdminResources() {
       } else {
         /*
          * Sub Admin:
-         * create approval request.
+         * create approval request
+         * + notify Root Admins.
          */
         await createActionRequest(
           userData.user.id,
@@ -569,7 +639,8 @@ export default function AdminResources() {
       } else {
         /*
          * Sub Admin:
-         * create approval request.
+         * create approval request
+         * + notify Root Admins.
          */
         await createActionRequest(
           userData.user.id,
@@ -704,6 +775,56 @@ export default function AdminResources() {
 
         if (requestError) {
           throw requestError;
+        }
+
+        /*
+         * Notify all Root Admins
+         */
+        const {
+          data: rootAdmins,
+          error: rootAdminsError,
+        } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "root_admin");
+
+        if (rootAdminsError) {
+          console.error(
+            "Failed to load root admins for resource delete notification:",
+            rootAdminsError
+          );
+        } else if (
+          rootAdmins &&
+          rootAdmins.length > 0
+        ) {
+          const notifications =
+            rootAdmins.map((rootAdmin) => ({
+              user_id: rootAdmin.id,
+              title: "طلب موافقة جديد",
+              message: `قام ${
+                profile?.full_name || "المشرف"
+              } بإرسال طلب حذف في قسم المصادر للعنصر "${resource.title}" للمراجعة.`,
+              type: "approval",
+              is_read: false,
+            }));
+
+          const {
+            error: notificationsError,
+          } = await supabase
+            .from("notifications")
+            .insert(notifications);
+
+          /*
+           * Request was already created,
+           * so notification failure should
+           * not cancel the request.
+           */
+          if (notificationsError) {
+            console.error(
+              "Failed to notify root admins about resource delete request:",
+              notificationsError
+            );
+          }
         }
 
         setSuccess(

@@ -49,7 +49,8 @@ export default function AdminEventForm() {
   const [status, setStatus] =
     useState<EventStatus>("قادمة");
 
-  const [role, setRole] = useState<AdminRole | null>(null);
+  const [role, setRole] =
+    useState<AdminRole | null>(null);
 
   const [canView, setCanView] = useState(false);
   const [canAdd, setCanAdd] = useState(false);
@@ -472,8 +473,6 @@ export default function AdminEventForm() {
        * بيانات الفعالية
        * =====================================================
        *
-       * هذه البيانات سيتم استخدامها:
-       *
        * Root Admin:
        *   مباشرة مع events
        *
@@ -547,25 +546,79 @@ export default function AdminEventForm() {
         ? "edit"
         : "add";
 
-      const {
-        error: requestError,
-      } = await supabase
-        .from("admin_action_requests")
-        .insert({
-          admin_id: user.id,
-          section: "events",
-          action,
-          target_id:
-            isEditMode && id ? id : null,
-          payload: eventData,
-          reason: isEditMode
-            ? "طلب تعديل فعالية من Sub Admin"
-            : "طلب إضافة فعالية من Sub Admin",
-          status: "pending",
-        });
+      const { error: requestError } =
+        await supabase
+          .from("admin_action_requests")
+          .insert({
+            admin_id: user.id,
+            section: "events",
+            action,
+            target_id:
+              isEditMode && id ? id : null,
+            payload: eventData,
+            reason: isEditMode
+              ? "طلب تعديل فعالية من Sub Admin"
+              : "طلب إضافة فعالية من Sub Admin",
+            status: "pending",
+          });
 
       if (requestError) {
         throw requestError;
+      }
+
+      /*
+       * =====================================================
+       * إشعار Root Admin
+       * =====================================================
+       *
+       * بعد نجاح إنشاء الطلب، نبحث عن كل Root Admin
+       * ونرسل لهم إشعارًا بوجود طلب موافقة جديد.
+       *
+       * فشل الإشعار لا يلغي إنشاء الطلب.
+       */
+      const {
+        data: rootAdmins,
+        error: rootAdminsError,
+      } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role", "root_admin");
+
+      if (rootAdminsError) {
+        console.error(
+          "Failed to load root admins for event notification:",
+          rootAdminsError
+        );
+      } else if (
+        rootAdmins &&
+        rootAdmins.length > 0
+      ) {
+        const actionLabel =
+          action === "add"
+            ? "إضافة"
+            : "تعديل";
+
+        const notifications =
+          rootAdmins.map((rootAdmin) => ({
+            user_id: rootAdmin.id,
+            title: "طلب موافقة جديد",
+            message: `قام أحد المشرفين بإرسال طلب ${actionLabel} في قسم الفعاليات للفعالية "${trimmedTitle}" للمراجعة.`,
+            type: "approval",
+            is_read: false,
+          }));
+
+        const {
+          error: notificationsError,
+        } = await supabase
+          .from("notifications")
+          .insert(notifications);
+
+        if (notificationsError) {
+          console.error(
+            "Failed to notify root admins about event request:",
+            notificationsError
+          );
+        }
       }
 
       /*

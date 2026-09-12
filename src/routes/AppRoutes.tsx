@@ -40,6 +40,8 @@ import AdminAnnouncementForm from "../pages/Admin/AdminAnnouncementForm";
 import AdminEvents from "../pages/Admin/AdminEvents";
 import AdminEventForm from "../pages/Admin/AdminEventForm";
 
+import AdminRequests from "../pages/Admin/AdminRequests";
+
 import AdminFaculties from "../pages/Admin/AdminFaculties";
 import AdminStudents from "../pages/Admin/AdminStudents";
 import AdminResources from "../pages/Admin/AdminResources";
@@ -334,6 +336,19 @@ export default function AppRoutes() {
         element={
           <AdminPage>
             <AdminEventForm />
+          </AdminPage>
+        }
+      />
+
+      {/* =====================================================
+          ADMIN — REQUESTS
+      ====================================================== */}
+
+      <Route
+        path="/admin/requests"
+        element={
+          <AdminPage>
+            <AdminRequests />
           </AdminPage>
         }
       />

@@ -12,11 +12,21 @@ import {
   Building2,
 } from "lucide-react";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import { Link } from "react-router-dom";
 
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
+
+/* =========================================================
+  TYPES
+========================================================= */
 
 type AdminSection =
   | "announcements"
@@ -39,6 +49,11 @@ interface AdminPermission {
 interface DashboardStats {
   students: number;
   admins: number;
+  announcements: number;
+  events: number;
+  requests: number;
+  resources: number;
+  faculties: number;
 }
 
 interface DashboardCard {
@@ -50,12 +65,24 @@ interface DashboardCard {
   href?: string;
 }
 
+/* =========================================================
+  HELPERS
+========================================================= */
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat("ar-EG").format(value);
 }
 
+/* =========================================================
+  COMPONENT
+========================================================= */
+
 export default function AdminDashboard() {
   const { profile } = useAuth();
+
+  /* =======================================================
+    STATE
+  ======================================================= */
 
   const [permissions, setPermissions] = useState<
     AdminPermission[]
@@ -64,12 +91,23 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     students: 0,
     admins: 0,
+    announcements: 0,
+    events: 0,
+    requests: 0,
+    resources: 0,
+    faculties: 0,
   });
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
 
-  const isRootAdmin = profile?.role === "root_admin";
+  const isRootAdmin =
+    profile?.role === "root_admin";
+
+  /* =======================================================
+    LOAD DASHBOARD
+  ======================================================= */
 
   const loadDashboard = useCallback(async () => {
     if (!profile?.id) {
@@ -80,6 +118,10 @@ export default function AdminDashboard() {
     setError("");
 
     try {
+      /* =====================================================
+        PERMISSIONS
+      ===================================================== */
+
       const permissionsPromise = isRootAdmin
         ? Promise.resolve({
             data: [],
@@ -92,13 +134,23 @@ export default function AdminDashboard() {
             )
             .eq("admin_id", profile.id);
 
+      /* =====================================================
+        ALL DASHBOARD COUNTS
+      ===================================================== */
+
       const [
         permissionsResult,
         studentsResult,
         adminsResult,
+        announcementsResult,
+        eventsResult,
+        requestsResult,
+        resourcesResult,
+        facultiesResult,
       ] = await Promise.all([
         permissionsPromise,
 
+        /* STUDENTS */
         supabase
           .from("profiles")
           .select("id", {
@@ -107,14 +159,62 @@ export default function AdminDashboard() {
           })
           .eq("role", "student"),
 
+        /* ADMINS */
         supabase
           .from("profiles")
           .select("id", {
             count: "exact",
             head: true,
           })
-          .in("role", ["admin", "root_admin"]),
+          .in("role", [
+            "admin",
+            "root_admin",
+          ]),
+
+        /* ANNOUNCEMENTS */
+        supabase
+          .from("announcements")
+          .select("id", {
+            count: "exact",
+            head: true,
+          }),
+
+        /* EVENTS */
+        supabase
+          .from("events")
+          .select("id", {
+            count: "exact",
+            head: true,
+          }),
+
+        /* REQUESTS */
+        supabase
+          .from("requests")
+          .select("id", {
+            count: "exact",
+            head: true,
+          }),
+
+        /* RESOURCES */
+        supabase
+          .from("resources")
+          .select("id", {
+            count: "exact",
+            head: true,
+          }),
+
+        /* FACULTIES */
+        supabase
+          .from("faculties")
+          .select("id", {
+            count: "exact",
+            head: true,
+          }),
       ]);
+
+      /* =====================================================
+        ERROR CHECKING
+      ===================================================== */
 
       if (permissionsResult.error) {
         throw permissionsResult.error;
@@ -128,16 +228,54 @@ export default function AdminDashboard() {
         throw adminsResult.error;
       }
 
+      if (announcementsResult.error) {
+        throw announcementsResult.error;
+      }
+
+      if (eventsResult.error) {
+        throw eventsResult.error;
+      }
+
+      if (requestsResult.error) {
+        throw requestsResult.error;
+      }
+
+      if (resourcesResult.error) {
+        throw resourcesResult.error;
+      }
+
+      if (facultiesResult.error) {
+        throw facultiesResult.error;
+      }
+
+      /* =====================================================
+        SAVE PERMISSIONS
+      ===================================================== */
+
       setPermissions(
-        (permissionsResult.data ?? []) as AdminPermission[]
+        (permissionsResult.data ??
+          []) as AdminPermission[]
       );
+
+      /* =====================================================
+        SAVE STATS
+      ===================================================== */
 
       setStats({
         students: studentsResult.count ?? 0,
         admins: adminsResult.count ?? 0,
+        announcements:
+          announcementsResult.count ?? 0,
+        events: eventsResult.count ?? 0,
+        requests: requestsResult.count ?? 0,
+        resources: resourcesResult.count ?? 0,
+        faculties: facultiesResult.count ?? 0,
       });
     } catch (err) {
-      console.error("Admin dashboard error:", err);
+      console.error(
+        "Admin dashboard error:",
+        err
+      );
 
       setError(
         "تعذر تحميل بيانات لوحة التحكم. حاول مرة أخرى."
@@ -147,9 +285,17 @@ export default function AdminDashboard() {
     }
   }, [profile?.id, isRootAdmin]);
 
+  /* =======================================================
+    INITIAL LOAD
+  ======================================================= */
+
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  /* =======================================================
+    PERMISSIONS
+  ======================================================= */
 
   const canView = useCallback(
     (section: AdminSection) => {
@@ -181,8 +327,16 @@ export default function AdminDashboard() {
     [isRootAdmin, permissions]
   );
 
-  const dashboardCards = useMemo<DashboardCard[]>(() => {
+  /* =======================================================
+    DASHBOARD CARDS
+  ======================================================= */
+
+  const dashboardCards = useMemo<
+    DashboardCard[]
+  >(() => {
     const cards: DashboardCard[] = [];
+
+    /* STUDENTS */
 
     if (canView("students")) {
       cards.push({
@@ -191,11 +345,14 @@ export default function AdminDashboard() {
         value: loading
           ? "..."
           : formatNumber(stats.students),
-        description: "إجمالي الطلاب المسجلين",
+        description:
+          "إجمالي الطلاب المسجلين",
         icon: Users,
         href: "/admin/students",
       });
     }
+
+    /* ADMINS */
 
     if (isRootAdmin) {
       cards.push({
@@ -204,42 +361,92 @@ export default function AdminDashboard() {
         value: loading
           ? "..."
           : formatNumber(stats.admins),
-        description: "إجمالي المشرفين",
+        description:
+          "إجمالي المشرفين",
         icon: ShieldCheck,
         href: "/admin/admins",
       });
     }
 
+    /* ANNOUNCEMENTS */
+
     if (canView("announcements")) {
       cards.push({
         id: "announcements",
         label: "الإعلانات",
-        value: "—",
-        description: "بيانات الإعلانات من قسم الإدارة",
+        value: loading
+          ? "..."
+          : formatNumber(
+              stats.announcements
+            ),
+        description:
+          "إجمالي الإعلانات المنشورة",
         icon: Megaphone,
         href: "/admin/announcements",
       });
     }
 
+    /* EVENTS */
+
     if (canView("events")) {
       cards.push({
         id: "events",
         label: "الفعاليات",
-        value: "—",
-        description: "بيانات الفعاليات من قسم الإدارة",
+        value: loading
+          ? "..."
+          : formatNumber(stats.events),
+        description:
+          "إجمالي الفعاليات المضافة",
         icon: CalendarDays,
         href: "/admin/events",
       });
     }
 
+    /* REQUESTS */
+
     if (canView("requests")) {
       cards.push({
         id: "requests",
         label: "الطلبات",
-        value: "—",
-        description: "بيانات الطلبات من قسم الإدارة",
+        value: loading
+          ? "..."
+          : formatNumber(stats.requests),
+        description:
+          "إجمالي طلبات الطلاب",
         icon: ClipboardList,
         href: "/admin/requests",
+      });
+    }
+
+    /* RESOURCES */
+
+    if (canView("resources")) {
+      cards.push({
+        id: "resources",
+        label: "المصادر",
+        value: loading
+          ? "..."
+          : formatNumber(stats.resources),
+        description:
+          "إجمالي المصادر التعليمية",
+        icon: BookOpen,
+        href: "/admin/resources",
+      });
+    }
+
+    /* FACULTIES */
+
+    if (canView("faculties")) {
+      cards.push({
+        id: "faculties",
+        label: "الكليات",
+        value: loading
+          ? "..."
+          : formatNumber(stats.faculties),
+        description:
+          "إجمالي الكليات المسجلة",
+        icon: Building2,
+        href: "/admin/faculties",
       });
     }
 
@@ -248,17 +455,36 @@ export default function AdminDashboard() {
     canView,
     isRootAdmin,
     loading,
-    stats.admins,
     stats.students,
+    stats.admins,
+    stats.announcements,
+    stats.events,
+    stats.requests,
+    stats.resources,
+    stats.faculties,
   ]);
+
+  /* =======================================================
+    NO PROFILE
+  ======================================================= */
 
   if (!profile) {
     return null;
   }
 
+  /* =======================================================
+    RENDER
+  ======================================================= */
+
   return (
-    <div className="admin-page" dir="rtl">
-      {/* Header */}
+    <div
+      className="admin-page"
+      dir="rtl"
+    >
+      {/* ===================================================
+          HEADER
+      =================================================== */}
+
       <section className="admin-page__header">
         <div>
           <span className="admin-page__kicker">
@@ -267,12 +493,13 @@ export default function AdminDashboard() {
 
           <h1>
             مرحبًا بك،{" "}
-            {profile.full_name?.trim() || "المشرف"}
+            {profile.full_name?.trim() ||
+              "المشرف"}
           </h1>
 
           <p>
-            تحكم في المنصة وأدر المحتوى والخدمات الطلابية
-            من مكان واحد.
+            تحكم في المنصة وأدر المحتوى والخدمات
+            الطلابية من مكان واحد.
           </p>
         </div>
 
@@ -283,13 +510,19 @@ export default function AdminDashboard() {
               className="admin-primary-button"
             >
               <Plus size={18} />
-              <span>إضافة إعلان</span>
+
+              <span>
+                إضافة إعلان
+              </span>
             </Link>
           )}
         </div>
       </section>
 
-      {/* Error */}
+      {/* ===================================================
+          ERROR
+      =================================================== */}
+
       {error && (
         <div
           className="admin-alert admin-alert--error"
@@ -310,7 +543,10 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Stats */}
+      {/* ===================================================
+          STATS
+      =================================================== */}
+
       <section className="admin-stats-grid">
         {dashboardCards.map((card) => {
           const Icon = card.icon;
@@ -321,7 +557,9 @@ export default function AdminDashboard() {
               key={card.id}
             >
               <div className="admin-stat-card__top">
-                <span>{card.label}</span>
+                <span>
+                  {card.label}
+                </span>
 
                 <div className="admin-stat-card__icon">
                   <Icon size={19} />
@@ -333,7 +571,9 @@ export default function AdminDashboard() {
               </div>
 
               <div className="admin-stat-card__bottom">
-                <span>{card.description}</span>
+                <span>
+                  {card.description}
+                </span>
               </div>
             </article>
           );
@@ -354,7 +594,10 @@ export default function AdminDashboard() {
         })}
       </section>
 
-      {/* Empty permissions state */}
+      {/* ===================================================
+          EMPTY PERMISSIONS STATE
+      =================================================== */}
+
       {!isRootAdmin &&
         !loading &&
         permissions.length === 0 && (
@@ -362,19 +605,23 @@ export default function AdminDashboard() {
             <div className="admin-empty-state">
               <ShieldCheck size={28} />
 
-              <h2>لا توجد صلاحيات مخصصة</h2>
+              <h2>
+                لا توجد صلاحيات مخصصة
+              </h2>
 
               <p>
-                حسابك كمشرف لا يحتوي حاليًا على صلاحيات
-                للوصول إلى أقسام الإدارة.
+                حسابك كمشرف لا يحتوي حاليًا على
+                صلاحيات للوصول إلى أقسام الإدارة.
               </p>
             </div>
           </section>
         )}
 
-      {/* Main grid */}
+      {/* ===================================================
+          MAIN GRID
+      =================================================== */}
+
       <section className="admin-dashboard-grid">
-        {/* Access overview */}
         <div className="admin-panel">
           <div className="admin-panel__header">
             <div>
@@ -382,7 +629,9 @@ export default function AdminDashboard() {
                 الوصول
               </span>
 
-              <h2>الأقسام المتاحة لك</h2>
+              <h2>
+                الأقسام المتاحة لك
+              </h2>
             </div>
 
             {isRootAdmin && (
@@ -432,7 +681,9 @@ export default function AdminDashboard() {
               },
             ].map((item) => {
               const Icon = item.icon;
-              const allowed = canView(item.id);
+
+              const allowed =
+                canView(item.id);
 
               if (!allowed) {
                 return (
@@ -444,9 +695,13 @@ export default function AdminDashboard() {
                       <Icon size={18} />
                     </div>
 
-                    <span>{item.label}</span>
+                    <span>
+                      {item.label}
+                    </span>
 
-                    <small>غير متاح</small>
+                    <small>
+                      غير متاح
+                    </small>
                   </div>
                 );
               }
@@ -461,7 +716,9 @@ export default function AdminDashboard() {
                     <Icon size={18} />
                   </div>
 
-                  <span>{item.label}</span>
+                  <span>
+                    {item.label}
+                  </span>
 
                   <ArrowLeft size={15} />
                 </Link>

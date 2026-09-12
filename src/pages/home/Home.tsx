@@ -20,11 +20,11 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { useProfile } from "../../context/useProfile";
-
 import { supabase } from "../../lib/supabase";
 
-import { announcements } from "../../data/announcements";
-import { events } from "../../data/events";
+/* ============================================================
+   TYPES
+============================================================ */
 
 interface HomeRequest {
   id: number | string;
@@ -32,6 +32,42 @@ interface HomeRequest {
   title: string;
   category: string;
   description: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface HomeTarget {
+  type?: "all" | "program" | "faculty" | "year";
+  value?: string;
+  faculty?: string;
+  program?: string;
+  academicYear?: string;
+}
+
+interface HomeAnnouncement {
+  id: number | string;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  target?: HomeTarget;
+  featured: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface HomeEvent {
+  id: number | string;
+  title: string;
+  category: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  capacity: number | string;
+  target?: HomeTarget;
   status: string;
   created_at: string;
   updated_at: string;
@@ -47,6 +83,16 @@ interface HomeSearchResult {
   searchableText: string;
 }
 
+interface StudentProfileData {
+  faculty: string;
+  program: string;
+  academicYear: string;
+}
+
+/* ============================================================
+   REQUEST STATUS
+============================================================ */
+
 const requestStatusIcons: Record<string, typeof Clock3> = {
   "قيد الانتظار": Clock3,
   "قيد المراجعة": Clock3,
@@ -58,6 +104,11 @@ const requestStatusColors: Record<string, string> = {
   "قيد المراجعة": "info",
   "تم الحل": "success",
 };
+
+/* ============================================================
+   QUICK ACTIONS
+   Static navigation metadata only.
+============================================================ */
 
 const quickActions = [
   {
@@ -102,7 +153,10 @@ const normalizeArabic = (value: string) => {
     .trim();
 };
 
-const getFirstString = (row: Record<string, unknown>, keys: string[]) => {
+const getFirstString = (
+  row: Record<string, unknown>,
+  keys: string[],
+) => {
   for (const key of keys) {
     const value = row[key];
 
@@ -120,10 +174,202 @@ const getFirstString = (row: Record<string, unknown>, keys: string[]) => {
 
 const getRowSearchText = (row: Record<string, unknown>) => {
   return Object.values(row)
-    .filter((value) => typeof value === "string" || typeof value === "number")
+    .filter(
+      (value) =>
+        typeof value === "string" || typeof value === "number",
+    )
     .map((value) => String(value))
     .join(" ");
 };
+
+/* ============================================================
+   TARGET HELPERS
+============================================================ */
+
+const parseTarget = (value: unknown): HomeTarget | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === "object") {
+    return value as HomeTarget;
+  }
+
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    if (parsed && typeof parsed === "object") {
+      return parsed as HomeTarget;
+    }
+  } catch {
+    // Legacy string target.
+  }
+
+  if (trimmed === "جميع الطلاب") {
+    return {
+      type: "all",
+    };
+  }
+
+  /*
+   * Old data may have stored the target directly
+   * as the program/faculty/year string.
+   *
+   * The current admin system stores structured JSON,
+   * but this keeps old records working.
+   */
+  return {
+    type: "program",
+    value: trimmed,
+  };
+};
+
+const getTargetValue = (target?: HomeTarget) => {
+  if (!target) {
+    return "";
+  }
+
+  return (
+    target.value?.trim() ||
+    target.program?.trim() ||
+    target.faculty?.trim() ||
+    target.academicYear?.trim() ||
+    ""
+  );
+};
+
+const matchesTarget = (
+  target: HomeTarget | undefined,
+  profile: StudentProfileData,
+) => {
+  /*
+   * No target = general content.
+   */
+  if (!target) {
+    return true;
+  }
+
+  /*
+   * Everyone.
+   */
+  if (target.type === "all") {
+    return true;
+  }
+
+  /*
+   * New structured target.
+   */
+  if (target.type === "program") {
+    return (
+      getTargetValue(target) !== "" &&
+      normalizeArabic(getTargetValue(target)) ===
+        normalizeArabic(profile.program)
+    );
+  }
+
+  if (target.type === "faculty") {
+    return (
+      getTargetValue(target) !== "" &&
+      normalizeArabic(getTargetValue(target)) ===
+        normalizeArabic(profile.faculty)
+    );
+  }
+
+  if (target.type === "year") {
+    return (
+      getTargetValue(target) !== "" &&
+      normalizeArabic(getTargetValue(target)) ===
+        normalizeArabic(profile.academicYear)
+    );
+  }
+
+  /*
+   * Legacy target shape.
+   */
+  if (
+    target.program &&
+    normalizeArabic(target.program) !==
+      normalizeArabic(profile.program)
+  ) {
+    return false;
+  }
+
+  if (
+    target.faculty &&
+    normalizeArabic(target.faculty) !==
+      normalizeArabic(profile.faculty)
+  ) {
+    return false;
+  }
+
+  if (
+    target.academicYear &&
+    normalizeArabic(target.academicYear) !==
+      normalizeArabic(profile.academicYear)
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const isPersonalizedTarget = (target?: HomeTarget) => {
+  if (!target) {
+    return false;
+  }
+
+  /*
+   * "all" is visible to everyone, but it is not
+   * personalized content.
+   */
+  if (target.type === "all") {
+    return false;
+  }
+
+  return true;
+};
+
+/* ============================================================
+   CONTENT VISIBILITY
+============================================================ */
+
+const isPublishedContent = (status: unknown) => {
+  if (typeof status !== "string") {
+    return true;
+  }
+
+  const normalized = normalizeArabic(status);
+
+  /*
+   * We only hide explicit non-public states.
+   * If the table uses another valid status, we don't
+   * accidentally hide the content.
+   */
+  const hiddenStatuses = [
+    "مسودة",
+    "draft",
+    "archived",
+    "مؤرشف",
+    "deleted",
+    "محذوف",
+  ];
+
+  return !hiddenStatuses.includes(normalized);
+};
+
+/* ============================================================
+   SEARCH RESULT BUILDER
+============================================================ */
 
 const createSearchResult = (
   row: Record<string, unknown>,
@@ -137,7 +383,11 @@ const createSearchResult = (
     row.event_id ??
     row.resource_id;
 
-  if (rawId === undefined || rawId === null || rawId === "") {
+  if (
+    rawId === undefined ||
+    rawId === null ||
+    rawId === ""
+  ) {
     return null;
   }
 
@@ -170,7 +420,6 @@ const createSearchResult = (
       ]) || "كلية أكاديمية";
 
     category = "كلية";
-
     to = `/faculties/${id}`;
   }
 
@@ -196,7 +445,10 @@ const createSearchResult = (
 
     const facultyId = row.faculty_id ?? row.facultyId;
 
-    if (typeof facultyId === "string" || typeof facultyId === "number") {
+    if (
+      typeof facultyId === "string" ||
+      typeof facultyId === "number"
+    ) {
       to = `/faculties/${facultyId}`;
     } else {
       to = "/faculties";
@@ -205,43 +457,76 @@ const createSearchResult = (
 
   if (type === "announcement") {
     title =
-      getFirstString(row, ["title", "name", "announcement_title"]) || "إعلان";
+      getFirstString(row, [
+        "title",
+        "name",
+        "announcement_title",
+      ]) || "إعلان";
 
     description =
-      getFirstString(row, ["description", "content", "body", "summary"]) ||
-      "إعلان طلابي";
+      getFirstString(row, [
+        "description",
+        "content",
+        "body",
+        "summary",
+      ]) || "إعلان طلابي";
 
-    category = getFirstString(row, ["category", "type"]) || "إعلان";
+    category =
+      getFirstString(row, ["category", "type"]) || "إعلان";
 
     to = `/announcements/${id}`;
   }
 
   if (type === "event") {
-    title = getFirstString(row, ["title", "name", "event_title"]) || "فعالية";
+    title =
+      getFirstString(row, [
+        "title",
+        "name",
+        "event_title",
+      ]) || "فعالية";
 
     description =
-      getFirstString(row, ["description", "content", "body", "summary"]) ||
-      "فعالية طلابية";
+      getFirstString(row, [
+        "description",
+        "content",
+        "body",
+        "summary",
+      ]) || "فعالية طلابية";
 
-    category = getFirstString(row, ["category", "type"]) || "فعالية";
+    category =
+      getFirstString(row, ["category", "type"]) || "فعالية";
 
     to = `/events/${id}`;
   }
 
   if (type === "resource") {
-    title = getFirstString(row, ["title", "name", "resource_title"]) || "مصدر";
+    title =
+      getFirstString(row, [
+        "title",
+        "name",
+        "resource_title",
+      ]) || "مصدر";
 
     description =
-      getFirstString(row, ["description", "content", "summary"]) ||
-      "مصدر تعليمي";
+      getFirstString(row, [
+        "description",
+        "content",
+        "summary",
+      ]) || "مصدر تعليمي";
 
-    category = getFirstString(row, ["category", "type"]) || "مصدر";
+    category =
+      getFirstString(row, ["category", "type"]) || "مصدر";
 
     to = "/resources";
   }
 
   const searchableText = normalizeArabic(
-    [title, description, category, getRowSearchText(row)].join(" "),
+    [
+      title,
+      description,
+      category,
+      getRowSearchText(row),
+    ].join(" "),
   );
 
   return {
@@ -255,7 +540,13 @@ const createSearchResult = (
   };
 };
 
-const getSearchIcon = (type: HomeSearchResult["type"]) => {
+/* ============================================================
+   SEARCH ICONS
+============================================================ */
+
+const getSearchIcon = (
+  type: HomeSearchResult["type"],
+) => {
   if (type === "faculty") {
     return Users;
   }
@@ -275,7 +566,9 @@ const getSearchIcon = (type: HomeSearchResult["type"]) => {
   return BookOpen;
 };
 
-const getSearchTypeLabel = (type: HomeSearchResult["type"]) => {
+const getSearchTypeLabel = (
+  type: HomeSearchResult["type"],
+) => {
   if (type === "faculty") {
     return "كلية";
   }
@@ -295,38 +588,85 @@ const getSearchTypeLabel = (type: HomeSearchResult["type"]) => {
   return "مصدر";
 };
 
+/* ============================================================
+   HOME COMPONENT
+============================================================ */
+
 export default function Home() {
   const navigate = useNavigate();
   const { profile } = useProfile();
 
+  /* ============================================================
+     SEARCH STATE
+  ============================================================ */
+
   const [searchValue, setSearchValue] = useState("");
-
-  const [searchResults, setSearchResults] = useState<HomeSearchResult[]>([]);
-
+  const [searchResults, setSearchResults] = useState<
+    HomeSearchResult[]
+  >([]);
   const [searchLoading, setSearchLoading] = useState(false);
-
-  const [searchError, setSearchError] = useState<string | null>(null);
-
-  const [searchIndex, setSearchIndex] = useState<HomeSearchResult[]>([]);
-
-  const [searchIndexLoaded, setSearchIndexLoaded] = useState(false);
-
+  const [searchError, setSearchError] = useState<string | null>(
+    null,
+  );
+  const [searchIndex, setSearchIndex] = useState<
+    HomeSearchResult[]
+  >([]);
+  const [searchIndexLoaded, setSearchIndexLoaded] =
+    useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+
+  /* ============================================================
+     AUTH
+  ============================================================ */
 
   const [userId, setUserId] = useState<string | null>(null);
 
-  const [studentRequests, setStudentRequests] = useState<HomeRequest[]>([]);
+  /* ============================================================
+     HOME CONTENT
+  ============================================================ */
+
+  const [homeAnnouncements, setHomeAnnouncements] = useState<
+    HomeAnnouncement[]
+  >([]);
+
+  const [homeEvents, setHomeEvents] = useState<HomeEvent[]>([]);
+
+  const [contentLoading, setContentLoading] = useState(true);
+
+  const [contentError, setContentError] = useState<string | null>(
+    null,
+  );
+
+  /* ============================================================
+     REQUESTS
+  ============================================================ */
+
+  const [studentRequests, setStudentRequests] = useState<
+    HomeRequest[]
+  >([]);
 
   const [requestsLoading, setRequestsLoading] = useState(true);
 
-  const [requestsError, setRequestsError] = useState<string | null>(null);
+  const [requestsError, setRequestsError] = useState<
+    string | null
+  >(null);
+
+  /* ============================================================
+     PROFILE
+  ============================================================ */
 
   const studentName = profile.name.trim() || "الطالب";
 
+  const studentProfile: StudentProfileData = {
+    faculty: profile.faculty.trim(),
+    program: profile.program.trim(),
+    academicYear: profile.academicYear.trim(),
+  };
+
   const hasAcademicData =
-    profile.faculty.trim() !== "" &&
-    profile.program.trim() !== "" &&
-    profile.academicYear.trim() !== "";
+    studentProfile.faculty !== "" &&
+    studentProfile.program !== "" &&
+    studentProfile.academicYear !== "";
 
   /* ============================================================
      LOAD AUTHENTICATED USER
@@ -336,9 +676,6 @@ export default function Home() {
     let mounted = true;
 
     const loadCurrentUser = async () => {
-      setRequestsLoading(true);
-      setRequestsError(null);
-
       try {
         const {
           data: { user },
@@ -350,40 +687,263 @@ export default function Home() {
         }
 
         if (error) {
-          console.error("Failed to get current user:", error);
+          console.error(
+            "Failed to get current user:",
+            error,
+          );
 
           setUserId(null);
-          setStudentRequests([]);
-          setRequestsError("تعذر التحقق من حسابك.");
-
           return;
         }
 
         if (!user) {
           setUserId(null);
-          setStudentRequests([]);
           return;
         }
 
         setUserId(user.id);
       } catch (error) {
-        console.error("Unexpected authentication error:", error);
+        console.error(
+          "Unexpected authentication error:",
+          error,
+        );
 
         if (!mounted) {
           return;
         }
 
         setUserId(null);
-        setStudentRequests([]);
-        setRequestsError("حدث خطأ أثناء التحقق من الحساب.");
-      } finally {
-        if (mounted) {
-          setRequestsLoading(false);
-        }
       }
     };
 
     void loadCurrentUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /* ============================================================
+     LOAD HOME CONTENT FROM SUPABASE
+  ============================================================ */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadHomeContent = async () => {
+      setContentLoading(true);
+      setContentError(null);
+
+      try {
+        const [
+          announcementsResponse,
+          eventsResponse,
+        ] = await Promise.all([
+          supabase
+            .from("announcements")
+            .select(
+              "id, title, category, content, target, status, created_by, created_at, updated_at, date",
+            )
+            .order("created_at", {
+              ascending: false,
+            })
+            .limit(100),
+
+          supabase
+            .from("events")
+            .select(
+              "id, title, category, description, date, time, location, capacity, target, status, created_by, created_at, updated_at",
+            )
+            .order("created_at", {
+              ascending: false,
+            })
+            .limit(100),
+        ]);
+
+        if (!mounted) {
+          return;
+        }
+
+        if (announcementsResponse.error) {
+          console.error(
+            "Failed to load announcements:",
+            announcementsResponse.error,
+          );
+        }
+
+        if (eventsResponse.error) {
+          console.error(
+            "Failed to load events:",
+            eventsResponse.error,
+          );
+        }
+
+        if (
+          announcementsResponse.error &&
+          eventsResponse.error
+        ) {
+          setContentError(
+            "تعذر تحميل الإعلانات والفعاليات حاليًا.",
+          );
+          setHomeAnnouncements([]);
+          setHomeEvents([]);
+          return;
+        }
+
+        /* ======================================================
+           ANNOUNCEMENTS
+        ====================================================== */
+
+        const announcementsData =
+          (announcementsResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
+
+        const normalizedAnnouncements: HomeAnnouncement[] =
+          announcementsData
+            .filter((row) =>
+              isPublishedContent(row.status),
+            )
+            .map((row) => {
+              const rawId = row.id;
+
+              const id =
+                typeof rawId === "string" ||
+                typeof rawId === "number"
+                  ? rawId
+                  : String(rawId ?? "");
+
+              const target = parseTarget(row.target);
+
+              return {
+                id,
+                title:
+                  getFirstString(row, ["title"]) ||
+                  "إعلان طلابي",
+                description:
+                  getFirstString(row, [
+                    "content",
+                    "description",
+                  ]) || "إعلان طلابي",
+                category:
+                  getFirstString(row, ["category"]) ||
+                  "إعلان",
+                date:
+                  getFirstString(row, [
+                    "date",
+                    "created_at",
+                  ]) || "",
+                target,
+                featured:
+                  Boolean(row.featured) ||
+                  Boolean(row.is_featured),
+                status:
+                  getFirstString(row, ["status"]) ||
+                  "منشور",
+                created_at:
+                  getFirstString(row, ["created_at"]),
+                updated_at:
+                  getFirstString(row, ["updated_at"]),
+              };
+            });
+
+        /* ======================================================
+           EVENTS
+        ====================================================== */
+
+        const eventsData =
+          (eventsResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
+
+        const normalizedEvents: HomeEvent[] =
+          eventsData
+            .filter((row) =>
+              isPublishedContent(row.status),
+            )
+            .map((row) => {
+              const rawId = row.id;
+
+              const id =
+                typeof rawId === "string" ||
+                typeof rawId === "number"
+                  ? rawId
+                  : String(rawId ?? "");
+
+              const capacityValue = row.capacity;
+
+              let capacity: number | string = "";
+
+              if (
+                typeof capacityValue === "number" &&
+                Number.isFinite(capacityValue)
+              ) {
+                capacity = capacityValue;
+              } else if (
+                typeof capacityValue === "string"
+              ) {
+                capacity = capacityValue.trim();
+              }
+
+              return {
+                id,
+                title:
+                  getFirstString(row, ["title"]) ||
+                  "فعالية طلابية",
+                category:
+                  getFirstString(row, ["category"]) ||
+                  "فعالية",
+                description:
+                  getFirstString(row, [
+                    "description",
+                  ]) || "فعالية طلابية",
+                date:
+                  getFirstString(row, ["date"]) || "",
+                time:
+                  getFirstString(row, ["time"]) || "",
+                location:
+                  getFirstString(row, [
+                    "location",
+                  ]) || "سيتم الإعلان عن المكان",
+                capacity,
+                target: parseTarget(row.target),
+                status:
+                  getFirstString(row, ["status"]) ||
+                  "منشور",
+                created_at:
+                  getFirstString(row, ["created_at"]),
+                updated_at:
+                  getFirstString(row, ["updated_at"]),
+              };
+            });
+
+        setHomeAnnouncements(normalizedAnnouncements);
+        setHomeEvents(normalizedEvents);
+      } catch (error) {
+        console.error(
+          "Failed to load Home content:",
+          error,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        setHomeAnnouncements([]);
+        setHomeEvents([]);
+        setContentError(
+          "حدث خطأ أثناء تحميل محتوى الصفحة.",
+        );
+      } finally {
+        if (mounted) {
+          setContentLoading(false);
+        }
+      }
+    };
+
+    void loadHomeContent();
 
     return () => {
       mounted = false;
@@ -413,15 +973,30 @@ export default function Home() {
           eventsResponse,
           resourcesResponse,
         ] = await Promise.all([
-          supabase.from("faculties").select("*").limit(100),
+          supabase
+            .from("faculties")
+            .select("*")
+            .limit(100),
 
-          supabase.from("programs").select("*").limit(200),
+          supabase
+            .from("programs")
+            .select("*")
+            .limit(200),
 
-          supabase.from("announcements").select("*").limit(100),
+          supabase
+            .from("announcements")
+            .select("*")
+            .limit(100),
 
-          supabase.from("events").select("*").limit(100),
+          supabase
+            .from("events")
+            .select("*")
+            .limit(100),
 
-          supabase.from("resources").select("*").limit(100),
+          supabase
+            .from("resources")
+            .select("*")
+            .limit(100),
         ]);
 
         if (!mounted) {
@@ -437,70 +1012,135 @@ export default function Home() {
         ].filter(Boolean);
 
         if (errors.length > 0) {
-          console.error("Some search data failed to load:", errors);
+          console.error(
+            "Some search data failed to load:",
+            errors,
+          );
         }
 
         const results: HomeSearchResult[] = [];
 
-        const facultyRows = (facultiesResponse.data ?? []) as Record<
-          string,
-          unknown
-        >[];
+        const facultyRows =
+          (facultiesResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
 
-        const programRows = (programsResponse.data ?? []) as Record<
-          string,
-          unknown
-        >[];
+        const programRows =
+          (programsResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
 
-        const announcementRows = (announcementsResponse.data ?? []) as Record<
-          string,
-          unknown
-        >[];
+        const announcementRows =
+          (announcementsResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
 
-        const eventRows = (eventsResponse.data ?? []) as Record<
-          string,
-          unknown
-        >[];
+        const eventRows =
+          (eventsResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
 
-        const resourceRows = (resourcesResponse.data ?? []) as Record<
-          string,
-          unknown
-        >[];
+        const resourceRows =
+          (resourcesResponse.data ?? []) as Record<
+            string,
+            unknown
+          >[];
+
+        /* ======================================================
+           FACULTIES
+        ====================================================== */
 
         facultyRows.forEach((row) => {
-          const result = createSearchResult(row, "faculty");
+          const result = createSearchResult(
+            row,
+            "faculty",
+          );
 
           if (result) {
             results.push(result);
           }
         });
+
+        /* ======================================================
+           PROGRAMS
+        ====================================================== */
 
         programRows.forEach((row) => {
-          const result = createSearchResult(row, "program");
+          const result = createSearchResult(
+            row,
+            "program",
+          );
 
           if (result) {
             results.push(result);
           }
         });
 
-        announcementRows.forEach((row) => {
-          const result = createSearchResult(row, "announcement");
+        /* ======================================================
+           ANNOUNCEMENTS
+           Only published + visible to current student.
+        ====================================================== */
 
-          if (result) {
-            results.push(result);
-          }
-        });
+        announcementRows
+          .filter((row) =>
+            isPublishedContent(row.status),
+          )
+          .filter((row) =>
+            matchesTarget(
+              parseTarget(row.target),
+              studentProfile,
+            ),
+          )
+          .forEach((row) => {
+            const result = createSearchResult(
+              row,
+              "announcement",
+            );
 
-        eventRows.forEach((row) => {
-          const result = createSearchResult(row, "event");
+            if (result) {
+              results.push(result);
+            }
+          });
 
-          if (result) {
-            results.push(result);
-          }
-        });
+        /* ======================================================
+           EVENTS
+           Only public/published + visible to current student.
+        ====================================================== */
+
+        eventRows
+          .filter((row) =>
+            isPublishedContent(row.status),
+          )
+          .filter((row) =>
+            matchesTarget(
+              parseTarget(row.target),
+              studentProfile,
+            ),
+          )
+          .forEach((row) => {
+            const result = createSearchResult(
+              row,
+              "event",
+            );
+
+            if (result) {
+              results.push(result);
+            }
+          });
+
+        /* ======================================================
+           RESOURCES
+        ====================================================== */
 
         resourceRows.forEach((row) => {
-          const result = createSearchResult(row, "resource");
+          const result = createSearchResult(
+            row,
+            "resource",
+          );
 
           if (result) {
             results.push(result);
@@ -510,14 +1150,19 @@ export default function Home() {
         setSearchIndex(results);
         setSearchIndexLoaded(true);
       } catch (error) {
-        console.error("Failed to load global search index:", error);
+        console.error(
+          "Failed to load global search index:",
+          error,
+        );
 
         if (!mounted) {
           return;
         }
 
         setSearchIndex([]);
-        setSearchError("تعذر تحميل نتائج البحث حاليًا.");
+        setSearchError(
+          "تعذر تحميل نتائج البحث حاليًا.",
+        );
       } finally {
         if (mounted) {
           setSearchLoading(false);
@@ -532,7 +1177,13 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [searchValue, searchIndexLoaded]);
+  }, [
+    searchValue,
+    searchIndexLoaded,
+    studentProfile.faculty,
+    studentProfile.program,
+    studentProfile.academicYear,
+  ]);
 
   /* ============================================================
      LIVE SEARCH
@@ -553,15 +1204,23 @@ export default function Home() {
 
     const timer = window.setTimeout(() => {
       const filtered = searchIndex
-        .filter((result) => result.searchableText.includes(query))
+        .filter((result) =>
+          result.searchableText.includes(query),
+        )
         .sort((first, second) => {
-          const firstTitle = normalizeArabic(first.title);
+          const firstTitle = normalizeArabic(
+            first.title,
+          );
 
-          const secondTitle = normalizeArabic(second.title);
+          const secondTitle = normalizeArabic(
+            second.title,
+          );
 
-          const firstStarts = firstTitle.startsWith(query);
+          const firstStarts =
+            firstTitle.startsWith(query);
 
-          const secondStarts = secondTitle.startsWith(query);
+          const secondStarts =
+            secondTitle.startsWith(query);
 
           if (firstStarts && !secondStarts) {
             return -1;
@@ -581,7 +1240,11 @@ export default function Home() {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [searchValue, searchIndex, searchIndexLoaded]);
+  }, [
+    searchValue,
+    searchIndex,
+    searchIndexLoaded,
+  ]);
 
   /* ============================================================
      LOAD STUDENT REQUESTS
@@ -617,24 +1280,36 @@ export default function Home() {
         }
 
         if (error) {
-          console.error("Failed to load student requests:", error);
+          console.error(
+            "Failed to load student requests:",
+            error,
+          );
 
           setStudentRequests([]);
-          setRequestsError("تعذر تحميل طلباتك حاليًا.");
+          setRequestsError(
+            "تعذر تحميل طلباتك حاليًا.",
+          );
 
           return;
         }
 
-        setStudentRequests((data ?? []) as HomeRequest[]);
+        setStudentRequests(
+          (data ?? []) as HomeRequest[],
+        );
       } catch (error) {
-        console.error("Unexpected error while loading requests:", error);
+        console.error(
+          "Unexpected error while loading requests:",
+          error,
+        );
 
         if (!mounted) {
           return;
         }
 
         setStudentRequests([]);
-        setRequestsError("حدث خطأ أثناء تحميل طلباتك.");
+        setRequestsError(
+          "حدث خطأ أثناء تحميل طلباتك.",
+        );
       } finally {
         if (mounted) {
           setRequestsLoading(false);
@@ -650,63 +1325,47 @@ export default function Home() {
   }, [userId]);
 
   /* ============================================================
-     PERSONALIZATION
-  ============================================================ */
-
-  const matchesTarget = (
-    target:
-      | {
-          faculty?: string;
-          program?: string;
-          academicYear?: string;
-        }
-      | undefined,
-  ) => {
-    if (!target) {
-      return true;
-    }
-
-    if (target.faculty && target.faculty !== profile.faculty) {
-      return false;
-    }
-
-    if (target.program && target.program !== profile.program) {
-      return false;
-    }
-
-    if (target.academicYear && target.academicYear !== profile.academicYear) {
-      return false;
-    }
-
-    return true;
-  };
-
-  /* ============================================================
-     PERSONALIZED ANNOUNCEMENTS
+     PERSONALIZED CONTENT
   ============================================================ */
 
   const relevantAnnouncements = useMemo(() => {
-    return announcements.filter((announcement) =>
-      matchesTarget(announcement.target),
+    return homeAnnouncements.filter((announcement) =>
+      matchesTarget(
+        announcement.target,
+        studentProfile,
+      ),
     );
-  }, [profile.faculty, profile.program, profile.academicYear]);
+  }, [
+    homeAnnouncements,
+    studentProfile.faculty,
+    studentProfile.program,
+    studentProfile.academicYear,
+  ]);
 
   const personalizedAnnouncements = useMemo(() => {
     return relevantAnnouncements.filter((announcement) =>
-      Boolean(announcement.target),
+      isPersonalizedTarget(announcement.target),
     );
   }, [relevantAnnouncements]);
 
-  /* ============================================================
-     PERSONALIZED EVENTS
-  ============================================================ */
-
   const relevantEvents = useMemo(() => {
-    return events.filter((event) => matchesTarget(event.target));
-  }, [profile.faculty, profile.program, profile.academicYear]);
+    return homeEvents.filter((event) =>
+      matchesTarget(
+        event.target,
+        studentProfile,
+      ),
+    );
+  }, [
+    homeEvents,
+    studentProfile.faculty,
+    studentProfile.program,
+    studentProfile.academicYear,
+  ]);
 
   const personalizedEvents = useMemo(() => {
-    return relevantEvents.filter((event) => Boolean(event.target));
+    return relevantEvents.filter((event) =>
+      isPersonalizedTarget(event.target),
+    );
   }, [relevantEvents]);
 
   /* ============================================================
@@ -714,12 +1373,14 @@ export default function Home() {
   ============================================================ */
 
   const latestAnnouncements = useMemo(() => {
-    const personalized = relevantAnnouncements.filter((announcement) =>
-      Boolean(announcement.target),
-    );
+    const personalized =
+      relevantAnnouncements.filter((announcement) =>
+        isPersonalizedTarget(announcement.target),
+      );
 
     const general = relevantAnnouncements.filter(
-      (announcement) => !announcement.target,
+      (announcement) =>
+        !isPersonalizedTarget(announcement.target),
     );
 
     return [...personalized, ...general].slice(0, 3);
@@ -727,9 +1388,10 @@ export default function Home() {
 
   const featuredAnnouncement =
     personalizedAnnouncements[0] ??
-    relevantAnnouncements.find((announcement) => announcement.featured) ??
-    relevantAnnouncements[0] ??
-    announcements[0];
+    relevantAnnouncements.find(
+      (announcement) => announcement.featured,
+    ) ??
+    relevantAnnouncements[0];
 
   /* ============================================================
      EVENTS TO SHOW
@@ -737,19 +1399,20 @@ export default function Home() {
 
   const latestEvents = useMemo(() => {
     const personalized = relevantEvents.filter((event) =>
-      Boolean(event.target),
+      isPersonalizedTarget(event.target),
     );
 
-    const general = relevantEvents.filter((event) => !event.target);
+    const general = relevantEvents.filter(
+      (event) =>
+        !isPersonalizedTarget(event.target),
+    );
 
     return [...personalized, ...general].slice(0, 3);
   }, [relevantEvents]);
 
   const featuredEvent =
     personalizedEvents[0] ??
-    relevantEvents.find((event) => event.featured) ??
-    relevantEvents[0] ??
-    events[0];
+    relevantEvents[0];
 
   /* ============================================================
      SEARCH ACTIONS
@@ -764,16 +1427,20 @@ export default function Home() {
 
     setSearchFocused(false);
 
-    navigate(`/explore?search=${encodeURIComponent(value)}`);
+    navigate(
+      `/explore?search=${encodeURIComponent(value)}`,
+    );
   };
 
-  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
+  const handleSearchKeyDown = (
+    keyboardEvent: KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (keyboardEvent.key === "Enter") {
+      keyboardEvent.preventDefault();
       handleSearch();
     }
 
-    if (event.key === "Escape") {
+    if (keyboardEvent.key === "Escape") {
       setSearchFocused(false);
     }
   };
@@ -782,7 +1449,8 @@ export default function Home() {
     setSearchFocused(false);
   };
 
-  const showSearchPanel = searchFocused && Boolean(searchValue.trim());
+  const showSearchPanel =
+    searchFocused && Boolean(searchValue.trim());
 
   /* ============================================================
      RENDER
@@ -795,7 +1463,10 @@ export default function Home() {
       ===================================================== */}
 
       <section className="home-hero">
-        <div className="home-hero__background" aria-hidden="true">
+        <div
+          className="home-hero__background"
+          aria-hidden="true"
+        >
           <span className="home-hero__orb home-hero__orb--one" />
           <span className="home-hero__orb home-hero__orb--two" />
           <span className="home-hero__grid" />
@@ -830,17 +1501,26 @@ export default function Home() {
 
           <div
             className={`home-search-wrapper${
-              showSearchPanel ? " home-search-wrapper--open" : ""
+              showSearchPanel
+                ? " home-search-wrapper--open"
+                : ""
             }`}
           >
             <div className="home-search">
-              <Search size={19} aria-hidden="true" />
+              <Search
+                size={19}
+                aria-hidden="true"
+              />
 
               <input
                 type="search"
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                onFocus={() => setSearchFocused(true)}
+                onChange={(event) =>
+                  setSearchValue(event.target.value)
+                }
+                onFocus={() =>
+                  setSearchFocused(true)
+                }
                 onKeyDown={handleSearchKeyDown}
                 placeholder="ابحث عن فعالية، إعلان، كلية أو خدمة..."
                 aria-label="البحث في المنصة"
@@ -871,61 +1551,92 @@ export default function Home() {
                 className="home-search-results"
                 role="listbox"
               >
-                {searchLoading && !searchIndexLoaded && (
-                  <div className="home-search-results__state">
-                    <Loader2 size={19} className="spin" />
+                {searchLoading &&
+                  !searchIndexLoaded && (
+                    <div className="home-search-results__state">
+                      <Loader2
+                        size={19}
+                        className="spin"
+                      />
 
-                    <span>جاري البحث...</span>
-                  </div>
-                )}
+                      <span>
+                        جاري البحث...
+                      </span>
+                    </div>
+                  )}
 
                 {!searchLoading &&
                   searchIndexLoaded &&
                   searchResults.length > 0 && (
                     <>
                       <div className="home-search-results__header">
-                        <span>نتائج البحث</span>
+                        <span>
+                          نتائج البحث
+                        </span>
 
-                        <small>{searchResults.length} نتيجة</small>
+                        <small>
+                          {searchResults.length} نتيجة
+                        </small>
                       </div>
 
                       <div className="home-search-results__list">
-                        {searchResults.map((result) => {
-                          const Icon = getSearchIcon(result.type);
+                        {searchResults.map(
+                          (result) => {
+                            const Icon =
+                              getSearchIcon(
+                                result.type,
+                              );
 
-                          return (
-                            <Link
-                              key={`${result.type}-${result.id}`}
-                              to={result.to}
-                              className="home-search-result"
-                              role="option"
-                              onClick={handleSearchResultClick}
-                            >
-                              <span className="home-search-result__icon">
-                                <Icon size={18} />
-                              </span>
+                            return (
+                              <Link
+                                key={`${result.type}-${result.id}`}
+                                to={result.to}
+                                className="home-search-result"
+                                role="option"
+                                onClick={
+                                  handleSearchResultClick
+                                }
+                              >
+                                <span className="home-search-result__icon">
+                                  <Icon
+                                    size={18}
+                                  />
+                                </span>
 
-                              <span className="home-search-result__content">
-                                <strong>{result.title}</strong>
+                                <span className="home-search-result__content">
+                                  <strong>
+                                    {result.title}
+                                  </strong>
 
-                                <span>{result.description}</span>
-                              </span>
+                                  <span>
+                                    {
+                                      result.description
+                                    }
+                                  </span>
+                                </span>
 
-                              <span className="home-search-result__meta">
-                                {result.category ||
-                                  getSearchTypeLabel(result.type)}
+                                <span className="home-search-result__meta">
+                                  {result.category ||
+                                    getSearchTypeLabel(
+                                      result.type,
+                                    )}
 
-                                <ChevronLeft size={16} />
-                              </span>
-                            </Link>
-                          );
-                        })}
+                                  <ChevronLeft
+                                    size={16}
+                                  />
+                                </span>
+                              </Link>
+                            );
+                          },
+                        )}
                       </div>
 
                       <button
                         type="button"
                         className="home-search-results__all"
-                        onClick={handleSearch}
+                        onClick={
+                          handleSearch
+                        }
                       >
                         عرض كل النتائج في الاستكشاف
                         <ArrowLeft size={15} />
@@ -935,34 +1646,43 @@ export default function Home() {
 
                 {!searchLoading &&
                   searchIndexLoaded &&
-                  searchResults.length === 0 && (
+                  searchResults.length === 0 &&
+                  !searchError && (
                     <div className="home-search-results__state home-search-results__state--empty">
                       <Search size={20} />
 
-                      <strong>لا توجد نتائج مطابقة</strong>
+                      <strong>
+                        لا توجد نتائج مطابقة
+                      </strong>
 
                       <span>
-                        جرّب كلمة أخرى أو ابحث باسم كلية أو برنامج أو فعالية.
+                        جرّب كلمة أخرى أو ابحث باسم كلية
+                        أو برنامج أو فعالية.
                       </span>
                     </div>
                   )}
 
-                {searchError && !searchLoading && (
-                  <div className="home-search-results__state home-search-results__state--error">
-                    <Search size={20} />
+                {searchError &&
+                  !searchLoading && (
+                    <div className="home-search-results__state home-search-results__state--error">
+                      <Search size={20} />
 
-                    <span>{searchError}</span>
+                      <span>
+                        {searchError}
+                      </span>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchIndexLoaded(false);
-                      }}
-                    >
-                      إعادة المحاولة
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchIndexLoaded(
+                            false,
+                          );
+                        }}
+                      >
+                        إعادة المحاولة
+                      </button>
+                    </div>
+                  )}
               </div>
             )}
           </div>
@@ -970,11 +1690,17 @@ export default function Home() {
           <div className="home-hero__suggestions">
             <span>اقتراحات:</span>
 
-            <Link to="/events">الفعاليات</Link>
+            <Link to="/events">
+              الفعاليات
+            </Link>
 
-            <Link to="/announcements">الإعلانات</Link>
+            <Link to="/announcements">
+              الإعلانات
+            </Link>
 
-            <Link to="/help">المساعدة</Link>
+            <Link to="/help">
+              المساعدة
+            </Link>
           </div>
         </div>
 
@@ -986,7 +1712,9 @@ export default function Home() {
           </div>
 
           <div className="home-hero__statement">
-            <span className="home-hero__number">01</span>
+            <span className="home-hero__number">
+              01
+            </span>
 
             <h2>
               تجربة جامعية
@@ -994,7 +1722,9 @@ export default function Home() {
               أفضل تبدأ من هنا.
             </h2>
 
-            <p>مكان واحد يجمع أهم ما يخص حياتك الجامعية.</p>
+            <p>
+              مكان واحد يجمع أهم ما يخص حياتك الجامعية.
+            </p>
           </div>
 
           <div className="home-hero__aside-bottom">
@@ -1018,18 +1748,25 @@ export default function Home() {
             </div>
 
             <div className="home-personalized__content">
-              <strong>محتوى مختار لك</strong>
+              <strong>
+                محتوى مختار لك
+              </strong>
 
               <p>
-                خصصنا لك بعض الإعلانات والفعاليات بناءً على بياناتك الأكاديمية.
+                خصصنا لك بعض الإعلانات والفعاليات بناءً
+                على بياناتك الأكاديمية.
               </p>
             </div>
 
             <div className="home-personalized__stats">
-              {personalizedAnnouncements.length > 0 && (
+              {personalizedAnnouncements.length >
+                0 && (
                 <span>
                   <Bell size={15} />
-                  {personalizedAnnouncements.length} إعلانات
+                  {
+                    personalizedAnnouncements.length
+                  }{" "}
+                  إعلانات
                 </span>
               )}
 
@@ -1050,45 +1787,63 @@ export default function Home() {
       <section className="home-section home-section--actions">
         <div className="home-section__heading">
           <div>
-            <span className="section-overline">ابدأ من هنا</span>
+            <span className="section-overline">
+              ابدأ من هنا
+            </span>
 
-            <h2>ماذا تحتاج اليوم؟</h2>
+            <h2>
+              ماذا تحتاج اليوم؟
+            </h2>
           </div>
 
-          <p>اختصارات سريعة لأكثر الخدمات استخدامًا.</p>
+          <p>
+            اختصارات سريعة لأكثر الخدمات استخدامًا.
+          </p>
         </div>
 
         <div className="home-actions-grid">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
+          {quickActions.map(
+            (action, index) => {
+              const Icon = action.icon;
 
-            return (
-              <Link
-                to={action.to}
-                className="home-action"
-                key={action.title}
-                style={
-                  {
-                    "--home-action-index": index,
-                  } as CSSProperties
-                }
-              >
-                <span className="home-action__number">0{index + 1}</span>
+              return (
+                <Link
+                  to={action.to}
+                  className="home-action"
+                  key={action.title}
+                  style={
+                    {
+                      "--home-action-index":
+                        index,
+                    } as CSSProperties
+                  }
+                >
+                  <span className="home-action__number">
+                    0{index + 1}
+                  </span>
 
-                <div className="home-action__icon">
-                  <Icon size={21} />
-                </div>
+                  <div className="home-action__icon">
+                    <Icon size={21} />
+                  </div>
 
-                <div className="home-action__content">
-                  <h3>{action.title}</h3>
+                  <div className="home-action__content">
+                    <h3>
+                      {action.title}
+                    </h3>
 
-                  <p>{action.description}</p>
-                </div>
+                    <p>
+                      {action.description}
+                    </p>
+                  </div>
 
-                <ArrowUpLeft className="home-action__arrow" size={19} />
-              </Link>
-            );
-          })}
+                  <ArrowUpLeft
+                    className="home-action__arrow"
+                    size={19}
+                  />
+                </Link>
+              );
+            },
+          )}
         </div>
       </section>
 
@@ -1105,48 +1860,105 @@ export default function Home() {
           <div className="home-section__heading home-section__heading--compact">
             <div>
               <span className="section-overline">
-                {personalizedAnnouncements.length > 0
+                {personalizedAnnouncements.length >
+                0
                   ? "مخصص لك"
                   : "ابقَ على اطلاع"}
               </span>
 
               <h2>
-                {personalizedAnnouncements.length > 0
+                {personalizedAnnouncements.length >
+                0
                   ? "إعلانات تهمك"
                   : "آخر الإعلانات"}
               </h2>
             </div>
 
-            <Link to="/announcements" className="text-link">
+            <Link
+              to="/announcements"
+              className="text-link"
+            >
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
           </div>
 
-          {featuredAnnouncement ? (
+          {contentLoading ? (
+            <div className="home-content-empty">
+              <Loader2
+                size={22}
+                className="spin"
+              />
+
+              <h3>
+                جاري تحميل الإعلانات...
+              </h3>
+
+              <p>
+                لحظات ونظهر لك أحدث الإعلانات.
+              </p>
+            </div>
+          ) : contentError &&
+            homeAnnouncements.length === 0 ? (
+            <div className="home-content-empty">
+              <Bell size={22} />
+
+              <h3>
+                تعذر تحميل الإعلانات
+              </h3>
+
+              <p>
+                {contentError}
+              </p>
+
+              <Link
+                to="/announcements"
+                className="button button--primary"
+              >
+                عرض الإعلانات
+                <ArrowLeft size={16} />
+              </Link>
+            </div>
+          ) : featuredAnnouncement ? (
             <Link
               to={`/announcements/${featuredAnnouncement.id}`}
               className="featured-announcement"
             >
               <div className="featured-announcement__top">
                 <span className="content-label">
-                  {featuredAnnouncement.category}
+                  {
+                    featuredAnnouncement.category
+                  }
                 </span>
 
-                <time>{featuredAnnouncement.date}</time>
+                <time>
+                  {
+                    featuredAnnouncement.date
+                  }
+                </time>
               </div>
 
               <div className="featured-announcement__icon">
                 <Bell size={21} />
               </div>
 
-              {featuredAnnouncement.target && (
-                <span className="home-personal-badge">مقترح لك</span>
+              {isPersonalizedTarget(
+                featuredAnnouncement.target,
+              ) && (
+                <span className="home-personal-badge">
+                  مقترح لك
+                </span>
               )}
 
-              <h3>{featuredAnnouncement.title}</h3>
+              <h3>
+                {featuredAnnouncement.title}
+              </h3>
 
-              <p>{featuredAnnouncement.description}</p>
+              <p>
+                {
+                  featuredAnnouncement.description
+                }
+              </p>
 
               <span className="featured-announcement__link">
                 قراءة الإعلان
@@ -1157,49 +1969,69 @@ export default function Home() {
             <div className="home-content-empty">
               <Bell size={22} />
 
-              <h3>لا توجد إعلانات حاليًا</h3>
+              <h3>
+                لا توجد إعلانات حاليًا
+              </h3>
 
-              <p>سنعرض أحدث الإعلانات هنا فور توفرها.</p>
+              <p>
+                سنعرض أحدث الإعلانات هنا فور توفرها.
+              </p>
             </div>
           )}
 
           <div className="content-list">
             {latestAnnouncements
               .filter(
-                (announcement) => announcement.id !== featuredAnnouncement?.id,
+                (announcement) =>
+                  announcement.id !==
+                  featuredAnnouncement?.id,
               )
-              .map((announcement, index) => (
-                <Link
-                  to={`/announcements/${announcement.id}`}
-                  className="content-list__item"
-                  key={announcement.id}
-                  style={
-                    {
-                      "--home-list-index": index,
-                    } as CSSProperties
-                  }
-                >
-                  <div className="content-list__icon">
-                    <FileText size={18} />
-                  </div>
+              .map(
+                (
+                  announcement,
+                  index,
+                ) => (
+                  <Link
+                    to={`/announcements/${announcement.id}`}
+                    className="content-list__item"
+                    key={announcement.id}
+                    style={
+                      {
+                        "--home-list-index":
+                          index,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="content-list__icon">
+                      <FileText size={18} />
+                    </div>
 
-                  <div>
-                    <h3>{announcement.title}</h3>
+                    <div>
+                      <h3>
+                        {announcement.title}
+                      </h3>
 
-                    <span>
-                      {announcement.category}
-                      {" · "}
-                      {announcement.date}
-                    </span>
-                  </div>
+                      <span>
+                        {
+                          announcement.category
+                        }
+                        {" · "}
+                        {announcement.date}
+                      </span>
+                    </div>
 
-                  {announcement.target && (
-                    <small className="home-list-badge">لك</small>
-                  )}
+                    {isPersonalizedTarget(
+                      announcement.target,
+                    ) && (
+                      <small className="home-list-badge">
+                        لك
+                      </small>
+                    )}
 
-                  <ChevronLeft size={17} />
-                </Link>
-              ))}
+                    <ChevronLeft size={17} />
+                  </Link>
+                ),
+              )}
           </div>
         </section>
 
@@ -1211,7 +2043,9 @@ export default function Home() {
           <div className="home-section__heading home-section__heading--compact">
             <div>
               <span className="section-overline">
-                {personalizedEvents.length > 0 ? "مخصص لك" : "شارك معنا"}
+                {personalizedEvents.length > 0
+                  ? "مخصص لك"
+                  : "شارك معنا"}
               </span>
 
               <h2>
@@ -1221,44 +2055,105 @@ export default function Home() {
               </h2>
             </div>
 
-            <Link to="/events" className="text-link">
+            <Link
+              to="/events"
+              className="text-link"
+            >
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
           </div>
 
-          {featuredEvent ? (
-            <Link to={`/events/${featuredEvent.id}`} className="featured-event">
+          {contentLoading ? (
+            <div className="home-content-empty">
+              <Loader2
+                size={22}
+                className="spin"
+              />
+
+              <h3>
+                جاري تحميل الفعاليات...
+              </h3>
+
+              <p>
+                لحظات ونظهر لك أحدث الفعاليات.
+              </p>
+            </div>
+          ) : contentError &&
+            homeEvents.length === 0 ? (
+            <div className="home-content-empty">
+              <CalendarDays size={22} />
+
+              <h3>
+                تعذر تحميل الفعاليات
+              </h3>
+
+              <p>
+                {contentError}
+              </p>
+
+              <Link
+                to="/events"
+                className="button button--primary"
+              >
+                عرض الفعاليات
+                <ArrowLeft size={16} />
+              </Link>
+            </div>
+          ) : featuredEvent ? (
+            <Link
+              to={`/events/${featuredEvent.id}`}
+              className="featured-event"
+            >
               <div className="featured-event__date">
                 <CalendarDays size={19} />
 
-                <span>{featuredEvent.date}</span>
+                <span>
+                  {featuredEvent.date}
+                </span>
               </div>
 
-              <span className="content-label">{featuredEvent.category}</span>
+              <span className="content-label">
+                {featuredEvent.category}
+              </span>
 
-              {featuredEvent.target && (
-                <span className="home-personal-badge">مقترحة لك</span>
+              {isPersonalizedTarget(
+                featuredEvent.target,
+              ) && (
+                <span className="home-personal-badge">
+                  مقترحة لك
+                </span>
               )}
 
-              <h3>{featuredEvent.title}</h3>
+              <h3>
+                {featuredEvent.title}
+              </h3>
 
-              <p>{featuredEvent.description}</p>
+              <p>
+                {featuredEvent.description}
+              </p>
 
               <div className="featured-event__meta">
                 <span>
                   <Clock3 size={15} />
-                  {featuredEvent.time}
+                  {featuredEvent.time ||
+                    "سيتم تحديد الوقت"}
                 </span>
 
-                <span>
-                  <Users size={15} />
-                  {featuredEvent.attendees} طالب
-                </span>
+                {featuredEvent.capacity !==
+                  "" && (
+                  <span>
+                    <Users size={15} />
+                    {featuredEvent.capacity} طالب
+                  </span>
+                )}
               </div>
 
               <div className="featured-event__footer">
-                <span>{featuredEvent.location}</span>
+                <span>
+                  {featuredEvent.location ||
+                    "سيتم الإعلان عن المكان"}
+                </span>
 
                 <span>
                   التفاصيل
@@ -1270,47 +2165,64 @@ export default function Home() {
             <div className="home-content-empty">
               <CalendarDays size={22} />
 
-              <h3>لا توجد فعاليات حاليًا</h3>
+              <h3>
+                لا توجد فعاليات حاليًا
+              </h3>
 
-              <p>سنعرض الفعاليات القادمة هنا فور إضافتها.</p>
+              <p>
+                سنعرض الفعاليات القادمة هنا فور إضافتها.
+              </p>
             </div>
           )}
 
           <div className="content-list">
             {latestEvents
-              .filter((event) => event.id !== featuredEvent?.id)
-              .map((event, index) => (
-                <Link
-                  to={`/events/${event.id}`}
-                  className="content-list__item"
-                  key={event.id}
-                  style={
-                    {
-                      "--home-list-index": index,
-                    } as CSSProperties
-                  }
-                >
-                  <div className="content-list__icon">
-                    <CalendarDays size={18} />
-                  </div>
+              .filter(
+                (event) =>
+                  event.id !==
+                  featuredEvent?.id,
+              )
+              .map(
+                (event, index) => (
+                  <Link
+                    to={`/events/${event.id}`}
+                    className="content-list__item"
+                    key={event.id}
+                    style={
+                      {
+                        "--home-list-index":
+                          index,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="content-list__icon">
+                      <CalendarDays size={18} />
+                    </div>
 
-                  <div>
-                    <h3>{event.title}</h3>
+                    <div>
+                      <h3>
+                        {event.title}
+                      </h3>
 
-                    <span>
-                      {event.date}
-                      {" · "}
-                      {event.time}
-                    </span>
-                  </div>
+                      <span>
+                        {event.date}
+                        {" · "}
+                        {event.time}
+                      </span>
+                    </div>
 
-                  {event.target && (
-                    <small className="home-list-badge">لك</small>
-                  )}
+                    {isPersonalizedTarget(
+                      event.target,
+                    ) && (
+                      <small className="home-list-badge">
+                        لك
+                      </small>
+                    )}
 
-                  <ChevronLeft size={17} />
-                </Link>
-              ))}
+                    <ChevronLeft size={17} />
+                  </Link>
+                ),
+              )}
           </div>
         </section>
       </div>
@@ -1322,12 +2234,19 @@ export default function Home() {
       <section className="home-section home-requests-section">
         <div className="home-section__heading home-section__heading--compact">
           <div>
-            <span className="section-overline">المتابعة</span>
+            <span className="section-overline">
+              المتابعة
+            </span>
 
-            <h2>طلباتك الأخيرة</h2>
+            <h2>
+              طلباتك الأخيرة
+            </h2>
           </div>
 
-          <Link to="/requests" className="text-link">
+          <Link
+            to="/requests"
+            className="text-link"
+          >
             كل الطلبات
             <ChevronLeft size={16} />
           </Link>
@@ -1335,21 +2254,35 @@ export default function Home() {
 
         {requestsLoading ? (
           <div className="home-content-empty home-content-empty--requests">
-            <Loader2 size={22} className="spin" />
+            <Loader2
+              size={22}
+              className="spin"
+            />
 
-            <h3>جاري تحميل طلباتك...</h3>
+            <h3>
+              جاري تحميل طلباتك...
+            </h3>
 
-            <p>لحظات ونظهر لك أحدث طلباتك.</p>
+            <p>
+              لحظات ونظهر لك أحدث طلباتك.
+            </p>
           </div>
         ) : requestsError ? (
           <div className="home-content-empty home-content-empty--requests">
             <ClipboardList size={22} />
 
-            <h3>تعذر تحميل الطلبات</h3>
+            <h3>
+              تعذر تحميل الطلبات
+            </h3>
 
-            <p>{requestsError}</p>
+            <p>
+              {requestsError}
+            </p>
 
-            <Link to="/requests" className="button button--primary">
+            <Link
+              to="/requests"
+              className="button button--primary"
+            >
               عرض الطلبات
               <ArrowLeft size={16} />
             </Link>
@@ -1358,68 +2291,103 @@ export default function Home() {
           <div className="home-content-empty home-content-empty--requests">
             <ClipboardList size={22} />
 
-            <h3>سجّل الدخول لمتابعة طلباتك</h3>
+            <h3>
+              سجّل الدخول لمتابعة طلباتك
+            </h3>
 
-            <p>بعد تسجيل الدخول ستتمكن من إنشاء طلباتك ومتابعتها من هنا.</p>
+            <p>
+              بعد تسجيل الدخول ستتمكن من إنشاء طلباتك
+              ومتابعتها من هنا.
+            </p>
 
-            <Link to="/login" className="button button--primary">
+            <Link
+              to="/login"
+              className="button button--primary"
+            >
               تسجيل الدخول
               <ArrowLeft size={16} />
             </Link>
           </div>
         ) : studentRequests.length > 0 ? (
           <div className="home-requests">
-            {studentRequests.map((request, index) => {
-              const StatusIcon = requestStatusIcons[request.status] ?? Clock3;
+            {studentRequests.map(
+              (request, index) => {
+                const StatusIcon =
+                  requestStatusIcons[
+                    request.status
+                  ] ?? Clock3;
 
-              const statusColor = requestStatusColors[request.status] ?? "info";
+                const statusColor =
+                  requestStatusColors[
+                    request.status
+                  ] ?? "info";
 
-              return (
-                <Link
-                  to={`/requests/${request.id}`}
-                  className="home-request"
-                  key={request.id}
-                  style={
-                    {
-                      "--home-request-index": index,
-                    } as CSSProperties
-                  }
-                >
-                  <div className="home-request__main">
-                    <div className="home-request__icon">
-                      <ClipboardList size={18} />
-                    </div>
-
-                    <div>
-                      <span className="home-request__id">#{request.id}</span>
-
-                      <h3>{request.title}</h3>
-
-                      <span>{request.category}</span>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`home-request__status home-request__status--${statusColor}`}
+                return (
+                  <Link
+                    to={`/requests/${request.id}`}
+                    className="home-request"
+                    key={request.id}
+                    style={
+                      {
+                        "--home-request-index":
+                          index,
+                      } as CSSProperties
+                    }
                   >
-                    <StatusIcon size={15} />
-                    {request.status}
-                  </div>
+                    <div className="home-request__main">
+                      <div className="home-request__icon">
+                        <ClipboardList
+                          size={18}
+                        />
+                      </div>
 
-                  <ChevronLeft size={17} />
-                </Link>
-              );
-            })}
+                      <div>
+                        <span className="home-request__id">
+                          #{request.id}
+                        </span>
+
+                        <h3>
+                          {request.title}
+                        </h3>
+
+                        <span>
+                          {request.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`home-request__status home-request__status--${statusColor}`}
+                    >
+                      <StatusIcon
+                        size={15}
+                      />
+                      {request.status}
+                    </div>
+
+                    <ChevronLeft size={17} />
+                  </Link>
+                );
+              },
+            )}
           </div>
         ) : (
           <div className="home-content-empty home-content-empty--requests">
             <ClipboardList size={22} />
 
-            <h3>لا توجد طلبات بعد</h3>
+            <h3>
+              لا توجد طلبات بعد
+            </h3>
 
-            <p>عندما ترسل طلب مساعدة، ستتمكن من متابعته من هنا.</p>
+            <p>
+              عندما ترسل طلب مساعدة، ستتمكن من متابعته
+              من هنا.
+            </p>
 
-            <Link to="/requests/new" className="button button--primary">
+            <Link
+              to="/requests/new"
+              className="button button--primary"
+            >
               إنشاء طلب
               <ArrowLeft size={16} />
             </Link>
@@ -1436,22 +2404,35 @@ export default function Home() {
           className="home-final__mark"
           aria-label="Tanta University Students Union"
         >
-          <span className="home-final__mark-main">TNU</span>
-          <span className="home-final__mark-sub">STUDENTS</span>
+          <span className="home-final__mark-main">
+            TNU
+          </span>
+
+          <span className="home-final__mark-sub">
+            STUDENTS
+          </span>
         </div>
 
         <div className="home-final__content">
-          <span>تحتاج إلى مساعدة؟</span>
+          <span>
+            تحتاج إلى مساعدة؟
+          </span>
 
-          <h2>لا تعرف من أين تبدأ؟</h2>
+          <h2>
+            لا تعرف من أين تبدأ؟
+          </h2>
 
           <p>
-            مركز المساعدة موجود لمساعدتك في الوصول إلى المكان المناسب أو إرسال
-            طلب لفريق اتحاد الطلاب.
+            مركز المساعدة موجود لمساعدتك في الوصول إلى
+            المكان المناسب أو إرسال طلب لفريق اتحاد
+            الطلاب.
           </p>
         </div>
 
-        <Link to="/help" className="home-final__button">
+        <Link
+          to="/help"
+          className="home-final__button"
+        >
           ابدأ من مركز المساعدة
           <ArrowLeft size={17} />
         </Link>

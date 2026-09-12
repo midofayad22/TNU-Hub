@@ -61,10 +61,7 @@ type RequestSection =
   | "resources"
   | "events";
 
-const sectionLabels: Record<
-  RequestSection,
-  string
-> = {
+const sectionLabels: Record<RequestSection, string> = {
   all: "كل الأقسام",
   faculties: "الكليات والبرامج",
   requests: "طلبات الطلاب",
@@ -82,10 +79,7 @@ const actionLabels: Record<
   delete: "حذف",
 };
 
-const statusLabels: Record<
-  RequestStatus,
-  string
-> = {
+const statusLabels: Record<RequestStatus, string> = {
   all: "الكل",
   pending: "قيد المراجعة",
   approved: "تمت الموافقة",
@@ -112,30 +106,23 @@ function getStatusLabel(
 
 function formatDate(value: string) {
   try {
-    return new Intl.DateTimeFormat(
-      "ar-EG",
-      {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }
-    ).format(new Date(value));
+    return new Intl.DateTimeFormat("ar-EG", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
   } catch {
     return value;
   }
 }
 
-function getEntity(
-  request: AdminActionRequest
-) {
+function getEntity(request: AdminActionRequest) {
   const payload = request.payload;
 
   if (!payload) {
     return null;
   }
 
-  if (
-    typeof payload.entity === "string"
-  ) {
+  if (typeof payload.entity === "string") {
     return payload.entity;
   }
 
@@ -147,8 +134,7 @@ function getEntity(
   }
 
   if (
-    typeof payload.faculty_id ===
-      "string" &&
+    typeof payload.faculty_id === "string" &&
     request.section === "faculties"
   ) {
     return "program";
@@ -157,8 +143,7 @@ function getEntity(
   if (
     request.section === "faculties" &&
     typeof payload.name === "string" &&
-    typeof payload.description ===
-      "string" &&
+    typeof payload.description === "string" &&
     "icon" in payload
   ) {
     return "faculty";
@@ -167,39 +152,24 @@ function getEntity(
   return null;
 }
 
-function getRequestTitle(
-  request: AdminActionRequest
-) {
+function getRequestTitle(request: AdminActionRequest) {
   const payload = request.payload;
   const entity = getEntity(request);
 
-  if (
-    entity === "faculty" &&
-    payload
-  ) {
+  if (entity === "faculty" && payload) {
     if (
       payload.faculty &&
-      typeof payload.faculty ===
-        "object"
+      typeof payload.faculty === "object"
     ) {
       const faculty =
-        payload.faculty as Record<
-          string,
-          unknown
-        >;
+        payload.faculty as Record<string, unknown>;
 
-      if (
-        typeof faculty.name ===
-        "string"
-      ) {
+      if (typeof faculty.name === "string") {
         return faculty.name;
       }
     }
 
-    if (
-      typeof payload.name ===
-      "string"
-    ) {
+    if (typeof payload.name === "string") {
       return payload.name;
     }
   }
@@ -207,24 +177,21 @@ function getRequestTitle(
   if (
     entity === "program" &&
     payload &&
-    typeof payload.name ===
-      "string"
+    typeof payload.name === "string"
   ) {
     return payload.name;
   }
 
   if (
     payload &&
-    typeof payload.title ===
-      "string"
+    typeof payload.title === "string"
   ) {
     return payload.title;
   }
 
   if (
     payload &&
-    typeof payload.name ===
-      "string"
+    typeof payload.name === "string"
   ) {
     return payload.name;
   }
@@ -238,28 +205,21 @@ export default function AdminApprovals() {
   const { profile } = useAuth();
 
   const [requests, setRequests] =
-    useState<AdminActionRequest[]>(
-      []
-    );
+    useState<AdminActionRequest[]>([]);
 
   const [admins, setAdmins] =
-    useState<
-      Record<string, RequestAdmin>
-    >({});
+    useState<Record<string, RequestAdmin>>({});
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
   const [
     processingId,
     setProcessingId,
   ] = useState<number | null>(null);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [success, setSuccess] =
-    useState("");
+  const [success, setSuccess] = useState("");
 
   const [statusFilter, setStatusFilter] =
     useState<RequestStatus>("pending");
@@ -268,9 +228,7 @@ export default function AdminApprovals() {
     useState<RequestSection>("all");
 
   const [selectedRequest, setSelectedRequest] =
-    useState<AdminActionRequest | null>(
-      null
-    );
+    useState<AdminActionRequest | null>(null);
 
   const isRootAdmin =
     profile?.role === "root_admin";
@@ -309,12 +267,9 @@ export default function AdminApprovals() {
         }
 
         const loadedRequests =
-          (data ??
-            []) as AdminActionRequest[];
+          (data ?? []) as AdminActionRequest[];
 
-        setRequests(
-          loadedRequests
-        );
+        setRequests(loadedRequests);
 
         const adminIds = Array.from(
           new Set(
@@ -351,12 +306,12 @@ export default function AdminApprovals() {
           RequestAdmin
         > = {};
 
-        (
-          adminProfiles ?? []
-        ).forEach((admin) => {
-          adminMap[admin.id] =
-            admin as RequestAdmin;
-        });
+        (adminProfiles ?? []).forEach(
+          (admin) => {
+            adminMap[admin.id] =
+              admin as RequestAdmin;
+          }
+        );
 
         setAdmins(adminMap);
       } catch (err) {
@@ -383,31 +338,26 @@ export default function AdminApprovals() {
     void loadRequests();
   }, [profile?.id, loadRequests]);
 
-  const filteredRequests =
-    useMemo(() => {
-      return requests.filter(
-        (request) => {
-          const matchesStatus =
-            statusFilter === "all" ||
-            request.status ===
-              statusFilter;
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const matchesStatus =
+        statusFilter === "all" ||
+        request.status === statusFilter;
 
-          const matchesSection =
-            sectionFilter === "all" ||
-            request.section ===
-              sectionFilter;
+      const matchesSection =
+        sectionFilter === "all" ||
+        request.section === sectionFilter;
 
-          return (
-            matchesStatus &&
-            matchesSection
-          );
-        }
+      return (
+        matchesStatus &&
+        matchesSection
       );
-    }, [
-      requests,
-      statusFilter,
-      sectionFilter,
-    ]);
+    });
+  }, [
+    requests,
+    statusFilter,
+    sectionFilter,
+  ]);
 
   const pendingCount = useMemo(() => {
     return requests.filter(
@@ -440,398 +390,189 @@ export default function AdminApprovals() {
     );
   };
 
-  const getPayloadForOperation =
-    (
-      request: AdminActionRequest
-    ) => {
-      if (!request.payload) {
-        return {};
-      }
+  const getPayloadForOperation = (
+    request: AdminActionRequest
+  ) => {
+    if (!request.payload) {
+      return {};
+    }
 
-      const payload = {
-        ...request.payload,
-      };
-
-      delete payload.entity;
-
-      return payload;
+    const payload = {
+      ...request.payload,
     };
 
-  const executeFacultyRequest =
-    async (
-      request: AdminActionRequest
-    ) => {
-      const payload =
-        request.payload ?? {};
+    delete payload.entity;
 
-      const entity =
-        getEntity(request);
+    return payload;
+  };
 
-      if (entity === "faculty") {
+  const executeFacultyRequest = async (
+    request: AdminActionRequest
+  ) => {
+    const payload =
+      request.payload ?? {};
+
+    const entity = getEntity(request);
+
+    if (entity === "faculty") {
+      if (request.action === "delete") {
+        let facultyData:
+          | Record<string, unknown>
+          | null = null;
+
+        let programsData:
+          | Array<Record<string, unknown>>
+          | [] = [];
+
         if (
-          request.action ===
-          "delete"
+          payload.faculty &&
+          typeof payload.faculty === "object"
         ) {
-          let facultyData:
-            | Record<
+          facultyData =
+            payload.faculty as Record<
+              string,
+              unknown
+            >;
+        } else {
+          facultyData = {
+            id: request.target_id,
+            name:
+              typeof payload.name ===
+              "string"
+                ? payload.name
+                : "",
+            description:
+              typeof payload.description ===
+              "string"
+                ? payload.description
+                : "",
+            icon:
+              typeof payload.icon ===
+              "string"
+                ? payload.icon
+                : "",
+          };
+        }
+
+        if (
+          Array.isArray(
+            payload.programs
+          )
+        ) {
+          programsData =
+            payload.programs.filter(
+              (
+                program
+              ): program is Record<
                 string,
                 unknown
-              >
-            | null = null;
-
-          let programsData:
-            | Array<
-                Record<
-                  string,
-                  unknown
-                >
-              >
-            | [] = [];
-
-          if (
-            payload.faculty &&
-            typeof payload.faculty ===
-              "object"
-          ) {
-            facultyData =
-              payload.faculty as Record<
-                string,
-                unknown
-              >;
-          } else {
-            facultyData = {
-              id:
-                request.target_id,
-              name:
-                typeof payload.name ===
-                "string"
-                  ? payload.name
-                  : "",
-              description:
-                typeof payload.description ===
-                "string"
-                  ? payload.description
-                  : "",
-              icon:
-                typeof payload.icon ===
-                "string"
-                  ? payload.icon
-                  : "",
-            };
-          }
-
-          if (
-            Array.isArray(
-              payload.programs
-            )
-          ) {
-            programsData =
-              payload.programs.filter(
-                (
-                  program
-                ): program is Record<
-                  string,
-                  unknown
-                > =>
-                  Boolean(
-                    program &&
-                      typeof program ===
-                        "object"
-                  )
-              );
-          }
-
-          const facultyId =
-            typeof facultyData.id ===
-            "string"
-              ? facultyData.id
-              : request.target_id;
-
-          if (!facultyId) {
-            throw new Error(
-              "لم يتم العثور على معرّف الكلية."
-            );
-          }
-
-          if (
-            programsData.length >
-            0
-          ) {
-            const programIds =
-              programsData
-                .map(
-                  (program) =>
-                    program.id
+              > =>
+                Boolean(
+                  program &&
+                    typeof program ===
+                      "object"
                 )
-                .filter(
-                  (
-                    id
-                  ): id is string =>
-                    typeof id ===
-                    "string"
-                );
-
-            if (
-              programIds.length >
-              0
-            ) {
-              const {
-                error:
-                  programsDeleteError,
-              } = await supabase
-                .from("programs")
-                .delete()
-                .in(
-                  "id",
-                  programIds
-                );
-
-              if (
-                programsDeleteError
-              ) {
-                throw programsDeleteError;
-              }
-            }
-          }
-
-          const {
-            error:
-              facultyDeleteError,
-          } = await supabase
-            .from("faculties")
-            .delete()
-            .eq(
-              "id",
-              facultyId
             );
+        }
+
+        const facultyId =
+          typeof facultyData.id ===
+          "string"
+            ? facultyData.id
+            : request.target_id;
+
+        if (!facultyId) {
+          throw new Error(
+            "لم يتم العثور على معرّف الكلية."
+          );
+        }
+
+        if (
+          programsData.length > 0
+        ) {
+          const programIds =
+            programsData
+              .map(
+                (program) =>
+                  program.id
+              )
+              .filter(
+                (
+                  id
+                ): id is string =>
+                  typeof id ===
+                  "string"
+              );
 
           if (
-            facultyDeleteError
+            programIds.length > 0
           ) {
-            throw facultyDeleteError;
-          }
-
-          return;
-        }
-
-        const facultyPayload =
-          getPayloadForOperation(
-            request
-          );
-
-        delete facultyPayload.id;
-
-        if (
-          request.action === "add"
-        ) {
-          const facultyId =
-            typeof request.payload
-              ?.id === "string"
-              ? request.payload.id
-              : request.target_id;
-
-          if (!facultyId) {
-            throw new Error(
-              "لم يتم العثور على معرّف الكلية."
-            );
-          }
-
-          const { error } =
-            await supabase
-              .from("faculties")
-              .insert({
-                id: facultyId,
-                ...facultyPayload,
-              });
-
-          if (error) {
-            throw error;
-          }
-
-          return;
-        }
-
-        if (
-          request.action ===
-          "edit"
-        ) {
-          if (!request.target_id) {
-            throw new Error(
-              "لم يتم العثور على الكلية المطلوب تعديلها."
-            );
-          }
-
-          const { error } =
-            await supabase
-              .from("faculties")
-              .update(
-                facultyPayload
-              )
-              .eq(
-                "id",
-                request.target_id
-              );
-
-          if (error) {
-            throw error;
-          }
-        }
-
-        return;
-      }
-
-      if (entity === "program") {
-        const programPayload =
-          getPayloadForOperation(
-            request
-          );
-
-        delete programPayload.id;
-
-        if (
-          request.action === "add"
-        ) {
-          const programId =
-            typeof request.payload
-              ?.id === "string"
-              ? request.payload.id
-              : request.target_id;
-
-          if (!programId) {
-            throw new Error(
-              "لم يتم العثور على معرّف البرنامج."
-            );
-          }
-
-          const { error } =
-            await supabase
-              .from("programs")
-              .insert({
-                id: programId,
-                ...programPayload,
-              });
-
-          if (error) {
-            throw error;
-          }
-
-          return;
-        }
-
-        if (
-          request.action ===
-          "edit"
-        ) {
-          if (!request.target_id) {
-            throw new Error(
-              "لم يتم العثور على البرنامج المطلوب تعديله."
-            );
-          }
-
-          const { error } =
-            await supabase
-              .from("programs")
-              .update(
-                programPayload
-              )
-              .eq(
-                "id",
-                request.target_id
-              );
-
-          if (error) {
-            throw error;
-          }
-
-          return;
-        }
-
-        if (
-          request.action ===
-          "delete"
-        ) {
-          if (!request.target_id) {
-            throw new Error(
-              "لم يتم العثور على البرنامج المطلوب حذفه."
-            );
-          }
-
-          const { error } =
-            await supabase
+            const {
+              error:
+                programsDeleteError,
+            } = await supabase
               .from("programs")
               .delete()
-              .eq(
+              .in(
                 "id",
-                request.target_id
+                programIds
               );
 
-          if (error) {
-            throw error;
+            if (
+              programsDeleteError
+            ) {
+              throw programsDeleteError;
+            }
           }
         }
 
-        return;
-      }
-
-      throw new Error(
-        "تعذر تحديد نوع العنصر داخل طلب الكليات."
-      );
-    };
-
-  const executeGenericRequest =
-    async (
-      request: AdminActionRequest
-    ) => {
-      const table =
-        request.section;
-
-      if (
-        request.action ===
-        "delete"
-      ) {
-        if (!request.target_id) {
-          throw new Error(
-            "لم يتم العثور على معرّف العنصر المطلوب حذفه."
+        const {
+          error:
+            facultyDeleteError,
+        } = await supabase
+          .from("faculties")
+          .delete()
+          .eq(
+            "id",
+            facultyId
           );
-        }
 
-        const { error } =
-          await supabase
-            .from(table)
-            .delete()
-            .eq(
-              "id",
-              request.target_id
-            );
-
-        if (error) {
-          throw error;
+        if (
+          facultyDeleteError
+        ) {
+          throw facultyDeleteError;
         }
 
         return;
       }
 
-      const payload =
+      const facultyPayload =
         getPayloadForOperation(
           request
         );
 
-      if (
-        request.action === "add"
-      ) {
-        if (
-          Object.keys(payload)
-            .length === 0
-        ) {
+      delete facultyPayload.id;
+
+      if (request.action === "add") {
+        const facultyId =
+          typeof request.payload
+            ?.id === "string"
+            ? request.payload.id
+            : request.target_id;
+
+        if (!facultyId) {
           throw new Error(
-            "بيانات الإضافة غير موجودة."
+            "لم يتم العثور على معرّف الكلية."
           );
         }
 
         const { error } =
           await supabase
-            .from(table)
-            .insert(payload);
+            .from("faculties")
+            .insert({
+              id: facultyId,
+              ...facultyPayload,
+            });
 
         if (error) {
           throw error;
@@ -840,20 +581,19 @@ export default function AdminApprovals() {
         return;
       }
 
-      if (
-        request.action ===
-        "edit"
-      ) {
+      if (request.action === "edit") {
         if (!request.target_id) {
           throw new Error(
-            "لم يتم العثور على معرّف العنصر المطلوب تعديله."
+            "لم يتم العثور على الكلية المطلوب تعديلها."
           );
         }
 
         const { error } =
           await supabase
-            .from(table)
-            .update(payload)
+            .from("faculties")
+            .update(
+              facultyPayload
+            )
             .eq(
               "id",
               request.target_id
@@ -863,7 +603,176 @@ export default function AdminApprovals() {
           throw error;
         }
       }
-    };
+
+      return;
+    }
+
+    if (entity === "program") {
+      const programPayload =
+        getPayloadForOperation(
+          request
+        );
+
+      delete programPayload.id;
+
+      if (request.action === "add") {
+        const programId =
+          typeof request.payload
+            ?.id === "string"
+            ? request.payload.id
+            : request.target_id;
+
+        if (!programId) {
+          throw new Error(
+            "لم يتم العثور على معرّف البرنامج."
+          );
+        }
+
+        const { error } =
+          await supabase
+            .from("programs")
+            .insert({
+              id: programId,
+              ...programPayload,
+            });
+
+        if (error) {
+          throw error;
+        }
+
+        return;
+      }
+
+      if (request.action === "edit") {
+        if (!request.target_id) {
+          throw new Error(
+            "لم يتم العثور على البرنامج المطلوب تعديله."
+          );
+        }
+
+        const { error } =
+          await supabase
+            .from("programs")
+            .update(
+              programPayload
+            )
+            .eq(
+              "id",
+              request.target_id
+            );
+
+        if (error) {
+          throw error;
+        }
+
+        return;
+      }
+
+      if (request.action === "delete") {
+        if (!request.target_id) {
+          throw new Error(
+            "لم يتم العثور على البرنامج المطلوب حذفه."
+          );
+        }
+
+        const { error } =
+          await supabase
+            .from("programs")
+            .delete()
+            .eq(
+              "id",
+              request.target_id
+            );
+
+        if (error) {
+          throw error;
+        }
+      }
+
+      return;
+    }
+
+    throw new Error(
+      "تعذر تحديد نوع العنصر داخل طلب الكليات."
+    );
+  };
+
+  const executeGenericRequest = async (
+    request: AdminActionRequest
+  ) => {
+    const table = request.section;
+
+    if (request.action === "delete") {
+      if (!request.target_id) {
+        throw new Error(
+          "لم يتم العثور على معرّف العنصر المطلوب حذفه."
+        );
+      }
+
+      const { error } =
+        await supabase
+          .from(table)
+          .delete()
+          .eq(
+            "id",
+            request.target_id
+          );
+
+      if (error) {
+        throw error;
+      }
+
+      return;
+    }
+
+    const payload =
+      getPayloadForOperation(
+        request
+      );
+
+    if (request.action === "add") {
+      if (
+        Object.keys(payload)
+          .length === 0
+      ) {
+        throw new Error(
+          "بيانات الإضافة غير موجودة."
+        );
+      }
+
+      const { error } =
+        await supabase
+          .from(table)
+          .insert(payload);
+
+      if (error) {
+        throw error;
+      }
+
+      return;
+    }
+
+    if (request.action === "edit") {
+      if (!request.target_id) {
+        throw new Error(
+          "لم يتم العثور على معرّف العنصر المطلوب تعديله."
+        );
+      }
+
+      const { error } =
+        await supabase
+          .from(table)
+          .update(payload)
+          .eq(
+            "id",
+            request.target_id
+          );
+
+      if (error) {
+        throw error;
+      }
+    }
+  };
 
   const executeRequest = async (
     request: AdminActionRequest
@@ -884,209 +793,300 @@ export default function AdminApprovals() {
     );
   };
 
-  const approveRequest =
-    async (
-      request: AdminActionRequest
-    ) => {
-      if (!isRootAdmin) {
-        setError(
-          "الموافقة على الطلبات متاحة لـ Root Admin فقط."
-        );
-        return;
-      }
-
-      if (
-        request.status !==
-        "pending"
-      ) {
-        return;
-      }
-
-      const confirmed =
-        window.confirm(
-          `هل تريد الموافقة على طلب ${getActionLabel(
-            request.action
-          )} في قسم ${getSectionLabel(
-            request.section
-          )}؟`
-        );
-
-      if (!confirmed) {
-        return;
-      }
-
-      setProcessingId(
-        request.id
+  /*
+   * إرسال إشعار للمشرف الفرعي بعد
+   * الموافقة أو الرفض.
+   *
+   * مهم:
+   * فشل الإشعار لا يلغي عملية
+   * الموافقة أو الرفض نفسها.
+   */
+  const notifyRequestAdmin = async (
+    request: AdminActionRequest,
+    decision: "approved" | "rejected"
+  ) => {
+    if (!request.admin_id) {
+      console.warn(
+        "Notification skipped: request has no admin_id."
       );
-      setError("");
-      setSuccess("");
+      return;
+    }
 
-      try {
-        await executeRequest(
-          request
-        );
+    const actionLabel =
+      getActionLabel(request.action);
 
-        const {
-          data: updatedRequest,
-          error: updateError,
-        } = await supabase
-          .from(
-            "admin_action_requests"
-          )
-          .update({
-            status: "approved",
-            reviewed_by:
-              profile?.id,
-            reviewed_at:
-              new Date().toISOString(),
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq(
-            "id",
-            request.id
-          )
-          .eq(
-            "status",
-            "pending"
-          )
-          .select(
-            "id, admin_id, section, action, target_id, payload, reason, status, reviewed_by, reviewed_at, created_at, updated_at"
-          )
-          .maybeSingle();
+    const sectionLabel =
+      getSectionLabel(request.section);
 
-        if (updateError) {
-          throw updateError;
-        }
+    const itemTitle =
+      getRequestTitle(request);
 
-        if (!updatedRequest) {
-          throw new Error(
-            "تم تنفيذ العملية، لكن تعذر تحديث حالة الطلب."
-          );
-        }
+    const isApproved =
+      decision === "approved";
 
-        setSuccess(
-          "تمت الموافقة على الطلب وتنفيذ العملية بنجاح."
-        );
+    const title = isApproved
+      ? "تمت الموافقة على طلبك"
+      : "تم رفض طلبك";
 
-        setSelectedRequest(
-          null
-        );
+    const message = isApproved
+      ? `تمت الموافقة على طلب ${actionLabel} في قسم ${sectionLabel} للعنصر "${itemTitle}".`
+      : `تم رفض طلب ${actionLabel} في قسم ${sectionLabel} للعنصر "${itemTitle}".`;
 
-        await loadRequests();
-      } catch (err) {
-        console.error(
-          "Approve admin request error:",
-          err
-        );
+    const {
+      error: notificationError,
+    } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: request.admin_id,
+        title,
+        message,
+        type: "approval",
+        is_read: false,
+      });
 
-        setError(
-          "تعذر تنفيذ الطلب. لم يتم تحويله إلى Approved."
-        );
-      } finally {
-        setProcessingId(null);
-      }
-    };
-
-  const rejectRequest =
-    async (
-      request: AdminActionRequest
-    ) => {
-      if (!isRootAdmin) {
-        setError(
-          "رفض الطلبات متاح لـ Root Admin فقط."
-        );
-        return;
-      }
-
-      if (
-        request.status !==
-        "pending"
-      ) {
-        return;
-      }
-
-      const confirmed =
-        window.confirm(
-          `هل تريد رفض طلب ${getActionLabel(
-            request.action
-          )} في قسم ${getSectionLabel(
-            request.section
-          )}؟`
-        );
-
-      if (!confirmed) {
-        return;
-      }
-
-      setProcessingId(
-        request.id
+    if (notificationError) {
+      console.error(
+        `${
+          isApproved
+            ? "Approve"
+            : "Reject"
+        } notification error:`,
+        notificationError
       );
-      setError("");
-      setSuccess("");
+    }
+  };
 
-      try {
-        const {
-          data: updatedRequest,
-          error: updateError,
-        } = await supabase
-          .from(
-            "admin_action_requests"
-          )
-          .update({
-            status: "rejected",
-            reviewed_by:
-              profile?.id,
-            reviewed_at:
-              new Date().toISOString(),
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq(
-            "id",
-            request.id
-          )
-          .eq(
-            "status",
-            "pending"
-          )
-          .select(
-            "id, admin_id, section, action, target_id, payload, reason, status, reviewed_by, reviewed_at, created_at, updated_at"
-          )
-          .maybeSingle();
+  const approveRequest = async (
+    request: AdminActionRequest
+  ) => {
+    if (!isRootAdmin) {
+      setError(
+        "الموافقة على الطلبات متاحة لـ Root Admin فقط."
+      );
+      return;
+    }
 
-        if (updateError) {
-          throw updateError;
-        }
+    if (
+      request.status !==
+      "pending"
+    ) {
+      return;
+    }
 
-        if (!updatedRequest) {
-          throw new Error(
-            "تعذر تحديث حالة الطلب."
-          );
-        }
+    const confirmed =
+      window.confirm(
+        `هل تريد الموافقة على طلب ${getActionLabel(
+          request.action
+        )} في قسم ${getSectionLabel(
+          request.section
+        )}؟`
+      );
 
-        setSuccess(
-          "تم رفض الطلب بنجاح."
-        );
+    if (!confirmed) {
+      return;
+    }
 
-        setSelectedRequest(
-          null
-        );
+    setProcessingId(
+      request.id
+    );
+    setError("");
+    setSuccess("");
 
-        await loadRequests();
-      } catch (err) {
-        console.error(
-          "Reject admin request error:",
-          err
-        );
+    try {
+      /*
+       * أولاً ننفذ العملية المطلوبة.
+       */
+      await executeRequest(
+        request
+      );
 
-        setError(
-          "تعذر رفض الطلب. حاول مرة أخرى."
-        );
-      } finally {
-        setProcessingId(null);
+      /*
+       * بعد نجاح العملية، نحول الطلب
+       * إلى Approved.
+       */
+      const {
+        data: updatedRequest,
+        error: updateError,
+      } = await supabase
+        .from(
+          "admin_action_requests"
+        )
+        .update({
+          status: "approved",
+          reviewed_by:
+            profile?.id,
+          reviewed_at:
+            new Date().toISOString(),
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          "id",
+          request.id
+        )
+        .eq(
+          "status",
+          "pending"
+        )
+        .select(
+          "id, admin_id, section, action, target_id, payload, reason, status, reviewed_by, reviewed_at, created_at, updated_at"
+        )
+        .maybeSingle();
+
+      if (updateError) {
+        throw updateError;
       }
-    };
+
+      if (!updatedRequest) {
+        throw new Error(
+          "تم تنفيذ العملية، لكن تعذر تحديث حالة الطلب."
+        );
+      }
+
+      /*
+       * إرسال إشعار للمشرف الفرعي.
+       *
+       * لا نرمي الخطأ هنا، لأن العملية
+       * الأساسية تمت بالفعل بنجاح.
+       */
+      await notifyRequestAdmin(
+        request,
+        "approved"
+      );
+
+      setSuccess(
+        "تمت الموافقة على الطلب وتنفيذ العملية وإرسال إشعار للمشرف."
+      );
+
+      setSelectedRequest(
+        null
+      );
+
+      await loadRequests();
+    } catch (err) {
+      console.error(
+        "Approve admin request error:",
+        err
+      );
+
+      setError(
+        "تعذر تنفيذ الطلب. لم يتم تحويله إلى Approved."
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const rejectRequest = async (
+    request: AdminActionRequest
+  ) => {
+    if (!isRootAdmin) {
+      setError(
+        "رفض الطلبات متاح لـ Root Admin فقط."
+      );
+      return;
+    }
+
+    if (
+      request.status !==
+      "pending"
+    ) {
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `هل تريد رفض طلب ${getActionLabel(
+          request.action
+        )} في قسم ${getSectionLabel(
+          request.section
+        )}؟`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setProcessingId(
+      request.id
+    );
+    setError("");
+    setSuccess("");
+
+    try {
+      /*
+       * تحويل الطلب إلى Rejected.
+       */
+      const {
+        data: updatedRequest,
+        error: updateError,
+      } = await supabase
+        .from(
+          "admin_action_requests"
+        )
+        .update({
+          status: "rejected",
+          reviewed_by:
+            profile?.id,
+          reviewed_at:
+            new Date().toISOString(),
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          "id",
+          request.id
+        )
+        .eq(
+          "status",
+          "pending"
+        )
+        .select(
+          "id, admin_id, section, action, target_id, payload, reason, status, reviewed_by, reviewed_at, created_at, updated_at"
+        )
+        .maybeSingle();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      if (!updatedRequest) {
+        throw new Error(
+          "تعذر تحديث حالة الطلب."
+        );
+      }
+
+      /*
+       * إرسال إشعار للمشرف الفرعي
+       * بأن Root Admin رفض الطلب.
+       */
+      await notifyRequestAdmin(
+        request,
+        "rejected"
+      );
+
+      setSuccess(
+        "تم رفض الطلب وإرسال إشعار للمشرف."
+      );
+
+      setSelectedRequest(
+        null
+      );
+
+      await loadRequests();
+    } catch (err) {
+      console.error(
+        "Reject admin request error:",
+        err
+      );
+
+      setError(
+        "تعذر رفض الطلب. حاول مرة أخرى."
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   if (!profile) {
     return null;
@@ -1291,9 +1291,7 @@ export default function AdminApprovals() {
             <div className="admin-select-wrapper">
               <select
                 id="approval-status"
-                value={
-                  statusFilter
-                }
+                value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(
                     event.target
@@ -1318,9 +1316,7 @@ export default function AdminApprovals() {
                 </option>
               </select>
 
-              <ChevronDown
-                size={16}
-              />
+              <ChevronDown size={16} />
             </div>
           </div>
 
@@ -1332,9 +1328,7 @@ export default function AdminApprovals() {
             <div className="admin-select-wrapper">
               <select
                 id="approval-section"
-                value={
-                  sectionFilter
-                }
+                value={sectionFilter}
                 onChange={(event) =>
                   setSectionFilter(
                     event.target
@@ -1367,9 +1361,7 @@ export default function AdminApprovals() {
                 </option>
               </select>
 
-              <ChevronDown
-                size={16}
-              />
+              <ChevronDown size={16} />
             </div>
           </div>
         </div>
@@ -1456,16 +1448,13 @@ export default function AdminApprovals() {
                             </strong>
 
                             {admins[
-                              request
-                                .admin_id
+                              request.admin_id
                             ]?.email && (
                               <span>
                                 {
                                   admins[
-                                    request
-                                      .admin_id
-                                  ]
-                                    .email
+                                    request.admin_id
+                                  ].email
                                 }
                               </span>
                             )}
@@ -1545,16 +1534,12 @@ export default function AdminApprovals() {
                                 >
                                   {isProcessing ? (
                                     <Loader2
-                                      size={
-                                        15
-                                      }
+                                      size={15}
                                       className="admin-spin"
                                     />
                                   ) : (
                                     <CheckCircle2
-                                      size={
-                                        15
-                                      }
+                                      size={15}
                                     />
                                   )}
 
@@ -1575,9 +1560,7 @@ export default function AdminApprovals() {
                                   }
                                 >
                                   <XCircle
-                                    size={
-                                      16
-                                    }
+                                    size={16}
                                   />
                                 </button>
                               </>
