@@ -32556,7 +32556,9 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 /* =========================================================
    TNU HUB — ADMIN APPROVAL CENTER
    AdminApprovals.tsx
+   Clean / Responsive / Mobile First
    ========================================================= */
+
 
 /* =========================================================
    PAGE
@@ -32565,10 +32567,38 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 .admin-approvals-page {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
+
 /* =========================================================
-   APPROVAL STATS
+   PAGE HEADER
+   ========================================================= */
+
+.admin-approvals-page .admin-page__header {
+  min-width: 0;
+}
+
+.admin-approvals-page .admin-page__header > div:first-child {
+  min-width: 0;
+}
+
+.admin-approvals-page .admin-page__header h1,
+.admin-approvals-page .admin-page__header p {
+  overflow-wrap: anywhere;
+}
+
+.admin-approvals-page .admin-page__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   STATS
    ========================================================= */
 
 .admin-approvals-page .admin-stats-grid {
@@ -32578,6 +32608,7 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 .admin-approvals-page .admin-stat-card {
   position: relative;
   overflow: hidden;
+
   transition:
     transform 220ms ease,
     border-color 220ms ease,
@@ -32587,20 +32618,26 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 
 .admin-approvals-page .admin-stat-card::after {
   content: "";
+
   position: absolute;
   inset: auto 0 0;
+
   height: 2px;
+
   background: linear-gradient(
     90deg,
     var(--tnu-primary),
     var(--tnu-primary-soft)
   );
+
   opacity: 0.65;
 }
 
 .admin-approvals-page .admin-stat-card:hover {
   transform: translateY(-2px);
+
   border-color: var(--tnu-border-strong);
+
   box-shadow: var(--tnu-shadow-md);
 }
 
@@ -32615,66 +32652,84 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   transform: translateY(-1px);
 }
 
+
 /* =========================================================
    FILTERS
    ========================================================= */
 
-.admin-filters {
+.admin-approvals-page .admin-filters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+
   gap: 0.85rem;
+
   margin-bottom: 1.15rem;
   padding: 0.95rem;
+
   border: 1px solid var(--tnu-border);
   border-radius: 0.95rem;
+
   background: var(--tnu-background);
 }
 
-.admin-filter {
+.admin-approvals-page .admin-filter {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
+
   gap: 0.4rem;
 }
 
-.admin-filter label {
+.admin-approvals-page .admin-filter label {
   color: var(--tnu-text);
+
   font-size: 0.76rem;
   font-weight: 700;
 }
 
-.admin-select-wrapper {
+.admin-approvals-page .admin-select-wrapper {
   position: relative;
   width: 100%;
 }
 
-.admin-select-wrapper select {
+.admin-approvals-page .admin-select-wrapper select {
   width: 100%;
   min-height: 2.75rem;
+
   box-sizing: border-box;
+
   padding: 0.6rem 2.5rem 0.6rem 0.8rem;
+
   border: 1px solid var(--tnu-border);
   border-radius: 0.75rem;
+
   background: var(--tnu-surface);
   color: var(--tnu-text);
+
   font: inherit;
   font-size: 0.8rem;
+
   cursor: pointer;
+
   appearance: none;
   -webkit-appearance: none;
+
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
     background-color 180ms ease;
 }
 
-.admin-select-wrapper select:hover {
+.admin-approvals-page .admin-select-wrapper select:hover {
   border-color: var(--tnu-border-strong);
 }
 
-.admin-select-wrapper select:focus {
+.admin-approvals-page .admin-select-wrapper select:focus-visible {
   outline: none;
+
   border-color: var(--tnu-primary);
+
   box-shadow:
     0 0 0 3px
     color-mix(
@@ -32684,126 +32739,158 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
     );
 }
 
-.admin-select-wrapper svg {
+.admin-approvals-page .admin-select-wrapper svg {
   position: absolute;
+
   top: 50%;
   right: 0.8rem;
+
   transform: translateY(-50%);
+
   color: var(--tnu-primary);
+
   pointer-events: none;
 }
 
-.admin-select-wrapper select option {
+.admin-approvals-page .admin-select-wrapper select option {
   background: var(--tnu-surface);
   color: var(--tnu-text);
 }
 
+
 /* =========================================================
-   LOADING STATE
+   LOADING
    ========================================================= */
 
-.admin-loading-state {
+.admin-approvals-page .admin-loading-state {
   min-height: 18rem;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   gap: 0.75rem;
+
   padding: 2rem;
+
   color: var(--tnu-text-muted);
+
   text-align: center;
 }
 
-.admin-loading-state svg {
+.admin-approvals-page .admin-loading-state svg {
   color: var(--tnu-primary);
 }
 
-.admin-loading-state span {
+.admin-approvals-page .admin-loading-state span {
   font-size: 0.8rem;
   line-height: 1.7;
 }
+
 
 /* =========================================================
    TABLE WRAPPER
    ========================================================= */
 
-.admin-table-wrapper {
+.admin-approvals-page .admin-table-wrapper {
   width: 100%;
+  max-width: 100%;
+
   overflow-x: auto;
   overflow-y: hidden;
+
   border: 1px solid var(--tnu-border);
   border-radius: 1rem;
+
   background: var(--tnu-surface);
+
   box-shadow: var(--tnu-shadow-sm);
+
   -webkit-overflow-scrolling: touch;
+
   scrollbar-width: thin;
+
   scrollbar-color:
     var(--tnu-border-strong)
     transparent;
 }
 
-.admin-table-wrapper::-webkit-scrollbar {
+.admin-approvals-page .admin-table-wrapper::-webkit-scrollbar {
   height: 7px;
 }
 
-.admin-table-wrapper::-webkit-scrollbar-track {
+.admin-approvals-page .admin-table-wrapper::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.admin-table-wrapper::-webkit-scrollbar-thumb {
+.admin-approvals-page .admin-table-wrapper::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: var(--tnu-border-strong);
 }
 
+
 /* =========================================================
-   APPROVAL TABLE
+   TABLE
    ========================================================= */
 
-.admin-table {
+.admin-approvals-page .admin-table {
   width: 100%;
   min-width: 980px;
+
   border-collapse: separate;
   border-spacing: 0;
+
   color: var(--tnu-text);
+
   direction: rtl;
 }
 
-.admin-table thead {
-  background:
-    linear-gradient(
-      180deg,
-      var(--tnu-background),
-      var(--tnu-surface)
-    );
+.admin-approvals-page .admin-table thead {
+  background: linear-gradient(
+    180deg,
+    var(--tnu-background),
+    var(--tnu-surface)
+  );
 }
 
-.admin-table th {
+.admin-approvals-page .admin-table th {
   padding: 0.9rem 0.85rem;
+
   border-bottom: 1px solid var(--tnu-border);
+
   color: var(--tnu-text-muted);
+
   font-size: 0.72rem;
   font-weight: 750;
+
   line-height: 1.5;
+
   text-align: right;
+
   white-space: nowrap;
 }
 
-.admin-table td {
+.admin-approvals-page .admin-table td {
   padding: 0.9rem 0.85rem;
+
   border-bottom: 1px solid var(--tnu-border);
+
   color: var(--tnu-text-soft);
+
   font-size: 0.77rem;
   line-height: 1.65;
+
   vertical-align: middle;
 }
 
-.admin-table tbody tr {
+.admin-approvals-page .admin-table tbody tr {
   transition:
     background-color 180ms ease,
     box-shadow 180ms ease;
 }
 
-.admin-table tbody tr:hover {
+.admin-approvals-page .admin-table tbody tr:hover {
   background: color-mix(
     in srgb,
     var(--tnu-primary-soft) 25%,
@@ -32811,81 +32898,106 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-.admin-table tbody tr:last-child td {
+.admin-approvals-page .admin-table tbody tr:last-child td {
   border-bottom: 0;
 }
+
 
 /* =========================================================
    TABLE USER
    ========================================================= */
 
-.admin-table-user {
+.admin-approvals-page .admin-table-user {
   min-width: 145px;
+
   display: flex;
   flex-direction: column;
+
   gap: 0.12rem;
 }
 
-.admin-table-user strong {
+.admin-approvals-page .admin-table-user strong {
   color: var(--tnu-text);
+
   font-size: 0.78rem;
   font-weight: 750;
+
   overflow-wrap: anywhere;
 }
 
-.admin-table-user span {
+.admin-approvals-page .admin-table-user span {
   color: var(--tnu-text-muted);
+
   font-size: 0.68rem;
+
   direction: ltr;
   text-align: right;
+
   overflow-wrap: anywhere;
 }
+
 
 /* =========================================================
    TABLE ITEM TITLE
    ========================================================= */
 
-.admin-table td > strong {
+.admin-approvals-page .admin-table td > strong {
   display: block;
+
   max-width: 190px;
+
   color: var(--tnu-text);
+
   font-size: 0.78rem;
   font-weight: 700;
+
   line-height: 1.65;
+
   overflow-wrap: anywhere;
 }
+
 
 /* =========================================================
    BADGES
    ========================================================= */
 
-.admin-badge {
+.admin-approvals-page .admin-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   min-height: 1.7rem;
+
   padding: 0.2rem 0.6rem;
+
   border: 1px solid var(--tnu-border);
   border-radius: 999px;
+
   background: var(--tnu-background);
   color: var(--tnu-text-soft);
+
   font-size: 0.68rem;
   font-weight: 750;
+
   line-height: 1.3;
+
   white-space: nowrap;
+
   transition:
     border-color 180ms ease,
     background-color 180ms ease,
     color 180ms ease;
 }
 
-.admin-badge--pending {
+.admin-approvals-page .admin-badge--pending {
   color: var(--tnu-primary);
+
   border-color: color-mix(
     in srgb,
     var(--tnu-primary) 28%,
     var(--tnu-border)
   );
+
   background: color-mix(
     in srgb,
     var(--tnu-primary-soft) 55%,
@@ -32893,13 +33005,15 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-.admin-badge--approved {
+.admin-approvals-page .admin-badge--approved {
   color: var(--tnu-primary);
+
   border-color: color-mix(
     in srgb,
     var(--tnu-primary) 30%,
     var(--tnu-border)
   );
+
   background: color-mix(
     in srgb,
     var(--tnu-primary-soft) 65%,
@@ -32907,13 +33021,15 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-.admin-badge--rejected {
+.admin-approvals-page .admin-badge--rejected {
   color: #b63a3a;
+
   border-color: color-mix(
     in srgb,
     #c24141 25%,
     var(--tnu-border)
   );
+
   background: color-mix(
     in srgb,
     #c24141 7%,
@@ -32921,48 +33037,66 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
+
 /* =========================================================
    TABLE ACTIONS
    ========================================================= */
 
-.admin-table-actions {
+.admin-approvals-page .admin-table-actions {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+
   flex-wrap: wrap;
+
   gap: 0.4rem;
+
   min-width: 190px;
 }
 
-.admin-table-actions .admin-primary-button,
-.admin-table-actions .admin-secondary-button {
+.admin-approvals-page .admin-table-actions
+  .admin-primary-button,
+.admin-approvals-page .admin-table-actions
+  .admin-secondary-button {
   min-height: 2.35rem;
+
   padding: 0.45rem 0.7rem;
+
   font-size: 0.72rem;
 }
 
-.admin-table-actions .admin-primary-button svg,
-.admin-table-actions .admin-secondary-button svg {
+.admin-approvals-page .admin-table-actions
+  .admin-primary-button svg,
+.admin-approvals-page .admin-table-actions
+  .admin-secondary-button svg {
   flex: 0 0 auto;
 }
+
 
 /* =========================================================
    ICON BUTTON
    ========================================================= */
 
-.admin-icon-button {
+.admin-approvals-page .admin-icon-button {
   width: 2.35rem;
   height: 2.35rem;
+
   flex: 0 0 2.35rem;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   padding: 0;
+
   border: 1px solid var(--tnu-border);
   border-radius: 0.7rem;
+
   background: var(--tnu-background);
   color: var(--tnu-text-soft);
+
   cursor: pointer;
+
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -32971,16 +33105,21 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
     box-shadow 180ms ease;
 }
 
-.admin-icon-button:hover {
+.admin-approvals-page .admin-icon-button:hover {
   transform: translateY(-1px);
+
   border-color: var(--tnu-border-strong);
+
   color: var(--tnu-text);
+
   box-shadow: var(--tnu-shadow-sm);
 }
 
-.admin-icon-button:focus-visible {
+.admin-approvals-page .admin-icon-button:focus-visible {
   outline: none;
+
   border-color: var(--tnu-primary);
+
   box-shadow:
     0 0 0 3px
     color-mix(
@@ -32990,8 +33129,9 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
     );
 }
 
-.admin-icon-button--danger {
+.admin-approvals-page .admin-icon-button--danger {
   color: #b63a3a;
+
   border-color: color-mix(
     in srgb,
     #c24141 20%,
@@ -32999,13 +33139,15 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-.admin-icon-button--danger:hover {
+.admin-approvals-page .admin-icon-button--danger:hover {
   color: #a52f2f;
+
   border-color: color-mix(
     in srgb,
     #c24141 45%,
     var(--tnu-border)
   );
+
   background: color-mix(
     in srgb,
     #c24141 7%,
@@ -33013,48 +33155,65 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-.admin-icon-button:disabled {
+.admin-approvals-page .admin-icon-button:disabled {
   opacity: 0.55;
+
   cursor: not-allowed;
+
   transform: none;
+
   box-shadow: none;
 }
 
+
 /* =========================================================
-   APPROVAL MODAL BACKDROP
+   MODAL BACKDROP
    ========================================================= */
 
-.admin-modal-backdrop {
+.admin-approvals-page .admin-modal-backdrop {
   position: fixed;
   inset: 0;
+
   z-index: 1000;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   padding: 1.25rem;
+
   background: color-mix(
     in srgb,
     var(--tnu-background) 78%,
     transparent
   );
+
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
+
   animation: adminApprovalBackdropIn 180ms ease both;
 }
+
 
 /* =========================================================
    APPROVAL MODAL
    ========================================================= */
 
-.admin-approval-modal {
+.admin-approvals-page .admin-approval-modal {
   width: min(760px, 100%);
+
   max-height: min(88vh, 900px);
+
   display: flex;
   flex-direction: column;
+
   overflow: hidden;
+
   border: 1px solid var(--tnu-border);
   border-radius: 1.2rem;
+
   background: var(--tnu-surface);
+
   box-shadow:
     var(--tnu-shadow-md),
     0 24px 70px
@@ -33063,14 +33222,19 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
       var(--tnu-primary) 10%,
       transparent
     );
+
   animation: adminApprovalModalIn 220ms ease both;
 }
 
-.admin-approval-modal::before {
+.admin-approvals-page .admin-approval-modal::before {
   content: "";
+
   display: block;
+
   flex: 0 0 auto;
+
   height: 3px;
+
   background: linear-gradient(
     90deg,
     var(--tnu-primary),
@@ -33078,46 +33242,72 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
+
 /* =========================================================
    MODAL HEADER
    ========================================================= */
 
-.admin-approval-modal .admin-modal__header {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__header {
   flex: 0 0 auto;
+
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 1rem;
+
   padding: 1.25rem 1.35rem;
+
   border-bottom: 1px solid var(--tnu-border);
 }
 
-.admin-approval-modal .admin-modal__header > div {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__header
+  > div {
   min-width: 0;
 }
 
-.admin-approval-modal .admin-modal__header h2 {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__header
+  h2 {
   margin: 0.25rem 0 0;
+
   color: var(--tnu-text);
+
   font-size: 1.05rem;
   font-weight: 750;
+
   line-height: 1.55;
+
   overflow-wrap: anywhere;
 }
 
-.admin-approval-modal .admin-modal__close {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__close {
   width: 2.35rem;
   height: 2.35rem;
+
   flex: 0 0 2.35rem;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   padding: 0;
+
   border: 1px solid var(--tnu-border);
   border-radius: 0.7rem;
+
   background: var(--tnu-background);
   color: var(--tnu-text-muted);
+
   cursor: pointer;
+
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -33125,16 +33315,25 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
     color 180ms ease;
 }
 
-.admin-approval-modal .admin-modal__close:hover {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__close:hover {
   transform: translateY(-1px);
+
   border-color: var(--tnu-border-strong);
+
   color: var(--tnu-text);
 }
 
-.admin-approval-modal .admin-modal__close:focus-visible {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__close:focus-visible {
   outline: none;
+
   border-color: var(--tnu-primary);
+
   color: var(--tnu-primary);
+
   box-shadow:
     0 0 0 3px
     color-mix(
@@ -33144,60 +33343,89 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
     );
 }
 
-.admin-approval-modal .admin-modal__close:disabled {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__close:disabled {
   opacity: 0.55;
+
   cursor: not-allowed;
+
   transform: none;
 }
+
 
 /* =========================================================
    APPROVAL DETAILS
    ========================================================= */
 
-.admin-approval-details {
+.admin-approvals-page .admin-approval-details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  grid-template-columns: repeat(
+    2,
+    minmax(0, 1fr)
+  );
+
   gap: 0.7rem;
+
   padding: 1.15rem 1.35rem;
+
   border-bottom: 1px solid var(--tnu-border);
+
   overflow-y: auto;
+
+  scrollbar-width: thin;
 }
 
-.admin-approval-detail {
+.admin-approvals-page .admin-approval-detail {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
+
   gap: 0.25rem;
+
   padding: 0.75rem 0.8rem;
+
   border: 1px solid var(--tnu-border);
   border-radius: 0.8rem;
+
   background: var(--tnu-background);
 }
 
-.admin-approval-detail span {
+.admin-approvals-page .admin-approval-detail span {
   color: var(--tnu-text-muted);
+
   font-size: 0.68rem;
   font-weight: 650;
 }
 
-.admin-approval-detail strong {
+.admin-approvals-page .admin-approval-detail strong {
   color: var(--tnu-text);
+
   font-size: 0.78rem;
   font-weight: 750;
+
   line-height: 1.55;
+
   overflow-wrap: anywhere;
 }
+
 
 /* =========================================================
    REQUEST REASON
    ========================================================= */
 
-.admin-form__notice {
+.admin-approvals-page .admin-form__notice {
   margin: 1rem 1.35rem 0;
+
   padding: 0.85rem 0.95rem;
+
   border: 1px solid var(--tnu-border);
   border-right: 3px solid var(--tnu-primary);
+
   border-radius: 0.8rem;
+
   background: color-mix(
     in srgb,
     var(--tnu-primary-soft) 35%,
@@ -33205,126 +33433,198 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-.admin-form__notice strong {
+.admin-approvals-page .admin-form__notice strong {
   display: block;
+
   margin-bottom: 0.35rem;
+
   color: var(--tnu-text);
+
   font-size: 0.75rem;
   font-weight: 750;
 }
 
-.admin-form__notice p {
+.admin-approvals-page .admin-form__notice p {
   margin: 0;
+
   color: var(--tnu-text-soft);
+
   font-size: 0.77rem;
+
   line-height: 1.8;
+
   overflow-wrap: anywhere;
 }
 
+
 /* =========================================================
-   APPROVAL PAYLOAD
+   PAYLOAD
    ========================================================= */
 
-.admin-approval-payload {
+.admin-approvals-page .admin-approval-payload {
   min-width: 0;
+
   margin: 1rem 1.35rem 0;
+
   border: 1px solid var(--tnu-border);
   border-radius: 0.9rem;
+
   background: var(--tnu-background);
+
   overflow: hidden;
 }
 
-.admin-approval-payload .admin-panel__header {
+.admin-approvals-page
+  .admin-approval-payload
+  .admin-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 1rem;
+
   margin: 0;
+
   padding: 0.9rem 1rem;
+
   border-bottom: 1px solid var(--tnu-border);
 }
 
-.admin-approval-payload .admin-panel__header h3 {
+.admin-approvals-page
+  .admin-approval-payload
+  .admin-panel__header
+  h3 {
   margin: 0.2rem 0 0;
+
   color: var(--tnu-text);
+
   font-size: 0.84rem;
   font-weight: 750;
 }
 
-.admin-approval-payload > pre {
+.admin-approvals-page
+  .admin-approval-payload
+  > pre {
   max-height: 240px;
+
   margin: 0;
+
   padding: 1rem;
+
   overflow: auto;
+
   direction: ltr;
   text-align: left;
+
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+
   color: var(--tnu-text-soft);
+
   background: var(--tnu-background);
+
   font-family:
     "Cascadia Code",
     "SFMono-Regular",
     Consolas,
     "Liberation Mono",
     monospace;
+
   font-size: 0.7rem;
+
   line-height: 1.75;
+
   tab-size: 2;
+
   scrollbar-width: thin;
+
   scrollbar-color:
     var(--tnu-border-strong)
     transparent;
 }
 
-.admin-approval-payload > pre::-webkit-scrollbar {
+.admin-approvals-page
+  .admin-approval-payload
+  > pre::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 
-.admin-approval-payload > pre::-webkit-scrollbar-track {
+.admin-approvals-page
+  .admin-approval-payload
+  > pre::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.admin-approval-payload > pre::-webkit-scrollbar-thumb {
+.admin-approvals-page
+  .admin-approval-payload
+  > pre::-webkit-scrollbar-thumb {
   border-radius: 999px;
+
   background: var(--tnu-border-strong);
 }
+
 
 /* =========================================================
    MODAL ACTIONS
    ========================================================= */
 
-.admin-approval-modal .admin-modal__actions {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__actions {
   flex: 0 0 auto;
+
   display: flex;
   align-items: center;
   justify-content: flex-start;
+
   flex-wrap: wrap;
+
   gap: 0.55rem;
+
   margin-top: 1rem;
+
   padding: 1rem 1.35rem 1.25rem;
+
   border-top: 1px solid var(--tnu-border);
 }
 
-.admin-approval-modal .admin-modal__actions .admin-primary-button,
-.admin-approval-modal .admin-modal__actions .admin-secondary-button {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__actions
+  .admin-primary-button,
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__actions
+  .admin-secondary-button {
   min-height: 2.75rem;
 }
 
-.admin-approval-modal .admin-modal__actions .admin-icon-button {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__actions
+  .admin-icon-button {
   width: auto;
+
   min-width: 8rem;
+
   flex: 0 0 auto;
+
   padding-inline: 0.85rem;
+
   gap: 0.4rem;
+
   font-size: 0.75rem;
   font-weight: 700;
 }
 
-.admin-approval-modal .admin-modal__actions .admin-primary-button {
+.admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__actions
+  .admin-primary-button {
   margin-inline-start: auto;
 }
+
 
 /* =========================================================
    ACCESS DENIED
@@ -33332,21 +33632,27 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 
 .admin-approvals-page .admin-panel--empty {
   min-height: 55vh;
+
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.admin-approvals-page .admin-panel--empty .admin-empty-state {
+.admin-approvals-page
+  .admin-panel--empty
+  .admin-empty-state {
   width: min(440px, 100%);
+
   margin: auto;
 }
 
-.admin-approvals-page .admin-panel--empty
+.admin-approvals-page
+  .admin-panel--empty
   .admin-empty-state
   svg {
   color: var(--tnu-primary);
 }
+
 
 /* =========================================================
    ALERTS
@@ -33358,18 +33664,26 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 
 .admin-approvals-page .admin-alert > button {
   margin-inline-start: auto;
+
   width: 2rem;
   height: 2rem;
+
   flex: 0 0 2rem;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   padding: 0;
+
   border: 0;
   border-radius: 0.55rem;
+
   background: transparent;
   color: inherit;
+
   cursor: pointer;
+
   transition:
     background-color 180ms ease,
     transform 180ms ease;
@@ -33377,6 +33691,7 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 
 .admin-approvals-page .admin-alert > button:hover {
   transform: translateY(-1px);
+
   background: color-mix(
     in srgb,
     currentColor 8%,
@@ -33384,20 +33699,27 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
+
 /* =========================================================
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .admin-table thead {
-  background:
-    linear-gradient(
-      180deg,
-      var(--tnu-background),
-      var(--tnu-surface)
-    );
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-table
+  thead {
+  background: linear-gradient(
+    180deg,
+    var(--tnu-background),
+    var(--tnu-surface)
+  );
 }
 
-[data-theme="dark"] .admin-table tbody tr:hover {
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-table
+  tbody
+  tr:hover {
   background: color-mix(
     in srgb,
     var(--tnu-primary-soft) 20%,
@@ -33405,139 +33727,385 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
   );
 }
 
-[data-theme="dark"] .admin-select-wrapper select,
-[data-theme="dark"] .admin-approval-detail,
-[data-theme="dark"] .admin-approval-payload,
-[data-theme="dark"] .admin-approval-payload > pre,
-[data-theme="dark"] .admin-icon-button,
-[data-theme="dark"] .admin-approval-modal .admin-modal__close {
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-select-wrapper
+  select,
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-approval-detail,
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-approval-payload,
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-approval-payload
+  > pre,
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-icon-button,
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-approval-modal
+  .admin-modal__close {
   background: var(--tnu-background);
 }
 
-[data-theme="dark"] .admin-modal-backdrop {
+[data-theme="dark"]
+  .admin-approvals-page
+  .admin-modal-backdrop {
   background: color-mix(
     in srgb,
-    var(--tnu-background) 84%,
+    #050b13 82%,
     transparent
   );
 }
 
+
 /* =========================================================
-   RESPONSIVE — TABLET
+   TABLET
    ========================================================= */
 
 @media (max-width: 900px) {
-  .admin-filters {
+  .admin-approvals-page .admin-filters {
     grid-template-columns: 1fr;
   }
 
-  .admin-approval-details {
-    grid-template-columns: 1fr 1fr;
+  .admin-approvals-page .admin-approval-details {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
   }
 
-  .admin-approval-modal {
+  .admin-approvals-page .admin-approval-modal {
     max-height: 90vh;
   }
 }
 
+
 /* =========================================================
-   RESPONSIVE — MOBILE
+   MOBILE — IMPORTANT
    ========================================================= */
 
 @media (max-width: 700px) {
-  .admin-filters {
-    gap: 0.7rem;
-    padding: 0.8rem;
-    border-radius: 0.85rem;
-  }
-
-  .admin-table-wrapper {
-    border-radius: 0.85rem;
-  }
-
-  .admin-table {
-    min-width: 900px;
-  }
-
-  .admin-modal-backdrop {
-    align-items: flex-end;
-    padding: 0;
-  }
-
-  .admin-approval-modal {
+  .admin-approvals-page {
     width: 100%;
-    max-height: 92vh;
-    border-radius: 1.1rem 1.1rem 0 0;
+    max-width: 100%;
   }
 
-  .admin-approval-modal .admin-modal__header {
+  /* ---------- Header ---------- */
+
+  .admin-approvals-page .admin-page__header {
+    gap: 0.9rem;
+  }
+
+  .admin-approvals-page
+    .admin-page__header-actions {
+    width: 100%;
+  }
+
+  .admin-approvals-page
+    .admin-page__header-actions
+    > * {
+    width: 100%;
+  }
+
+  /* ---------- Filters ---------- */
+
+  .admin-approvals-page .admin-filters {
+    grid-template-columns: 1fr;
+
+    gap: 0.7rem;
+
+    margin-bottom: 0.9rem;
+
+    padding: 0.8rem;
+
+    border-radius: 0.85rem;
+  }
+
+  .admin-approvals-page
+    .admin-select-wrapper
+    select {
+    min-height: 2.9rem;
+
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  /* ---------- Table ---------- */
+
+  .admin-approvals-page
+    .admin-table-wrapper {
+    border-radius: 0.85rem;
+
+    overscroll-behavior-inline: contain;
+  }
+
+  .admin-approvals-page .admin-table {
+    min-width: 920px;
+  }
+
+  .admin-approvals-page .admin-table th,
+  .admin-approvals-page .admin-table td {
+    padding: 0.8rem 0.7rem;
+  }
+
+  .admin-approvals-page
+    .admin-table-actions {
+    min-width: 180px;
+  }
+
+  /* ---------- Modal ---------- */
+
+  .admin-approvals-page
+    .admin-modal-backdrop {
+    align-items: flex-end;
+
+    padding: 0;
+
+    padding-bottom: env(
+      safe-area-inset-bottom,
+      0px
+    );
+  }
+
+  .admin-approvals-page
+    .admin-approval-modal {
+    width: 100%;
+
+    max-width: 100%;
+
+    max-height: 94dvh;
+    max-height: 94vh;
+
+    border-radius: 1.1rem 1.1rem 0 0;
+
+    box-shadow:
+      0 -12px 45px
+      rgba(0, 0, 0, 0.16);
+  }
+
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__header {
     padding: 1rem;
   }
 
-  .admin-approval-details {
-    padding: 0.9rem 1rem;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.55rem;
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__header
+    h2 {
+    font-size: 0.98rem;
   }
 
-  .admin-approval-detail {
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__close {
+    width: 2.6rem;
+    height: 2.6rem;
+
+    flex-basis: 2.6rem;
+  }
+
+  /* ---------- Details ---------- */
+
+  .admin-approvals-page
+    .admin-approval-details {
+    grid-template-columns: 1fr 1fr;
+
+    gap: 0.55rem;
+
+    padding: 0.9rem 1rem;
+  }
+
+  .admin-approvals-page
+    .admin-approval-detail {
     padding: 0.65rem 0.7rem;
   }
 
-  .admin-form__notice {
+  .admin-approvals-page
+    .admin-approval-detail
+    strong {
+    font-size: 0.75rem;
+  }
+
+  /* ---------- Reason ---------- */
+
+  .admin-approvals-page
+    .admin-form__notice {
     margin-inline: 1rem;
   }
 
-  .admin-approval-payload {
+  /* ---------- Payload ---------- */
+
+  .admin-approvals-page
+    .admin-approval-payload {
     margin-inline: 1rem;
   }
 
-  .admin-approval-modal .admin-modal__actions {
+  .admin-approvals-page
+    .admin-approval-payload
+    .admin-panel__header {
+    padding: 0.8rem 0.9rem;
+  }
+
+  /* ---------- Actions ---------- */
+
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__actions {
+    gap: 0.5rem;
+
     padding: 0.9rem 1rem 1rem;
+
+    padding-bottom: calc(
+      1rem + env(
+        safe-area-inset-bottom,
+        0px
+      )
+    );
   }
 }
 
+
 /* =========================================================
-   RESPONSIVE — SMALL MOBILE
+   SMALL MOBILE
    ========================================================= */
 
 @media (max-width: 480px) {
-  .admin-approvals-page .admin-stat-card {
+  /* ---------- Stats ---------- */
+
+  .admin-approvals-page
+    .admin-stat-card {
     min-height: auto;
   }
 
-  .admin-approval-details {
+  /* ---------- Details ---------- */
+
+  .admin-approvals-page
+    .admin-approval-details {
     grid-template-columns: 1fr;
   }
 
-  .admin-approval-modal .admin-modal__header h2 {
-    font-size: 0.95rem;
+  /* ---------- Modal ---------- */
+
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__header {
+    gap: 0.65rem;
   }
 
-  .admin-approval-modal .admin-modal__actions {
-    display: grid;
-    grid-template-columns: 1fr;
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__header
+    h2 {
+    font-size: 0.93rem;
+
+    line-height: 1.65;
   }
 
-  .admin-approval-modal .admin-modal__actions .admin-primary-button,
-  .admin-approval-modal .admin-modal__actions .admin-secondary-button,
-  .admin-approval-modal .admin-modal__actions .admin-icon-button {
-    width: 100%;
-    min-width: 0;
-    margin-inline-start: 0;
-    justify-content: center;
+  /* ---------- Reason ---------- */
+
+  .admin-approvals-page
+    .admin-form__notice {
+    margin-top: 0.85rem;
+
+    padding: 0.75rem 0.8rem;
   }
 
-  .admin-approval-payload > pre {
+  /* ---------- Payload ---------- */
+
+  .admin-approvals-page
+    .admin-approval-payload {
+    margin-top: 0.85rem;
+  }
+
+  .admin-approvals-page
+    .admin-approval-payload
+    > pre {
     max-height: 200px;
+
     padding: 0.8rem;
+
     font-size: 0.65rem;
   }
 
-  .admin-table-actions {
+  /* ---------- Modal Actions ---------- */
+
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__actions {
+    display: grid;
+
+    grid-template-columns: 1fr;
+
+    gap: 0.55rem;
+  }
+
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__actions
+    .admin-primary-button,
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__actions
+    .admin-secondary-button,
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__actions
+    .admin-icon-button {
+    width: 100%;
+
+    min-width: 0;
+
+    min-height: 2.85rem;
+
+    margin-inline-start: 0;
+
+    justify-content: center;
+  }
+
+  /* ---------- Table ---------- */
+
+  .admin-approvals-page
+    .admin-table-actions {
     min-width: 180px;
   }
 }
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__header {
+    padding-inline: 0.85rem;
+  }
+
+  .admin-approvals-page
+    .admin-approval-details {
+    padding-inline: 0.85rem;
+  }
+
+  .admin-approvals-page
+    .admin-form__notice,
+  .admin-approvals-page
+    .admin-approval-payload {
+    margin-inline: 0.85rem;
+  }
+
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__actions {
+    padding-inline: 0.85rem;
+  }
+}
+
 
 /* =========================================================
    ANIMATIONS
@@ -33556,40 +34124,57 @@ html[data-theme="dark"] .admin-sidebar__logout:hover {
 @keyframes adminApprovalModalIn {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.985);
+
+    transform:
+      translateY(12px)
+      scale(0.985);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+
+    transform:
+      translateY(0)
+      scale(1);
   }
 }
 
+
 /* =========================================================
-   ACCESSIBILITY / REDUCED MOTION
+   REDUCED MOTION
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   .admin-approvals-page .admin-stat-card,
   .admin-approvals-page .admin-stat-card__icon,
-  .admin-table tbody tr,
-  .admin-select-wrapper select,
-  .admin-icon-button,
-  .admin-approval-modal .admin-modal__close,
+  .admin-approvals-page .admin-table tbody tr,
+  .admin-approvals-page .admin-select-wrapper select,
+  .admin-approvals-page .admin-icon-button,
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__close,
   .admin-approvals-page .admin-alert > button {
     transition: none;
   }
 
-  .admin-approvals-page .admin-stat-card:hover,
-  .admin-approvals-page .admin-stat-card:hover .admin-stat-card__icon,
-  .admin-icon-button:hover,
-  .admin-approval-modal .admin-modal__close:hover,
-  .admin-approvals-page .admin-alert > button:hover {
+  .admin-approvals-page
+    .admin-stat-card:hover,
+  .admin-approvals-page
+    .admin-stat-card:hover
+    .admin-stat-card__icon,
+  .admin-approvals-page
+    .admin-icon-button:hover,
+  .admin-approvals-page
+    .admin-approval-modal
+    .admin-modal__close:hover,
+  .admin-approvals-page
+    .admin-alert
+    > button:hover {
     transform: none;
   }
 
-  .admin-modal-backdrop,
-  .admin-approval-modal {
+  .admin-approvals-page .admin-modal-backdrop,
+  .admin-approvals-page .admin-approval-modal {
     animation: none;
   }
 }
