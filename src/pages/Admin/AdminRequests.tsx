@@ -20,10 +20,9 @@ import {
 } from "react";
 
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../context/AuthContext";
 
 /* =========================================================
-  TYPES
+   TYPES
 ========================================================= */
 
 type RequestStatus =
@@ -62,7 +61,7 @@ type FilterType =
   | "تم الحل";
 
 /* =========================================================
-  HELPERS
+   HELPERS
 ========================================================= */
 
 function formatDate(date: string) {
@@ -112,14 +111,12 @@ function getStatusClass(status: RequestStatus) {
 }
 
 /* =========================================================
-  COMPONENT
+   COMPONENT
 ========================================================= */
 
 export default function AdminRequests() {
-  const { profile } = useAuth();
-
   /* =======================================================
-    STATE
+     STATE
   ======================================================= */
 
   const [requests, setRequests] = useState<
@@ -149,7 +146,7 @@ export default function AdminRequests() {
     useState(false);
 
   /* =======================================================
-    LOAD REQUESTS
+     LOAD REQUESTS
   ======================================================= */
 
   const loadRequests = useCallback(
@@ -198,7 +195,7 @@ export default function AdminRequests() {
         }
 
         /* =================================================
-          LOAD STUDENTS
+           LOAD STUDENTS
         ================================================= */
 
         const userIds = Array.from(
@@ -282,7 +279,7 @@ export default function AdminRequests() {
   );
 
   /* =======================================================
-    INITIAL LOAD
+     INITIAL LOAD
   ======================================================= */
 
   useEffect(() => {
@@ -290,7 +287,7 @@ export default function AdminRequests() {
   }, [loadRequests]);
 
   /* =======================================================
-    FILTERED REQUESTS
+     FILTERED REQUESTS
   ======================================================= */
 
   const filteredRequests = useMemo(() => {
@@ -331,7 +328,7 @@ export default function AdminRequests() {
   }, [requests, filter, search]);
 
   /* =======================================================
-    SEARCH RESULTS
+     SEARCH RESULTS
   ======================================================= */
 
   const searchResults = useMemo(() => {
@@ -343,7 +340,7 @@ export default function AdminRequests() {
   }, [filteredRequests, search]);
 
   /* =======================================================
-    STATS
+     STATS
   ======================================================= */
 
   const stats = useMemo(() => {
@@ -368,7 +365,7 @@ export default function AdminRequests() {
   }, [requests]);
 
   /* =======================================================
-    STATUS UPDATE
+     STATUS UPDATE
   ======================================================= */
 
   const handleStatusChange = async (
@@ -401,7 +398,7 @@ export default function AdminRequests() {
       }
 
       /* =================================================
-        CREATE NOTIFICATION
+         CREATE NOTIFICATION
       ================================================= */
 
       const {
@@ -458,7 +455,7 @@ export default function AdminRequests() {
   };
 
   /* =======================================================
-    DELETE REQUEST
+     DELETE REQUEST
   ======================================================= */
 
   const handleDelete = async (
@@ -512,7 +509,7 @@ export default function AdminRequests() {
   };
 
   /* =======================================================
-    RENDER — LOADING
+     RENDER — LOADING
   ======================================================= */
 
   if (loading) {
@@ -536,7 +533,7 @@ export default function AdminRequests() {
   }
 
   /* =======================================================
-    RENDER
+     RENDER
   ======================================================= */
 
   return (
@@ -696,7 +693,6 @@ export default function AdminRequests() {
       =================================================== */}
 
       <div className="admin-requests__toolbar">
-
         {/* SEARCH */}
         <div className="admin-requests__search-wrapper">
           <div className="admin-requests__search">
@@ -883,7 +879,6 @@ export default function AdminRequests() {
         ================================================= */
 
         <div className="admin-requests__content">
-
           {/* =================================================
               REQUEST LIST
           ================================================= */}
