@@ -99,15 +99,29 @@ export default {
           );
         }
 
+        const cleanName = name.trim();
+        const cleanEmail = email.trim();
+
         /*
          * إنشاء حساب المشرف في Supabase Auth.
+         *
+         * عند إنشاء المستخدم، Trigger:
+         *
+         * on_auth_user_created
+         *
+         * يشغل:
+         *
+         * handle_new_student()
+         *
+         * والذي يقوم تلقائيًا بإنشاء Profile
+         * داخل public.profiles بدور student.
          */
         const {
           data: createdUser,
           error: createUserError,
         } =
           await ctx.supabaseAdmin.auth.admin.createUser({
-            email: email.trim(),
+            email: cleanEmail,
             password,
             email_confirm: true,
           });
@@ -132,36 +146,55 @@ export default {
 
         const adminId = createdUser.user.id;
 
-        /*
-         * إنشاء Profile للمشرف.
-         */
-        const { error: profileInsertError } =
-          await ctx.supabaseAdmin
-            .from("profiles")
-            .insert({
-              id: adminId,
-              full_name: name.trim(),
-              email: email.trim(),
-              role: "admin",
-            });
+        console.log(
+          "New admin Auth user created:",
+          adminId
+        );
 
-        if (profileInsertError) {
+        /*
+         * مهم:
+         *
+         * لا نستخدم INSERT هنا.
+         *
+         * الـ Trigger قام بالفعل بإنشاء Profile
+         * لهذا المستخدم.
+         *
+         * لذلك نقوم بتحويل الـ Profile من student
+         * إلى admin وتحديث بياناته.
+         */
+        const {
+          data: updatedProfile,
+          error: profileUpdateError,
+        } = await ctx.supabaseAdmin
+          .from("profiles")
+          .update({
+            full_name: cleanName,
+            email: cleanEmail,
+            role: "admin",
+          })
+          .eq("id", adminId)
+          .select("id, full_name, email, role")
+          .single();
+
+        if (profileUpdateError || !updatedProfile) {
           /*
-           * حذف حساب Auth إذا فشل إنشاء Profile.
+           * إذا فشل تحديث الـ Profile،
+           * نحذف حساب Auth حتى لا نترك
+           * حسابًا ناقصًا.
            */
           await ctx.supabaseAdmin.auth.admin.deleteUser(
             adminId
           );
 
           console.error(
-            "Profile insert error:",
-            profileInsertError
+            "Profile update error:",
+            profileUpdateError
           );
 
           return Response.json(
             {
               error:
-                "تم إنشاء الحساب ولكن فشل إنشاء بيانات المشرف.",
+                "تم إنشاء الحساب ولكن فشل تحديث بيانات المشرف.",
             },
             {
               status: 500,
@@ -180,11 +213,13 @@ export default {
           },
           {
             section: "events",
-            enabled: permissions?.events === true,
+            enabled:
+              permissions?.events === true,
           },
           {
             section: "requests",
-            enabled: permissions?.requests === true,
+            enabled:
+              permissions?.requests === true,
           },
           {
             section: "resources",
@@ -220,13 +255,16 @@ export default {
 
         if (permissionsError) {
           /*
-           * تنظيف البيانات في حالة فشل حفظ الصلاحيات.
+           * تنظيف الـ Profile.
            */
           await ctx.supabaseAdmin
             .from("profiles")
             .delete()
             .eq("id", adminId);
 
+          /*
+           * تنظيف حساب Auth.
+           */
           await ctx.supabaseAdmin.auth.admin.deleteUser(
             adminId
           );
@@ -256,8 +294,8 @@ export default {
             message: "تم إنشاء المشرف بنجاح.",
             admin: {
               id: adminId,
-              name: name.trim(),
-              email: email.trim(),
+              name: cleanName,
+              email: cleanEmail,
               role: "admin",
             },
           },
